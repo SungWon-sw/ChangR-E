@@ -5,7 +5,13 @@ from folium.plugins import FastMarkerCluster, HeatMap
 # =========================
 # 1) 파일 읽기
 # =========================
-file_path = "d04_text_meta_2025_10_16.txt"
+import os
+
+# 현재 실행 중인 파이썬 파일의 폴더 위치를 가져옵니다.
+current_path = os.path.dirname(__file__)
+
+# 그 폴더 안에 있는 파일 이름을 합칩니다.
+file_path = os.path.join(current_path, "d04_text_meta_2025_10_16.txt")
 
 # PeMS 메타데이터는 보통 탭(tab) 구분 파일이라 sep="\t" 사용
 df = pd.read_csv(file_path, sep="\t")
