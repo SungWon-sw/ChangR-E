@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from sac_algorithm import SAC평가함수
+from sac_algorithm import SAC
 from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
 import os
@@ -64,8 +64,10 @@ q1 = QNetwork(hidden_size=HIDDEN_SIZE)
 q2 = QNetwork(hidden_size=HIDDEN_SIZE)
 
 # SAC 초기화
-sac = SAC(policy, q1, q2, STATE_DIM, ACTION_DIM)
-
+sac = SAC(policy, q1, q2, STATE_DIM, ACTION_DIM,
+          policy_lr=1e-4,
+          q_lr=1e-4,
+          alpha_lr=1e-4)
 # 리플레이 버퍼
 buffer = ReplayBuffer(max_size=BUFFER_SIZE, state_dim=STATE_DIM, action_dim=ACTION_DIM)
 
@@ -76,7 +78,7 @@ env = SimpleEnv()
 # 학습 루프
 # =====================
 print("학습 시작...")
-WARMUP_STEPS = 1000  # 추가
+WARMUP_STEPS = 5000  # 추가
 
 for episode in range(NUM_EPISODES):
     state = env.reset()
@@ -97,7 +99,7 @@ for episode in range(NUM_EPISODES):
         episode_reward += reward
         
         # 학습 (버퍼에 충분한 데이터가 있으면)
-        if buffer.size > BATCH_SIZE:
+        if buffer.size > WARMUP_STEPS:
             batch = buffer.sample(BATCH_SIZE)
             
             sac.update_critic(batch)
@@ -110,7 +112,7 @@ for episode in range(NUM_EPISODES):
         if done:
             break
     
-    if (episode + 1) % 10 == 0:
+    if (episode + 1) % 1 == 0:
         print(f"Episode {episode + 1}, Reward: {episode_reward:.2f}, Buffer Size: {buffer.size}")
 
 print("학습 완료!")

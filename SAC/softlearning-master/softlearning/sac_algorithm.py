@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from neural_networks import QNetwork  
 
 class SAC:
     """최소화된 Soft Actor-Critic 구현"""
@@ -22,13 +23,17 @@ class SAC:
         self.Q2 = q_network_2
 
         # Target networks (천천히 업데이트)
+        self.Q1_target = QNetwork(hidden_size=q_network_1.hidden_size)
+        self.Q2_target = QNetwork(hidden_size=q_network_2.hidden_size)
+
         dummy = tf.zeros((1, state_dim + action_dim))
+
         q_network_1(dummy)
         q_network_2(dummy)
-        self.Q1_target(dummy)
-        self.Q2_target(dummy)
-        self.Q1_target = tf.keras.models.clone_model(q_network_1)
-        self.Q2_target = tf.keras.models.clone_model(q_network_2)
+        self.Q1(dummy);        self.Q1_target(dummy)
+        self.Q2(dummy);        self.Q2_target(dummy)
+        self.Q1_target.set_weights(self.Q1.get_weights())
+        self.Q2_target.set_weights(self.Q2.get_weights())
         
         # Optimizers
         self.policy_optimizer = tf.optimizers.Adam(policy_lr)
