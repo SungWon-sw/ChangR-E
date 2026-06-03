@@ -1,8 +1,10 @@
 import tensorflow as tf
 import numpy as np
-from sac_algorithm import SAC
+from sac_algorithm import SAC평가함수
 from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "8"
 
 # =====================
 # 환경 설정 (당신의 2D 맵)
