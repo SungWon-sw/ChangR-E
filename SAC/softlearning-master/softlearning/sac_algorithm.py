@@ -11,9 +11,9 @@ class SAC:
                  q_network_2, # Q네트워크 2
                  state_dim,
                  action_dim,
-                 policy_lr=3e-4, # 학습률
-                 q_lr=3e-4, # Q학습률 1
-                 alpha_lr=3e-4, # 엔트로피학습률
+                 policy_lr=1e-4, # 학습률
+                 q_lr=1e-4, # Q학습률 1
+                 alpha_lr=1e-4, # 엔트로피학습률
                  discount=0.99, # 보상의 지수가중뭐시기그거평균
                  tau=5e-3       # 타겟네트워크업데이트속도. 온라인 네트워크 반영비율
                  ):
@@ -100,9 +100,11 @@ class SAC:
         
         # 정책 손실 계산 -> 엔트로피 패널티 부여 -> 알파를 곱해서 최종
         with tf.GradientTape() as tape:
-            actions, log_probs = self.policy(observations)
-            q1_values = self.Q1(tf.concat([observations, actions], -1))
-            q2_values = self.Q2(tf.concat([observations, actions], -1))
+
+            obs_tensor = tf.cast(observations, tf.float32)
+            actions, log_probs = self.policy(obs_tensor)  # ← 명시적 변환
+            q1_values = self.Q1(tf.concat([obs_tensor, actions], -1))
+            q2_values = self.Q2(tf.concat([obs_tensor, actions], -1))
             
             min_q = tf.minimum(q1_values, q2_values)
             policy_loss = tf.reduce_mean(
@@ -110,10 +112,13 @@ class SAC:
             )
         
         # 왜필요한거지 여긴
+        # 수정
         policy_grad = tape.gradient(policy_loss, self.policy.trainable_variables)
+        policy_grad = [g if g is not None else tf.zeros_like(v)
+                    for g, v in zip(policy_grad, self.policy.trainable_variables)]
         self.policy_optimizer.apply_gradients(
             zip(policy_grad, self.policy.trainable_variables))
-        
+            
         return policy_loss
     
     def update_alpha(self, batch):

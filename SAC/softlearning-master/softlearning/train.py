@@ -5,7 +5,25 @@ from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "8"
+import sys
 
+# 로그 파일 설정
+log_file = open('log.txt', 'w', buffering=1)  # buffering=1: 한 줄씩 즉시 저장
+
+class Logger:
+    def __init__(self, file):
+        self.terminal = sys.stdout
+        self.file = file
+    
+    def write(self, message):
+        self.terminal.write(message)  # 터미널에도 출력
+        self.file.write(message)      # 파일에도 저장
+    
+    def flush(self):
+        self.terminal.flush()
+        self.file.flush()
+
+sys.stdout = Logger(log_file)
 # =====================
 # 환경 설정 (당신의 2D 맵)
 # =====================
@@ -18,7 +36,7 @@ class SimpleEnv:
         self.reset()
     
     def reset(self):
-        self.state = np.random.randn(self.state_dim).astype('float32')
+        self.state = np.random.uniform(-1, 1, self.state_dim).astype('float32')
         return self.state
     
     def step(self, action):

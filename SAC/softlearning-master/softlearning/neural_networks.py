@@ -28,7 +28,7 @@ class GaussianPolicy(tf.keras.Model):
         # states -> fc1 -> fc2 추출
 
         mu = self.mu(x)
-        log_std = tf.clip_by_value(self.log_std(x), -20, 2)
+        log_std = tf.clip_by_value(self.log_std(x), -20, 0)
         # 학습 안정화 전략
         std = tf.exp(log_std)
 
@@ -71,8 +71,8 @@ class QNetwork(tf.keras.Model):
         super().__init__(**kwargs)
         self.hidden_size = hidden_size
 
-        self.fc1 = tf.keras.layers.Dense(hidden_size, activation='silu')
-        self.fc2 = tf.keras.layers.Dense(hidden_size, activation='silu')
+        self.fc1 = tf.keras.layers.Dense(hidden_size, activation='relu')
+        self.fc2 = tf.keras.layers.Dense(hidden_size, activation='relu')
         self.out = tf.keras.layers.Dense(1)
         # Q값 . . . 기대 보상
     
