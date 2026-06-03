@@ -1,25 +1,32 @@
 import tensorflow as tf
 import numpy as np
-from copy import deepcopy
 
 class SAC:
     """최소화된 Soft Actor-Critic 구현"""
     
     def __init__(self, 
-                 policy,
-                 q_network_1, 
-                 q_network_2,
-                 policy_lr=3e-4,
-                 q_lr=3e-4,
-                 alpha_lr=3e-4,
-                 discount=0.99,
-                 tau=5e-3):
+                 policy, #현재 정책
+                 q_network_1, # Q네트워크 1
+                 q_network_2, # Q네트워크 2
+                 state_dim,
+                 action_dim,
+                 policy_lr=3e-4, # 학습률
+                 q_lr=3e-4, # Q학습률 1
+                 alpha_lr=3e-4, # 엔트로피학습률
+                 discount=0.99, # 보상의 지수가중뭐시기그거평균
+                 tau=5e-3       # 타겟네트워크업데이트속도. 온라인 네트워크 반영비율
+                 ):
         
         self.policy = policy
         self.Q1 = q_network_1
         self.Q2 = q_network_2
-        
+
         # Target networks (천천히 업데이트)
+        dummy = tf.zeros((1, state_dim + action_dim))
+        q_network_1(dummy)
+        q_network_2(dummy)
+        self.Q1_target(dummy)
+        self.Q2_target(dummy)
         self.Q1_target = tf.keras.models.clone_model(q_network_1)
         self.Q2_target = tf.keras.models.clone_model(q_network_2)
         
@@ -30,15 +37,16 @@ class SAC:
         self.alpha_optimizer = tf.optimizers.Adam(alpha_lr)
         
         # Entropy parameter
-        self.log_alpha = tf.Variable(0.0, trainable=True)
-        self.target_entropy = -np.prod([2])  # 2D action space
+        self.log_alpha = tf.Variable(0.0, trainable=True) # 역전파로 학습 -> 엔트로피 온도 계수의 log값.
+                                                          # alpha가 크면 많이 바뀐다.
+        self.target_entropy = -float(action_dim)  # 2D action space
         
         self.discount = discount
         self.tau = tau
     
     @property
     def alpha(self):
-        return tf.exp(self.log_alpha)
+        return tf.exp(self.log_alpha) #알파를 절댓값취하는 작용
     
     def update_critic(self, batch):
         """Q-function 업데이트"""
@@ -48,21 +56,28 @@ class SAC:
         next_actions, next_log_probs = self.policy(next_observations)
         q1_targets = self.Q1_target(tf.concat([next_observations, next_actions], -1))
         q2_targets = self.Q2_target(tf.concat([next_observations, next_actions], -1))
+        # 다음 관측이 A면 B행동을 해라 -> [A,B]
         
         min_q_target = tf.minimum(q1_targets, q2_targets)
-        q_target = rewards + (1 - dones) * self.discount * (
-            min_q_target - self.alpha * next_log_probs
+        q_target = tf.stop_gradient(
+            rewards + (1 - dones) * self.discount * (
+                min_q_target - self.alpha * next_log_probs
+            )
         )
+        # soft bellman 타겟 -> 최종 타겟 결정 ( == 정해 )
         
         # Q1 업데이트
         with tf.GradientTape() as tape:
             q1_values = self.Q1(tf.concat([observations, actions], -1))
+            # - 
             q1_loss = tf.reduce_mean((q1_values - q_target) ** 2)
-        
+            # Q값이 타겟에 얼마나 가까운지
+
         q1_grad = tape.gradient(q1_loss, self.Q1.trainable_variables)
         self.q1_optimizer.apply_gradients(
             zip(q1_grad, self.Q1.trainable_variables))
-        
+        # 가중치 업데이트
+
         # Q2 업데이트
         with tf.GradientTape() as tape:
             q2_values = self.Q2(tf.concat([observations, actions], -1))
@@ -78,6 +93,7 @@ class SAC:
         """Policy 업데이트"""
         observations, _, _, _, _ = batch
         
+        # 정책 손실 계산 -> 엔트로피 패널티 부여 -> 알파를 곱해서 최종
         with tf.GradientTape() as tape:
             actions, log_probs = self.policy(observations)
             q1_values = self.Q1(tf.concat([observations, actions], -1))
@@ -88,6 +104,7 @@ class SAC:
                 self.alpha * log_probs - min_q
             )
         
+        # 왜필요한거지 여긴
         policy_grad = tape.gradient(policy_loss, self.policy.trainable_variables)
         self.policy_optimizer.apply_gradients(
             zip(policy_grad, self.policy.trainable_variables))
@@ -111,6 +128,8 @@ class SAC:
     
     def update_target_networks(self):
         """타겟 네트워크를 천천히 업데이트"""
+        # 온라인 네트워크 기반
+
         for target_var, var in zip(
             self.Q1_target.trainable_variables, 
             self.Q1.trainable_variables

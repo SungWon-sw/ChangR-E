@@ -9,6 +9,7 @@ from replay_buffer import ReplayBuffer
 # =====================
 class SimpleEnv:
     """예제용 간단한 환경"""
+    #이거 수정해야함
     def __init__(self):
         self.state_dim = 4  # x, y, vx, vy
         self.action_dim = 2  # ax, ay
@@ -61,7 +62,7 @@ q1 = QNetwork(hidden_size=HIDDEN_SIZE)
 q2 = QNetwork(hidden_size=HIDDEN_SIZE)
 
 # SAC 초기화
-sac = SAC(policy, q1, q2)
+sac = SAC(policy, q1, q2, STATE_DIM, ACTION_DIM)
 
 # 리플레이 버퍼
 buffer = ReplayBuffer(max_size=BUFFER_SIZE, state_dim=STATE_DIM, action_dim=ACTION_DIM)
@@ -73,14 +74,18 @@ env = SimpleEnv()
 # 학습 루프
 # =====================
 print("학습 시작...")
+WARMUP_STEPS = 1000  # 추가
+
 for episode in range(NUM_EPISODES):
     state = env.reset()
     episode_reward = 0
     
     for step in range(MAX_STEPS):
-        # 정책으로 액션 선택
-        action, _ = policy(tf.expand_dims(state, 0))
-        action = action[0].numpy()
+        if buffer.size < WARMUP_STEPS:
+            action = np.random.uniform(-1, 1, size=(ACTION_DIM,)).astype('float32')
+        else:
+            action, _ = policy(tf.expand_dims(state, 0))
+            action = action[0].numpy()
         
         # 환경과 상호작용
         next_state, reward, done, _ = env.step(action)
