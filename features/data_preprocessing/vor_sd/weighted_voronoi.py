@@ -87,7 +87,7 @@ def weighted_delaunay_edges(sites, weights):
 
 
 # --------------------------------------------------------------------------
-# 3. Jain-Smith M/G/c/c 상태의존 차단확률 (Erlang-B 일반화)
+# 3. Jain-Smith M/G/c/c 상태의존 차단확률
 # --------------------------------------------------------------------------
 def speed_ratio(n, beta, gamma):
     """f(n) = V_n / V_free = exp(-((n-1)/beta)^gamma).  f(1)=1."""
