@@ -136,7 +136,7 @@ def edge_blocking_distribution(sites, weights, edge_attr_fn):
         Pb, _, _ = blocking_probability(L, vf, lam, lanes)
         blocks.append(Pb)
     blocks = np.array(blocks)
-    cv = blocks.std() / (blocks.mean() + 1e-12)   # 변동계수: 작을수록 균일
+    cv = np.sqrt(np.mean(blocks ** 2))
     return edges, blocks, cv
 
 
