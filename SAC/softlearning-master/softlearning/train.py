@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from sac_algorithm import SAC
+from ../../data_preprocessing/rl_env_voronoi import TrafficRLEnv
 from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
 import os
@@ -73,6 +74,10 @@ BUFFER_SIZE = 100000
 BATCH_SIZE = 256
 NUM_EPISODES = 100
 MAX_STEPS = 1000
+SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
+SITES_FILE    = f"{DIR}/outputs/pems_d07_sites.csv"
+META_FILE     = f"{DIR}/d07_text_meta_2018_10_13.txt"
+
 
 # =====================
 # 네트워크 초기화
@@ -90,8 +95,21 @@ sac = SAC(policy, q1, q2, STATE_DIM, ACTION_DIM,
 buffer = ReplayBuffer(max_size=BUFFER_SIZE, state_dim=STATE_DIM, action_dim=ACTION_DIM)
 
 # 환경
-env = SimpleEnv()
-
+try:
+    env = TrafficRLEnv(
+        segments_csv=SEGMENTS_FILE, 
+        sites_csv=SITES_FILE, 
+        meta_txt=META_FILE
+    )
+    print("\n--- [학습 루프 테스트: 동적 도로 분할 연산 시뮬레이션] ---")
+    
+    uniform_weights = np.zeros(env.K)
+    mean_std_uni, all_stds_uni = env.step(uniform_weights)
+    print(f"[Test 1] 균등 가중치(유클리드) 적용 시 평균 표준편차: {mean_std_uni:.8f}")
+    
+except FileNotFoundError as e:
+    print(f"\n[오류] 데이터 파일을 찾을 수 없습니다: {e}")
+    
 # =====================
 # 학습 루프
 # =====================

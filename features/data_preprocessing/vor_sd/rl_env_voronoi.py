@@ -38,13 +38,14 @@ class TrafficRLEnv:
         self.vols = self.seg_df["vol_day_veh"].values
         self.lam = (self.vols * PHF) / 3600.0  # 초당 첨두 도착률 [veh/s]
         
+        print(self.seg_df.columns)
         # 3. 보로노이 생성 시 자를 Bounding Box 계산
         pad = 4000
         self.bbox = (
-            self.seg_df[['x1', 'x2']].values.min() - pad,
-            self.seg_df[['y1', 'y2']].values.min() - pad,
-            self.seg_df[['x1', 'x2']].values.max() + pad,
-            self.seg_df[['y1', 'y2']].values.max() + pad
+            self.seg_df['mid_x'].values.min() - pad,
+            self.seg_df['mid_y'].values.min() - pad,
+            self.seg_df['mid_x'].values.max() + pad,
+            self.seg_df['mid_y'].values.max() + pad
         )
         
         # 4. 도로의 양 끝점을 활용하여 LineString 객체 및 공간 인덱스(STRtree) 구축
