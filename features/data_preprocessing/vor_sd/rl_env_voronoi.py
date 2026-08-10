@@ -112,7 +112,8 @@ class TrafficRLEnv:
         return mean_std, stds
 
     def reset(self):
-        self.weights = np.zeros(self.K)
+        self.weights = np.random.uniform(-0.5, 0.5, self.K)
+        self.weights -= self.weights.mean()
         return self.weights.copy() 
         # 위에저거 
         # self.weights로만하면
@@ -120,7 +121,10 @@ class TrafficRLEnv:
         # 걍 copy()로함
 
     def step(self, action):
-        self.weights += np.array(action) - self.weights.mean()
+        self.weights += np.array(action)
+        self.weights -= self.weights.mean()
+        self.weights = np.clip(self.weights, -2, 2)
+
         mean_std, stds = self.evaluate(self.weights)
         reward = -mean_std
         return self.weights.copy(), reward, False, dict()
