@@ -67,7 +67,8 @@ class TrafficRLEnv:
         """
         if len(weights) != self.K:
             raise ValueError(f"가중치 개수({len(weights)})가 분기점 개수({self.K})와 다릅니다.")
-            
+
+        # if min(weights) < 0: return ValueError(f"가중치가 음수입니다라리라라라")
         # 나눗셈 로직 제거 -> 수학적으로 올바른 가중 보로노이(멱 다이어그램) 코어 함수 직접 호출
         # safe_weights = np.array(weights) 
 
