@@ -91,7 +91,7 @@ env = TrafficRLEnv(
     meta_txt=META_FILE
 )
 STATE_DIM = env.K
-ACTION_DIM = 4
+ACTION_DIM = env.K
 # =====================
 # 네트워크 초기화
 # =====================
@@ -164,38 +164,24 @@ for episode in range(NUM_EPISODES):
         print(f"Episode {episode + 1}, Reward: {episode_reward:.2f}, Buffer Size: {buffer.size}")
 
 print("학습 완료!")
-print(env.finalW)
 
+# 하이퍼파라미터 + 학습 결과 저장
+config = {
+    "STATE_DIM":    STATE_DIM,
+    "ACTION_DIM":   ACTION_DIM,
+    "HIDDEN_SIZE":  HIDDEN_SIZE,
+    "BUFFER_SIZE":  BUFFER_SIZE,
+    "BATCH_SIZE":   BATCH_SIZE,
+    "NUM_EPISODES": NUM_EPISODES,
+    "MAX_STEPS":    MAX_STEPS,
+    "WARMUP_STEPS": WARMUP_STEPS,
+    "policy_lr":    1e-4,
+    "q_lr":         1e-4,
+    "alpha_lr":     1e-4,
+    "log_alpha_final": float(sac.log_alpha.numpy()),
+    "alpha_final":     float(sac.alpha.numpy()),
+}
+with open(f'{save_dir}/config.json', 'w') as f:
+    json.dump(config, f, indent=2)
 
-# # =====================
-# # 모델 저장
-# # =====================
-# save_dir = 'saved_model'
-# os.makedirs(save_dir, exist_ok=True)
-
-# # 가중치 저장
-# policy.save_weights(f'{save_dir}/policy.weights.h5')
-# q1.save_weights(f'{save_dir}/q1.weights.h5')
-# q2.save_weights(f'{save_dir}/q2.weights.h5')
-
-# # 하이퍼파라미터 + 학습 결과 저장
-# config = {
-#     "STATE_DIM":    STATE_DIM,
-#     "ACTION_DIM":   ACTION_DIM,
-#     "HIDDEN_SIZE":  HIDDEN_SIZE,
-#     "BUFFER_SIZE":  BUFFER_SIZE,
-#     "BATCH_SIZE":   BATCH_SIZE,
-#     "NUM_EPISODES": NUM_EPISODES,
-#     "MAX_STEPS":    MAX_STEPS,
-#     "WARMUP_STEPS": WARMUP_STEPS,
-#     "policy_lr":    1e-4,
-#     "q_lr":         1e-4,
-#     "alpha_lr":     1e-4,
-#     "log_alpha_final": float(sac.log_alpha.numpy()),
-#     "alpha_final":     float(sac.alpha.numpy()),
-# }
-# with open(f'{save_dir}/config.json', 'w') as f:
-#     json.dump(config, f, indent=2)
-
-# print(f"모델 저장 완료 → {save_dir}/")
-# print(f"최종 alpha: {config['alpha_final']:.4f}")
+print("모델 저장 완료")

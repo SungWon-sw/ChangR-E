@@ -103,8 +103,8 @@ def fw_speed(grp):
 
 agg = d.groupby("station").apply(
     lambda grp: pd.Series({"vol_day": np.nansum(grp.flow.values),
-                           "speed_day": fw_speed(grp)}), include_groups=False).reset_index()
-pm = d[d.hour.between(15, 18)].groupby("station").apply(fw_speed, include_groups=False)
+                           "speed_day": fw_speed(grp)})).reset_index()
+pm = d[d.hour.between(15, 18)].groupby("station").apply(fw_speed)
 agg = agg.merge(pm.rename("speed_pm"), on="station", how="left")
 ml = ml.merge(agg, left_on="ID", right_on="station", how="left")
 
