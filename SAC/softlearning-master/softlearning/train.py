@@ -9,7 +9,7 @@ if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
 DIR = str(parent_dir / "features" / "data_preprocessing" / "vor_sd") 
-from features.data_preprocessing.vor_sd.rl_env_voronoi import TrafficRLEnv
+from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW
 
 from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
@@ -85,7 +85,7 @@ SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
 SITES_FILE    = f"{DIR}/outputs/pems_d07_sites.csv"
 META_FILE     = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
-env = TrafficRLEnv(
+env = TrafficRLEnvMW(
     segments_csv=SEGMENTS_FILE, 
     sites_csv=SITES_FILE, 
     meta_txt=META_FILE
