@@ -1,90 +1,101 @@
 import os
+import sys
+from pathlib import Path
+
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.collections import PolyCollection
-from shapely.geometry import Polygon
 
-from rl_env_voronoi import TrafficRLEnv, VF_MS
-from weighted_voronoi import all_power_cells, blocking_probability
+# 이 파일(trashes/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
+# rl_env_voronoi_mw.py 가 절대 패키지 경로(features.data_preprocessing.vor_sd...)로
+# 자기 모듈들을 import 하기 때문에, 루트가 sys.path 에 있어야 한다.
+REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW, VF_MS
+from features.data_preprocessing.vor_sd.mw_cut import cut_segments_fast
+from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
 
 
-def compute_cells_and_segment_stats(env, weights):
+def compute_mw_stats(env, a):
     """
-    evaluate()와 동일한 멱 다이어그램/차단확률 로직을 재현하되,
-    (1) 폴리곤 좌표(cells) 자체, (2) 셀별 평균/표준편차, (3) 세그먼트별 상세값을 모두 반환한다.
+    evaluate()와 동일한 MW(곱셈가중) 절단/차단확률 로직을 재현하되,
+    (1) 세그먼트별 대표 소유 사이트/확률, (2) 사이트(셀)별 평균/표준편차를 모두 반환한다.
+    폴리곤을 만들지 않는 MW 버전에서는 셀 좌표 자체가 존재하지 않는다.
     """
-    cells = all_power_cells(env.site_coords, weights * env.spacing2, env.bbox)
+    w = env.weights(a)
 
-    N = env.N
-    assigned_site = np.full(N, -1, dtype=int)
-    seg_prob = np.full(N, np.nan)
-    best_len = np.zeros(N)
+    Lmat = cut_segments_fast(env.P, env.Q, env.site_coords, w, min_len=env.min_len)
+    seg_i, cell_i = np.nonzero(Lmat)
+    L_eff = Lmat[seg_i, cell_i]
 
-    stds = np.zeros(env.K)
-    cell_mean_prob = np.full(env.K, np.nan)
+    lam_eff = env.lam[seg_i]
+    if env.lam_scaling == "length":
+        lam_eff = lam_eff * (L_eff / env.seg_len[seg_i])
+    probs, _ = blocking_probability_batch(L_eff, VF_MS, lam_eff, env.lanes[seg_i])
 
-    for k, poly_coords in enumerate(cells):
-        if len(poly_coords) < 3:
-            continue
+    # 세그먼트별 대표 소유 사이트 = 그 세그먼트 위에서 가장 긴 조각을 차지한 셀
+    assigned_site = np.full(env.N, -1, dtype=int)
+    seg_prob = np.full(env.N, np.nan)
+    if len(seg_i) > 0:
+        order = np.lexsort((-L_eff, seg_i))  # seg_i 오름차순, 그 안에서 L_eff 내림차순
+        dominant = order[np.concatenate(([True], seg_i[order][1:] != seg_i[order][:-1]))]
+        assigned_site[seg_i[dominant]] = cell_i[dominant]
+        seg_prob[seg_i[dominant]] = probs[dominant]
 
-        poly = Polygon(poly_coords)
-        idx_hits = env.tree.query(poly)
+    # 셀(사이트)별 평균/표준편차
+    cnt = np.bincount(cell_i, minlength=env.K)
+    s1 = np.bincount(cell_i, weights=probs, minlength=env.K)
+    s2 = np.bincount(cell_i, weights=probs ** 2, minlength=env.K)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        var = np.maximum(s2 / cnt - (s1 / cnt) ** 2, 0.0)
+    cell_mean_prob = np.where(cnt > 0, s1 / np.maximum(cnt, 1), np.nan)
+    cell_std = np.where(cnt >= env.min_pieces, np.sqrt(var), 0.0)
 
-        cell_probs = []
-        for idx in idx_hits:
-            line = env.seg_lines[idx]
-            if not poly.intersects(line):
-                continue
-
-            inter = poly.intersection(line)
-            L_eff = inter.length
-            if L_eff < 1.0:
-                continue
-
-            prob, _, _ = blocking_probability(
-                length_m=L_eff, v_free_ms=VF_MS,
-                lam=env.lam[idx], lanes=env.lanes[idx],
-            )
-            cell_probs.append(prob)
-
-            if L_eff > best_len[idx]:
-                best_len[idx] = L_eff
-                assigned_site[idx] = k
-                seg_prob[idx] = prob
-
-        if cell_probs:
-            stds[k] = np.std(cell_probs) if len(cell_probs) > 1 else 0.0
-            cell_mean_prob[k] = np.mean(cell_probs)
-
-    return cells, assigned_site, seg_prob, stds, cell_mean_prob
+    return assigned_site, seg_prob, cell_mean_prob, cell_std
 
 
-def plot_traffic_voronoi(env, weights, save_filename="traffic_visualization.png"):
+def rasterize_owner_grid(env, w, grid_res=300, pad=4000):
     """
-    멱 다이어그램(power diagram) 자체를 면적으로 채워서 시각화한다.
+    MW(Apollonius) 셀은 비볼록/비연결일 수 있어 폴리곤으로 그리기 어렵다.
+    대신 평면을 촘촘한 격자로 샘플링해 각 점의 소유 사이트(d_i = |x-p_i|/w_i 최소)를 구해
+    래스터(pcolormesh)로 영역을 채운다.
+    """
+    x_min, y_min = env.site_coords.min(axis=0) - pad
+    x_max, y_max = env.site_coords.max(axis=0) + pad
+
+    xs = np.linspace(x_min, x_max, grid_res)
+    ys = np.linspace(y_min, y_max, grid_res)
+    XX, YY = np.meshgrid(xs, ys)
+    pts = np.stack([XX.ravel(), YY.ravel()], axis=1)
+
+    d = np.linalg.norm(pts[:, None, :] - env.site_coords[None, :, :], axis=2) / w[None, :]
+    owner = d.argmin(1).reshape(grid_res, grid_res)
+
+    return XX, YY, owner, (x_min, y_min, x_max, y_max)
+
+
+def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
+    """
+    MW(곱셈가중) 보로노이 다이어그램을 래스터로 채워서 시각화한다.
     왼쪽: site별 영역 분할, 오른쪽: 영역별 평균 M/G/c/c 차단확률(+개별 도로 산점도).
     """
-    seg_coords = env.seg_df[["mid_x", "mid_y"]].values
-    cells, assigned_site, seg_prob, stds, cell_mean_prob = compute_cells_and_segment_stats(env, weights)
+    w = env.weights(a)
+    seg_coords = 0.5 * (env.P + env.Q)
 
-    valid_idx = [k for k, poly in enumerate(cells) if len(poly) >= 3]
-    verts = [cells[k] for k in valid_idx]
+    assigned_site, seg_prob, cell_mean_prob, cell_std = compute_mw_stats(env, a)
+    XX, YY, owner_grid, (x_min, y_min, x_max, y_max) = rasterize_owner_grid(env, w)
 
     fig, axes = plt.subplots(1, 2, figsize=(20, 9), sharex=True, sharey=True)
     plt.subplots_adjust(wspace=0.1)
 
     # --------------------------------------------------------------------------
-    # [왼쪽 플롯] 멱 다이어그램 영역 분할 (면적 채우기)
+    # [왼쪽 플롯] MW 보로노이 영역 분할 (래스터 채우기)
     # --------------------------------------------------------------------------
     ax1 = axes[0]
 
-    area1 = PolyCollection(
-        verts, array=np.array(valid_idx, dtype=float), cmap="tab20",
-        edgecolors="white", linewidths=0.8, alpha=0.55
-    )
-    area1.set_clim(0, max(env.K - 1, 1))
-    ax1.add_collection(area1)
+    ax1.pcolormesh(XX, YY, owner_grid, cmap="tab20", vmin=0, vmax=max(env.K - 1, 1),
+                   alpha=0.55, shading="auto")
 
     unassigned = assigned_site == -1
     ax1.scatter(seg_coords[unassigned, 0], seg_coords[unassigned, 1],
@@ -96,29 +107,27 @@ def plot_traffic_voronoi(env, weights, save_filename="traffic_visualization.png"
                 c="red", marker="^", s=100, edgecolor="black", linewidth=1.2, label="Junction Sites")
     for k in range(env.K):
         ax1.text(env.site_coords[k, 0] + 300, env.site_coords[k, 1] + 300,
-                  f"#{k}\n(σ:{stds[k]:.3f})", fontsize=8, weight="bold",
+                  f"#{k}\n(σ:{cell_std[k]:.3f})", fontsize=8, weight="bold",
                   bbox=dict(facecolor="white", alpha=0.75, edgecolor="none", pad=1))
 
-    ax1.set_xlim(env.bbox[0], env.bbox[2])
-    ax1.set_ylim(env.bbox[1], env.bbox[3])
+    rho = w.max() / w.min()
+    ax1.set_xlim(x_min, x_max)
+    ax1.set_ylim(y_min, y_max)
     ax1.set_aspect("equal")
-    ax1.set_title(f"1. Power-Diagram Area Partitions (Weights Scale: {np.mean(weights):.2f})", fontsize=14, weight="bold")
+    ax1.set_title(f"1. MW-Voronoi Area Partitions (ρ = w_max/w_min: {rho:.2f})", fontsize=14, weight="bold")
     ax1.set_xlabel("X Coordinate (meters)", fontsize=11)
     ax1.set_ylabel("Y Coordinate (meters)", fontsize=11)
     ax1.grid(True, linestyle="--", alpha=0.3)
     ax1.legend(loc="upper left")
 
     # --------------------------------------------------------------------------
-    # [오른쪽 플롯] 영역별 평균 차단확률 (면적 채우기) + 개별 도로 산점도
+    # [오른쪽 플롯] 영역별 평균 차단확률 (래스터 채우기) + 개별 도로 산점도
     # --------------------------------------------------------------------------
     ax2 = axes[1]
 
-    area2 = PolyCollection(
-        verts, array=cell_mean_prob[valid_idx], cmap="YlOrRd",
-        edgecolors="white", linewidths=0.8, alpha=0.85
-    )
-    area2.set_clim(0.0, 1.0)
-    ax2.add_collection(area2)
+    prob_grid = np.nan_to_num(cell_mean_prob, nan=0.0)[owner_grid]
+    mesh2 = ax2.pcolormesh(XX, YY, prob_grid, cmap="YlOrRd", vmin=0.0, vmax=1.0,
+                            alpha=0.85, shading="auto")
 
     valid_seg = ~np.isnan(seg_prob)
     ax2.scatter(seg_coords[valid_seg, 0], seg_coords[valid_seg, 1],
@@ -128,19 +137,20 @@ def plot_traffic_voronoi(env, weights, save_filename="traffic_visualization.png"
     ax2.scatter(env.site_coords[:, 0], env.site_coords[:, 1],
                 c="black", marker="o", s=40, edgecolor="white", linewidth=0.8)
 
-    cbar = fig.colorbar(area2, ax=ax2, fraction=0.046, pad=0.04)
+    cbar = fig.colorbar(mesh2, ax=ax2, fraction=0.046, pad=0.04)
     cbar.set_label("M/G/c/c Blocking Probability $P(c)$ (영역 평균)", fontsize=12, weight="bold")
 
-    ax2.set_xlim(env.bbox[0], env.bbox[2])
-    ax2.set_ylim(env.bbox[1], env.bbox[3])
+    ax2.set_xlim(x_min, x_max)
+    ax2.set_ylim(y_min, y_max)
     ax2.set_aspect("equal")
-    ax2.set_title("2. Spatial Distribution of Blocking Probabilities (Area-filled)", fontsize=14, weight="bold")
+    ax2.set_title("2. Spatial Distribution of Blocking Probabilities (Rasterized)", fontsize=14, weight="bold")
     ax2.set_xlabel("X Coordinate (meters)", fontsize=11)
     ax2.grid(True, linestyle="--", alpha=0.3)
 
-    mean_std = np.mean(stds)
+    J, _ = env.evaluate(a)
     fig.suptitle(
-        f"PeMS D07 Traffic RL Environment State Analysis\nGlobal Objective (Mean of Stds): {mean_std:.6f}",
+        f"PeMS D07 Traffic RL Environment State Analysis (MW Voronoi)\n"
+        f"Objective [{env.objective}]: {J:.6f}",
         fontsize=16, weight="bold", y=0.98
     )
 
@@ -150,42 +160,45 @@ def plot_traffic_voronoi(env, weights, save_filename="traffic_visualization.png"
     print(f"[성공] 시각화 플롯이 '{save_filename}'에 저장되었습니다.")
 
 
+def random_search_best_a(env, iters=2000, seed=42):
+    """하드코딩된 옛 power-diagram 가중치 예시를 대체:
+    현재 MW 환경(a-space, |a|<=a_bound)에서 무작위 탐색으로 목적함수가 가장 낮은 a를 찾는다."""
+    rng = np.random.default_rng(seed)
+    best_J, best_a = np.inf, np.zeros(env.K)
+    for _ in range(iters):
+        a = rng.uniform(-env.a_bound, env.a_bound, env.K)
+        a -= a.mean()
+        J, _ = env.evaluate(a)
+        if J < best_J:
+            best_J, best_a = J, a
+    return best_a, best_J
+
+
 if __name__ == "__main__":
-    DIR = "."  # vor_sd 폴더 안에서 실행한다고 가정
+    DIR = str(REPO_ROOT / "features" / "data_preprocessing" / "vor_sd")
 
     SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
     SITES_FILE = f"{DIR}/outputs/pems_d07_sites.csv"
     META_FILE = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
     print("[Visualizer] 환경 데이터 로드 및 초기화 중...")
-    env = TrafficRLEnv(
+    env = TrafficRLEnvMW(
         segments_csv=SEGMENTS_FILE,
         sites_csv=SITES_FILE,
         meta_txt=META_FILE
     )
 
-    print("\n[시나리오 1] 균등 가중치(Uniform Weights) 시각화 생성 중...")
-    uniform_weights = np.zeros(env.K)
-    plot_traffic_voronoi(env, uniform_weights, save_filename=f"{DIR}/outputs/vis_uniform_weights.png")
+    print("\n[시나리오 1] 균등 가중치(Uniform, a=0) 시각화 생성 중...")
+    uniform_a = np.zeros(env.K)
+    plot_traffic_voronoi(env, uniform_a, save_filename=f"{DIR}/outputs/vis_uniform_weights.png")
 
-    print("\n[시나리오 2] 무작위 가중치(Random Weights) 시각화 생성 중...")
-    np.random.seed(42)
-    random_weights = np.random.uniform(-50, 50, size=env.K)
-    plot_traffic_voronoi(env, random_weights, save_filename=f"{DIR}/outputs/vis_random_weights.png")
+    print("\n[시나리오 2] 무작위 가중치(Random a) 시각화 생성 중...")
+    rng = np.random.default_rng(42)
+    random_a = rng.uniform(-env.a_bound, env.a_bound, env.K)
+    random_a -= random_a.mean()
+    plot_traffic_voronoi(env, random_a, save_filename=f"{DIR}/outputs/vis_random_weights.png")
 
-    print("\n[시나리오 3] 학습된(도출) 가중치 시각화 생성 중...")
-    anal_weights = np.array([
-        49.96741934, 47.13893601, -42.7545594, -1.65908331, 47.85887268,
-        -42.21540915, 35.87545882, -30.28017296, -21.80077422, 1.26895474,
-        -50.92952524, -4.88680289, -6.7142753, -42.04246368, -49.18016608,
-        50.90372189, -15.26008708, 46.59871147, -11.98695063, -50.9681357,
-        29.33884171, -50.03240965, 0.95607672, -47.12416277, -11.85760138,
-        -50.9743623, -16.31290461, 22.13128088, 4.78380801, -50.97372816,
-        -0.5530032, -50.97250603, -23.77873442, -50.94838635, 11.48741087,
-        -45.07208194, 36.80758185, 50.21449381, -36.55854074, 0.91187941,
-        12.49942578, 22.49752191, -48.85336488, 26.8287647, 51.02502568,
-        51.02502914, 50.88768059, 33.66862827, 49.52608593, 35.32594693,
-        50.99385174, 18.34145188, -50.93979422, 19.3288309, 35.1415751,
-        12.29671952,
-    ])
-    plot_traffic_voronoi(env, anal_weights, save_filename=f"{DIR}/outputs/vis_anal_weights.png")
+    print("\n[시나리오 3] 탐색된(무작위 서치 최적) 가중치 시각화 생성 중...")
+    best_a, best_J = random_search_best_a(env, iters=2000)
+    print(f"  -> 탐색된 최적 목적함수 값: {best_J:.6f}")
+    plot_traffic_voronoi(env, best_a, save_filename=f"{DIR}/outputs/vis_anal_weights.png")
