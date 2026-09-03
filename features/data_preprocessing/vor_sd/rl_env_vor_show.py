@@ -161,17 +161,20 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
 
 
 def random_search_best_a(env, iters=2000, seed=42):
-    """하드코딩된 옛 power-diagram 가중치 예시를 대체:
-    현재 MW 환경(a-space, |a|<=a_bound)에서 무작위 탐색으로 목적함수가 가장 낮은 a를 찾는다."""
-    rng = np.random.default_rng(seed)
-    best_J, best_a = np.inf, np.zeros(env.K)
-    for _ in range(iters):
-        a = rng.uniform(-env.a_bound, env.a_bound, env.K)
-        a -= a.mean()
-        J, _ = env.evaluate(a)
-        if J < best_J:
-            best_J, best_a = J, a
-    return best_a, best_J
+    
+    x=[ 0.50419168,  0.17569678, -0.12279998,-1.15252922,-0.07640861,1.19292052,
+ -0.11751173,  0.22858488, -0.08889165,  0.37452424, -0.12783602 ,-0.0165227,
+ -1.25092841, -1.28300467,  1.1166999 ,  0.17220266,  0.11961419 ,-0.62454871,
+ -0.22756079,  0.75530648, -0.09561621, -0.86142003,  1.28050006 , 1.37765435,
+  0.63103852,  0.17893913, -0.52662009, -0.37314697,  0.34171134 ,-0.76308245,
+  0.87348878,  0.5232631 , -0.38052496,  0.16141357,  0.16681712 ,-1.46368702,
+ -0.80528999,  0.02537081, -0.09602686,  0.23597003, -0.23200895 ,-0.21797293,
+  1.19748948,  1.15260749,  0.01870735, -0.06825872,  0.994547   , 0.06703219,
+ -1.88582864, -1.9560115 , -0.07330651,  0.32692695,  0.58567216, -0.13611748,
+  0.34884422, -0.10427316]
+
+    return np.array(x)
+
 
 
 if __name__ == "__main__":
@@ -199,6 +202,5 @@ if __name__ == "__main__":
     plot_traffic_voronoi(env, random_a, save_filename=f"{DIR}/outputs/vis_random_weights.png")
 
     print("\n[시나리오 3] 탐색된(무작위 서치 최적) 가중치 시각화 생성 중...")
-    best_a, best_J = random_search_best_a(env, iters=2000)
-    print(f"  -> 탐색된 최적 목적함수 값: {best_J:.6f}")
+    best_a = random_search_best_a(env, iters=2000)
     plot_traffic_voronoi(env, best_a, save_filename=f"{DIR}/outputs/vis_anal_weights.png")
