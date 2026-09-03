@@ -151,10 +151,8 @@ for episode in range(NUM_EPISODES):
         if buffer.size > WARMUP_STEPS:
             batch = buffer.sample(BATCH_SIZE)
             
-            sac.update_critic(batch)
-            sac.update_actor(batch)
-            sac.update_alpha(batch)
-            sac.update_target_networks()
+            # critic -> actor -> alpha -> target 을 그래프 하나로 실행 (@tf.function)
+            q1_loss, q2_loss, policy_loss, alpha_loss = sac.train_step(batch)
         
         state = next_state
         

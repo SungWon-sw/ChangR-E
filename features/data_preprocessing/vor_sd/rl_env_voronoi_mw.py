@@ -164,7 +164,6 @@ class TrafficRLEnvMW:
         if(mean_std < self.finalA):
             self.finalA=mean_std
             self.finalW = self.a.copy()
-        J, stds = self.evaluate(self.a)
         
-        reward = -J
+        reward = -mean_std
         return self.a.copy(), reward, False, stds

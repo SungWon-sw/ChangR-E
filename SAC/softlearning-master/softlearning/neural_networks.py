@@ -28,7 +28,7 @@ class GaussianPolicy(tf.keras.Model):
         # states -> fc1 -> fc2 추출
 
         mu = self.mu(x)
-        log_std = tf.clip_by_value(self.log_std(x), -20, 0)
+        log_std = tf.clip_by_value(self.log_std(x), -20, 2)
         # 학습 안정화 전략
         std = tf.exp(log_std)
 
@@ -37,8 +37,7 @@ class GaussianPolicy(tf.keras.Model):
                                 # epsilon을 난수로 설정해서 역전파가 가능한 랜덤을 만듦
 
         # log_prob 계산 - 마할라노비스 거리 계산 후 정규화
-        log_probs = -0.5 * ((u - mu) ** 2 / (std ** 2 + 1e-6) +
-                            2 * log_std + tf.math.log(2.0 * np.pi))
+        log_probs = -0.5 * (epsilon ** 2 + 2 * log_std + tf.math.log(2.0 * np.pi))
         log_probs = tf.reduce_sum(log_probs, axis=-1, keepdims=True)
 
         # Squash
