@@ -210,3 +210,4 @@ def cut_segments_fast(P, Q, sites, w, max_cuts=64, min_len=1.0, return_info=Fals
         return Lmat, dict(max_candidates=C, max_cuts_used=int(nroot.max()),
                           truncated=truncated)
     return Lmat
+
