@@ -1,0 +1,35 @@
+nohup: ignoring input
+2026-09-01 09:11:10.251696: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-01 09:11:10.415340: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-01 09:11:10.450484: E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-09-01 09:11:11.208552: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-01 09:11:11.208645: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-01 09:11:11.208654: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=50.0
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 48516 (\N{HANGUL SYLLABLE BUN}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 54252 (\N{HANGUL SYLLABLE PO}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 46020 (\N{HANGUL SYLLABLE DO}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 55176 (\N{HANGUL SYLLABLE HI}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 49828 (\N{HANGUL SYLLABLE SEU}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 53664 (\N{HANGUL SYLLABLE TO}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 44536 (\N{HANGUL SYLLABLE GEU}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+SAC/softlearning-master/softlearning/test.py:111: UserWarning: Glyph 47016 (\N{HANGUL SYLLABLE RAEM}) missing from current font.
+  plt.savefig("variation histogram", dpi=150, bbox_inches="tight")
+0.12426126440632593 [0.11504753 0.10266792 0.09620946 0.14950636 0.05642281 0.11753452
+ 0.0949705  0.09379654 0.11131452 0.24064754 0.13636476 0.18865411
+ 0.14077213 0.10486347 0.10397857 0.17706243 0.25702841 0.09782471
+ 0.08189283 0.16440747 0.07866758 0.06939742 0.17447719 0.21455838
+ 0.1174729  0.10487996 0.10159467 0.10995258 0.06451772 0.16733418
+ 0.15936244 0.08980856 0.09101259 0.07518618 0.24451986 0.10942367
+ 0.17167718 0.05293004 0.07400294 0.20063372 0.1354273  0.05336775
+ 0.08316676 0.08691013 0.24099143 0.09797337 0.10212472 0.17385174
+ 0.08777186 0.07205576 0.20983167 0.05361093 0.07172508 0.04903546
+ 0.1632435  0.17516698]

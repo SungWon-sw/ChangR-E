@@ -92,6 +92,7 @@ env = TrafficRLEnvMW(
 )
 STATE_DIM = env.K
 ACTION_DIM = 4
+# ACTION_DIM = env.K
 # =====================
 # 네트워크 초기화
 # =====================
@@ -164,6 +165,7 @@ for episode in range(NUM_EPISODES):
         print(f"Episode {episode + 1}, Reward: {episode_reward:.2f}, Buffer Size: {buffer.size}")
 
 print("학습 완료!")
+print(env.finalA)
 print(env.finalW)
 
 

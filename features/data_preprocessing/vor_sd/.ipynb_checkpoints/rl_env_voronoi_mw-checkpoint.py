@@ -36,10 +36,10 @@ PHF = 0.15
 
 class TrafficRLEnvMW:
     def __init__(self, segments_csv, sites_csv, meta_txt,
-                 rho_max=2.0,          # 허용 가중치 비 w_max/w_min
+                 rho_max=50.0,          # 허용 가중치 비 w_max/w_min
                  min_len=1.0,          # 자투리 컷 [m]
                  min_pieces=2,         # 이보다 조각이 적은 셀은 목적함수에서 제외
-                 objective="global",   # "global" | "within" | "mixed"
+                 objective="within",   # "global" | "within" | "mixed"
                  lam_scaling="none"):  # "none" | "length"  (아래 설명 참조)
         self.sites_df = pd.read_csv(sites_csv)
         self.seg_df = pd.read_csv(segments_csv)
@@ -81,6 +81,9 @@ class TrafficRLEnvMW:
         self.finalA = 99999999
         print(f"[MW Env] 분기점 {self.K}개, 도로 선분 {self.N}개, "
               f"이웃간격 중앙값 {self.spacing:.0f} m, rho_max={self.rho_max}")
+        
+        self.x_min, self.y_min = self.site_coords.min(axis=0)
+        self.x_max, self.y_max = self.site_coords.max(axis=0)
 
     # ------------------------------------------------------------------
     def weights(self, a=None):
@@ -143,13 +146,15 @@ class TrafficRLEnvMW:
     def step(self, action):
         # 액션을 a 공간에서 그대로 더한다. a_bound 가 곧 rho_max 제약.
         A = action [0]
-        xpos = action [1]
-        ypos = action [2]
-        mu = max(1e-5, action [3])
+        xpos = self.x_min + (action[1] + 1) / 2 * (self.x_max - self.x_min)
+        ypos = self.y_min + (action[2] + 1) / 2 * (self.y_max - self.y_min)
+        mu   = max(1e-5, (action[3] + 1) / 2 * self.spacing)
+        # tanh 스케일링 반영함
         for i in range(0,len(self.a)):
             uclid_dist = sqrt((xpos-self.site_coords[i][0])**2 + (ypos-self.site_coords[i][1])**2)
-            self.a[i] += A * norm.pdf(uclid_dist, loc=0, scale=mu)
-            
+            kernel = np.exp(-0.5 * (uclid_dist / mu) ** 2)   # dist=0일 때 항상 1, mu와 무관
+            self.a[i] += A * kernel
+        # self.a += action
         self.a -= self.a.mean()
         self.a = np.clip(self.a, -self.a_bound, self.a_bound)
         self.a -= self.a.mean()          # 클리핑 후 재중심화

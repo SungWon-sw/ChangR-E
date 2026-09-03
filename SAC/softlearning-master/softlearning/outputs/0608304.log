@@ -1,0 +1,129 @@
+nohup: ignoring input
+2026-08-30 22:52:20.525566: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-08-30 22:52:20.687729: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-08-30 22:52:20.722384: E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-08-30 22:52:21.419565: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-08-30 22:52:21.419658: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-08-30 22:52:21.419667: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=50.0
+2026-08-30 22:52:22.783146: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-08-30 22:52:23.397785: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1616] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 677 MB memory:  -> device: 0, name: NVIDIA RTX A6000, pci bus id: 0000:b5:00.0, compute capability: 8.6
+2026-08-30 22:52:24.245587: I tensorflow/stream_executor/cuda/cuda_blas.cc:1614] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+--- [학습 루프 테스트: 동적 도로 분할 연산 시뮬레이션] ---
+[Test 1] 균등 가중치(유클리드) 적용 시 평균 표준편차: 0.16055159
+학습 시작...
+Episode 1, Reward: -163.14, Buffer Size: 1000
+Episode 2, Reward: -163.35, Buffer Size: 2000
+Episode 3, Reward: -162.96, Buffer Size: 3000
+Episode 4, Reward: -163.12, Buffer Size: 4000
+Episode 5, Reward: -163.08, Buffer Size: 5000
+Episode 6, Reward: -163.69, Buffer Size: 6000
+Episode 7, Reward: -163.31, Buffer Size: 7000
+Episode 8, Reward: -163.20, Buffer Size: 8000
+Episode 9, Reward: -163.10, Buffer Size: 9000
+Episode 10, Reward: -163.31, Buffer Size: 10000
+Episode 11, Reward: -163.37, Buffer Size: 11000
+Episode 12, Reward: -163.58, Buffer Size: 12000
+Episode 13, Reward: -163.32, Buffer Size: 13000
+Episode 14, Reward: -163.25, Buffer Size: 14000
+Episode 15, Reward: -163.28, Buffer Size: 15000
+Episode 16, Reward: -162.92, Buffer Size: 16000
+Episode 17, Reward: -163.43, Buffer Size: 17000
+Episode 18, Reward: -162.92, Buffer Size: 18000
+Episode 19, Reward: -162.99, Buffer Size: 19000
+Episode 20, Reward: -163.26, Buffer Size: 20000
+Episode 21, Reward: -163.63, Buffer Size: 21000
+Episode 22, Reward: -163.03, Buffer Size: 22000
+Episode 23, Reward: -163.19, Buffer Size: 23000
+Episode 24, Reward: -162.90, Buffer Size: 24000
+Episode 25, Reward: -163.47, Buffer Size: 25000
+Episode 26, Reward: -163.12, Buffer Size: 26000
+Episode 27, Reward: -163.22, Buffer Size: 27000
+Episode 28, Reward: -163.79, Buffer Size: 28000
+Episode 29, Reward: -163.18, Buffer Size: 29000
+Episode 30, Reward: -163.12, Buffer Size: 30000
+Episode 31, Reward: -163.52, Buffer Size: 31000
+Episode 32, Reward: -163.61, Buffer Size: 32000
+Episode 33, Reward: -163.33, Buffer Size: 33000
+Episode 34, Reward: -163.16, Buffer Size: 34000
+Episode 35, Reward: -163.19, Buffer Size: 35000
+Episode 36, Reward: -163.17, Buffer Size: 36000
+Episode 37, Reward: -163.27, Buffer Size: 37000
+Episode 38, Reward: -162.83, Buffer Size: 38000
+Episode 39, Reward: -163.23, Buffer Size: 39000
+Episode 40, Reward: -163.48, Buffer Size: 40000
+Episode 41, Reward: -163.42, Buffer Size: 41000
+Episode 42, Reward: -163.09, Buffer Size: 42000
+Episode 43, Reward: -163.40, Buffer Size: 43000
+Episode 44, Reward: -163.85, Buffer Size: 44000
+Episode 45, Reward: -162.97, Buffer Size: 45000
+Episode 46, Reward: -162.95, Buffer Size: 46000
+Episode 47, Reward: -163.79, Buffer Size: 47000
+Episode 48, Reward: -163.56, Buffer Size: 48000
+Episode 49, Reward: -162.98, Buffer Size: 49000
+Episode 50, Reward: -163.29, Buffer Size: 50000
+Episode 51, Reward: -163.10, Buffer Size: 51000
+Episode 52, Reward: -163.11, Buffer Size: 52000
+Episode 53, Reward: -163.27, Buffer Size: 53000
+Episode 54, Reward: -163.21, Buffer Size: 54000
+Episode 55, Reward: -163.33, Buffer Size: 55000
+Episode 56, Reward: -163.70, Buffer Size: 56000
+Episode 57, Reward: -163.31, Buffer Size: 57000
+Episode 58, Reward: -162.78, Buffer Size: 58000
+Episode 59, Reward: -163.52, Buffer Size: 59000
+Episode 60, Reward: -163.65, Buffer Size: 60000
+Episode 61, Reward: -163.19, Buffer Size: 61000
+Episode 62, Reward: -163.38, Buffer Size: 62000
+Episode 63, Reward: -162.95, Buffer Size: 63000
+Episode 64, Reward: -163.01, Buffer Size: 64000
+Episode 65, Reward: -163.18, Buffer Size: 65000
+Episode 66, Reward: -164.02, Buffer Size: 66000
+Episode 67, Reward: -162.77, Buffer Size: 67000
+Episode 68, Reward: -162.94, Buffer Size: 68000
+Episode 69, Reward: -163.57, Buffer Size: 69000
+Episode 70, Reward: -163.95, Buffer Size: 70000
+Episode 71, Reward: -163.36, Buffer Size: 71000
+Episode 72, Reward: -163.04, Buffer Size: 72000
+Episode 73, Reward: -163.36, Buffer Size: 73000
+Episode 74, Reward: -163.28, Buffer Size: 74000
+Episode 75, Reward: -162.73, Buffer Size: 75000
+Episode 76, Reward: -163.75, Buffer Size: 76000
+Episode 77, Reward: -162.19, Buffer Size: 77000
+Episode 78, Reward: -162.96, Buffer Size: 78000
+Episode 79, Reward: -163.29, Buffer Size: 79000
+Episode 80, Reward: -163.31, Buffer Size: 80000
+Episode 81, Reward: -162.83, Buffer Size: 81000
+Episode 82, Reward: -163.05, Buffer Size: 82000
+Episode 83, Reward: -163.30, Buffer Size: 83000
+Episode 84, Reward: -163.10, Buffer Size: 84000
+Episode 85, Reward: -163.61, Buffer Size: 85000
+Episode 86, Reward: -163.15, Buffer Size: 86000
+Episode 87, Reward: -163.38, Buffer Size: 87000
+Episode 88, Reward: -163.21, Buffer Size: 88000
+Episode 89, Reward: -163.36, Buffer Size: 89000
+Episode 90, Reward: -163.34, Buffer Size: 90000
+Episode 91, Reward: -163.47, Buffer Size: 91000
+Episode 92, Reward: -163.66, Buffer Size: 92000
+Episode 93, Reward: -163.19, Buffer Size: 93000
+Episode 94, Reward: -163.26, Buffer Size: 94000
+Episode 95, Reward: -163.31, Buffer Size: 95000
+Episode 96, Reward: -163.14, Buffer Size: 96000
+Episode 97, Reward: -163.39, Buffer Size: 97000
+Episode 98, Reward: -162.88, Buffer Size: 98000
+Episode 99, Reward: -162.95, Buffer Size: 99000
+Episode 100, Reward: -163.07, Buffer Size: 100000
+학습 완료!
+0.1580491137378548
+[ 1.12824341 -1.47066702  0.18157928 -1.9333665  -0.16955376 -0.34544217
+ -0.60162885 -1.31864375  1.09207536 -0.65520527  0.78751307 -1.85829303
+  0.13082971 -1.32164809  1.97865651  0.57100727  0.81851575  1.97865651
+  1.18024049  1.22673813 -1.33023511  1.38493411  1.89327161 -1.8403307
+  1.25211192  0.99489282  0.93189049 -1.9333665   0.80151433 -1.84495888
+  0.00372753  1.1789933  -1.31056687  0.44754365 -0.45260214  1.97865651
+  1.27771051 -0.70638623 -1.17991371  1.51868943  0.68501652  0.21613286
+ -0.59796382  0.69952374  1.37978101 -1.18273829  0.13920157 -1.42568616
+  1.18525213 -0.5198423  -0.48342231 -0.4488834  -1.9333665  -1.81174784
+  0.43787022 -0.80431052]

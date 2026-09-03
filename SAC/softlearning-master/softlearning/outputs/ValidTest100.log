@@ -1,0 +1,19 @@
+nohup: ignoring input
+2026-09-01 08:51:06.547012: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-01 08:51:06.710079: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-01 08:51:06.745345: E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-09-01 08:51:07.463355: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-01 08:51:07.463443: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-01 08:51:07.463452: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=50.0
+0.12780351560682537 [0.11666122 0.10257231 0.08300971 0.16075723 0.06270168 0.08850965
+ 0.11296029 0.10195726 0.11924327 0.23424704 0.14247317 0.18862418
+ 0.14072154 0.09736139 0.10378959 0.16993715 0.25732253 0.103923
+ 0.08381609 0.18388539 0.07418005 0.08521612 0.16135579 0.21078544
+ 0.1117154  0.1052482  0.10381371 0.10882504 0.06280543 0.17336645
+ 0.16383971 0.08580101 0.09673226 0.07845588 0.24456582 0.13497311
+ 0.14862132 0.0532884  0.07229042 0.20058992 0.12380086 0.05276075
+ 0.17459191 0.08720483 0.26013866 0.14811339 0.10493578 0.18267209
+ 0.08583467 0.07148699 0.21462519 0.05398903 0.08812888 0.04885081
+ 0.15539997 0.17351988]

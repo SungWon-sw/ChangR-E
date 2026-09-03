@@ -1,29 +1,10 @@
-"""
-TrafficRLEnv — MW(곱셈가중) 보로노이 버전.
-
-기존 power(멱) 다이어그램 버전과 인터페이스는 동일하다. 바뀐 것:
-
-  1) 상태변수가 w 가 아니라 a = log w  이다.
-       - MW 는 스케일 불변(모든 w 에 상수배 -> 동일 다이어그램)이므로
-         a 의 '평균 0' 이 기존 w 의 '평균 0' 에 대응하는 올바른 게이지 고정.
-       - w = exp(a) > 0 이 자동 보장된다.
-       - spacing2 곱셈은 삭제. MW 가중치는 무차원이라 단위 보정이 필요 없다.
-         대신 a 의 범위가 곧 w_max/w_min 비율을 결정한다:  rho = exp(max a - min a).
-
-  2) 폴리곤을 만들지 않는다. MW 셀은 비볼록/비연결/구멍 가능이라
-     Shapely Polygon 으로 표현하기 까다롭다. 대신 도로 선분을 직접
-     이차방정식으로 잘라 (선분 x 셀) 유효길이 행렬을 정확히 얻는다.
-     -> STRtree / Polygon / intersection 전부 불필요.
-
-  3) M/G/c/c 를 배치로 계산한다 (수학적으로 동일, ~30x 빠름).
-"""
 
 import numpy as np
 import pandas as pd
 from scipy.spatial import KDTree
 
-from features.data_preprocessing.vor_sd.mw_cut import cut_segments_fast
-from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
+from mw_cut import cut_segments_fast
+from mg_cc_batch import blocking_probability_batch
 
 from math import sqrt
 from scipy.stats import norm
@@ -32,7 +13,6 @@ VF_MPH_DEFAULT = 65.0
 MPH2MS = 0.44704
 VF_MS = VF_MPH_DEFAULT * MPH2MS
 PHF = 0.15
-
 
 class TrafficRLEnvMW:
     def __init__(self, segments_csv, sites_csv, meta_txt,
@@ -168,3 +148,10 @@ class TrafficRLEnvMW:
         
         reward = -J
         return self.a.copy(), reward, False, stds
+
+env=TrafficRLEnvMW()
+
+it=100000
+for i in range(it):
+    env.reset()
+    print(env.evaluate(env.a))
