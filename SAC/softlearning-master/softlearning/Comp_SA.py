@@ -60,7 +60,7 @@ SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
 SITES_FILE = f"{DIR}/outputs/pems_d07_sites.csv"
 META_FILE = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
-OBJECTIVE = "global"          # "global" | "within" | "mixed"
+OBJECTIVE = "within"          # "global" | "within" | "mixed"
 
 env = TrafficRLEnvMW(
     segments_csv=SEGMENTS_FILE,

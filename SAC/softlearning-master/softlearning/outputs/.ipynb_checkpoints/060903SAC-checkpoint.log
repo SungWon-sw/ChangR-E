@@ -1,0 +1,5 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/src/gs25048/chngR/SAC/softlearning-master/softlearning/train.py", line 1, in <module>
+    import tensorflow as tf
+ModuleNotFoundError: No module named 'tensorflow'

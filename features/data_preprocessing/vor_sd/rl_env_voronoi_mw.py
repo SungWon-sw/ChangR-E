@@ -36,7 +36,7 @@ PHF = 0.15
 
 class TrafficRLEnvMW:
     def __init__(self, segments_csv, sites_csv, meta_txt,
-                 rho_max=50.0,          # 허용 가중치 비 w_max/w_min
+                 rho_max=2.0,          # 허용 가중치 비 w_max/w_min
                  min_len=1.0,          # 자투리 컷 [m]
                  min_pieces=2,         # 이보다 조각이 적은 셀은 목적함수에서 제외
                  objective="within",   # "global" | "within" | "mixed"
@@ -149,6 +149,7 @@ class TrafficRLEnvMW:
         xpos = self.x_min + (action[1] + 1) / 2 * (self.x_max - self.x_min)
         ypos = self.y_min + (action[2] + 1) / 2 * (self.y_max - self.y_min)
         mu   = max(1e-5, (action[3] + 1) / 2 * self.spacing)
+        
         # tanh 스케일링 반영함
         for i in range(0,len(self.a)):
             uclid_dist = sqrt((xpos-self.site_coords[i][0])**2 + (ypos-self.site_coords[i][1])**2)

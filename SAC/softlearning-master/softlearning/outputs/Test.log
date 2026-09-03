@@ -1,0 +1,72 @@
+nohup: ignoring input
+2026-09-03 23:12:49.572845: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-03 23:12:49.770879: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-03 23:12:49.807526: E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-09-03 23:12:50.624706: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-03 23:12:50.624806: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-03 23:12:50.624816: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=50.0
+2026-09-03 23:12:53.409912: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-03 23:12:54.193023: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1616] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 951 MB memory:  -> device: 0, name: NVIDIA RTX A6000, pci bus id: 0000:b5:00.0, compute capability: 8.6
+2026-09-03 23:12:56.429099: I tensorflow/stream_executor/cuda/cuda_blas.cc:1614] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+--- [학습 루프 테스트: 동적 도로 분할 연산 시뮬레이션] ---
+[Test 1] 균등 가중치(유클리드) 적용 시 평균 표준편차: 0.13058294
+[[ -3511.12877259 -15615.84110964]
+ [  5313.52657628 -16765.55406964]
+ [ -4049.60774378 -21646.21248964]
+ [  6280.13290851  -3627.61537821]
+ [ -4090.08210998 -23358.53166964]
+ [  -882.28599297   3826.88336369]
+ [  1984.02791874  14690.72276036]
+ [  5380.7519165  -17813.63186964]
+ [ -3977.77161205  -3314.20186964]
+ [ -3061.69955477  -3435.26236964]
+ [-10986.08249194 -14962.61534964]
+ [  6131.75763771 -17295.99386964]
+ [-18813.50048365  22429.49435036]
+ [  6381.35515147  -5516.00014964]
+ [  2966.75226072 -26809.8622525 ]
+ [-12244.9207901  -15229.56070964]
+ [  2604.91051668  -4241.79962393]
+ [ 22313.52325818   -327.61782964]
+ [ 12536.88477222 -18299.65498964]
+ [ 40108.08087455   -276.1836525 ]
+ [ 44810.67324387  -4232.81450964]
+ [ 12803.54221457 -21307.52138964]
+ [  1153.76269148   8014.44491036]
+ [  1551.35783026   8883.48039321]
+ [ 37816.88635723   6049.53559036]
+ [ -3896.43724981   9495.44619036]
+ [-21784.49473195  22177.48442369]
+ [  6826.16453701   -593.25294729]
+ [ 13522.18786402 -14333.04508964]
+ [-23142.60721365  27998.58348036]
+ [  7777.66035618   9428.26457036]
+ [-17716.96204666  -4006.72358964]
+ [-12363.01238226   9642.24387436]
+ [ 25184.23977718   7654.15773036]
+ [  1180.41306641  16133.95873036]
+ [-14783.43816404  24008.62421036]
+ [-15854.61724772  25186.38981036]
+ [  2523.53663337  15624.89237036]
+ [ 13498.51144962 -31153.21878964]
+ [ -4576.8978609  -35348.70260964]
+ [ 26468.53623132   7436.24087893]
+ [ 19239.59239081  -4092.55130964]
+ [   617.94261006   9347.00097036]
+ [  4356.60290622 -21571.68374964]
+ [-14932.05934372  -8757.63854964]
+ [  3151.40348264  -1428.70081631]
+ [ 39030.86165399  -5581.79026964]
+ [  2430.76750818   -867.05430964]
+ [-17791.79519288  21056.41781036]
+ [-16134.52303101  19141.30563702]
+ [-24749.38736616  29851.69969036]
+ [  -636.05435701   -371.56898964]
+ [ 38777.72920007   5954.19001036]
+ [-21101.28301526  10473.61503036]
+ [  1816.97894232   1749.96757036]
+ [-57148.12828774  12305.49695036]]
