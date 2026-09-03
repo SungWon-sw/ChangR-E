@@ -5,10 +5,10 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 이 파일(trashes/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
+# 이 파일(vor_sd/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
 # rl_env_voronoi_mw.py 가 절대 패키지 경로(features.data_preprocessing.vor_sd...)로
 # 자기 모듈들을 import 하기 때문에, 루트가 sys.path 에 있어야 한다.
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
