@@ -1,9 +1,11 @@
 import os
 import sys
+import colorsys
 from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 # 이 파일(vor_sd/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
 # rl_env_voronoi_mw.py 가 절대 패키지 경로(features.data_preprocessing.vor_sd...)로
@@ -15,6 +17,17 @@ if str(REPO_ROOT) not in sys.path:
 from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW, VF_MS
 from features.data_preprocessing.vor_sd.mw_cut import cut_segments_fast
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
+
+
+def distinct_cmap(n):
+    """
+    tab20은 20색까지만 구분되고 그 이상은 색이 반복돼 인접 사이트끼리 헷갈린다.
+    황금각(golden angle)으로 색상환을 순회해 n개(여기선 K=56) 모두 서로
+    뚜렷이 구분되는 색을 만든다.
+    """
+    hues = (np.arange(n) * 0.6180339887498949) % 1.0
+    colors = [colorsys.hsv_to_rgb(h, 0.65, 0.92) for h in hues]
+    return ListedColormap(colors)
 
 
 def compute_mw_stats(env, a):
@@ -94,7 +107,7 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     # --------------------------------------------------------------------------
     ax1 = axes[0]
 
-    ax1.pcolormesh(XX, YY, owner_grid, cmap="tab20", vmin=0, vmax=max(env.K - 1, 1),
+    ax1.pcolormesh(XX, YY, owner_grid, cmap=distinct_cmap(env.K), vmin=0, vmax=max(env.K - 1, 1),
                    alpha=0.55, shading="auto")
 
     unassigned = assigned_site == -1
@@ -160,21 +173,20 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     print(f"[성공] 시각화 플롯이 '{save_filename}'에 저장되었습니다.")
 
 
-def random_search_best_a(env, iters=2000, seed=42):
-    
-    x=[ 0.50419168,  0.17569678, -0.12279998,-1.15252922,-0.07640861,1.19292052,
- -0.11751173,  0.22858488, -0.08889165,  0.37452424, -0.12783602 ,-0.0165227,
- -1.25092841, -1.28300467,  1.1166999 ,  0.17220266,  0.11961419 ,-0.62454871,
- -0.22756079,  0.75530648, -0.09561621, -0.86142003,  1.28050006 , 1.37765435,
-  0.63103852,  0.17893913, -0.52662009, -0.37314697,  0.34171134 ,-0.76308245,
-  0.87348878,  0.5232631 , -0.38052496,  0.16141357,  0.16681712 ,-1.46368702,
- -0.80528999,  0.02537081, -0.09602686,  0.23597003, -0.23200895 ,-0.21797293,
-  1.19748948,  1.15260749,  0.01870735, -0.06825872,  0.994547   , 0.06703219,
- -1.88582864, -1.9560115 , -0.07330651,  0.32692695,  0.58567216, -0.13611748,
-  0.34884422, -0.10427316]
-
+def random_search_best_a(env, iters=200, seed=42):
+    """SAC(Comp_SA.py)로 실제 학습해 찾은 log-가중치(a) 결과값.
+    (iters/seed 인자는 더 이상 쓰이지 않음 — 과거 랜덤서치 인터페이스와의 호환을 위해 남겨둠.)"""
+    x = [0.50419168, 0.17569678, -0.12279998, -1.15252922, -0.07640861, 1.19292052,
+         -0.11751173, 0.22858488, -0.08889165, 0.37452424, -0.12783602, -0.0165227,
+         -1.25092841, -1.28300467, 1.1166999, 0.17220266, 0.11961419, -0.62454871,
+         -0.22756079, 0.75530648, -0.09561621, -0.86142003, 1.28050006, 1.37765435,
+         0.63103852, 0.17893913, -0.52662009, -0.37314697, 0.34171134, -0.76308245,
+         0.87348878, 0.5232631, -0.38052496, 0.16141357, 0.16681712, -1.46368702,
+         -0.80528999, 0.02537081, -0.09602686, 0.23597003, -0.23200895, -0.21797293,
+         1.19748948, 1.15260749, 0.01870735, -0.06825872, 0.994547, 0.06703219,
+         -1.88582864, -1.9560115, -0.07330651, 0.32692695, 0.58567216, -0.13611748,
+         0.34884422, -0.10427316]
     return np.array(x)
-
 
 
 if __name__ == "__main__":
@@ -201,6 +213,6 @@ if __name__ == "__main__":
     random_a -= random_a.mean()
     plot_traffic_voronoi(env, random_a, save_filename=f"{DIR}/outputs/vis_random_weights.png")
 
-    print("\n[시나리오 3] 탐색된(무작위 서치 최적) 가중치 시각화 생성 중...")
-    best_a = random_search_best_a(env, iters=2000)
+    print("\n[시나리오 3] SAC로 학습된 가중치 시각화 생성 중...")
+    best_a = random_search_best_a(env)
     plot_traffic_voronoi(env, best_a, save_filename=f"{DIR}/outputs/vis_anal_weights.png")
