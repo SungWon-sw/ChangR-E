@@ -1,9 +1,11 @@
 import os
 import sys
+import colorsys
 from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 # 이 파일(vor_sd/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
 # rl_env_voronoi_mw.py 가 절대 패키지 경로(features.data_preprocessing.vor_sd...)로
@@ -15,6 +17,17 @@ if str(REPO_ROOT) not in sys.path:
 from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW, VF_MS
 from features.data_preprocessing.vor_sd.mw_cut import cut_segments_fast
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
+
+
+def distinct_cmap(n):
+    """
+    tab20은 20색까지만 구분되고 그 이상은 색이 반복돼 인접 사이트끼리 헷갈린다.
+    황금각(golden angle)으로 색상환을 순회해 n개(여기선 K=56) 모두 서로
+    뚜렷이 구분되는 색을 만든다.
+    """
+    hues = (np.arange(n) * 0.6180339887498949) % 1.0
+    colors = [colorsys.hsv_to_rgb(h, 0.65, 0.92) for h in hues]
+    return ListedColormap(colors)
 
 
 def compute_mw_stats(env, a):
@@ -94,7 +107,7 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     # --------------------------------------------------------------------------
     ax1 = axes[0]
 
-    ax1.pcolormesh(XX, YY, owner_grid, cmap="tab20", vmin=0, vmax=max(env.K - 1, 1),
+    ax1.pcolormesh(XX, YY, owner_grid, cmap=distinct_cmap(env.K), vmin=0, vmax=max(env.K - 1, 1),
                    alpha=0.55, shading="auto")
 
     unassigned = assigned_site == -1
@@ -160,7 +173,7 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     print(f"[성공] 시각화 플롯이 '{save_filename}'에 저장되었습니다.")
 
 
-def random_search_best_a(env, iters=2000, seed=42):
+def random_search_best_a(env, iters=200, seed=42):
     """하드코딩된 옛 power-diagram 가중치 예시를 대체:
     현재 MW 환경(a-space, |a|<=a_bound)에서 무작위 탐색으로 목적함수가 가장 낮은 a를 찾는다."""
     rng = np.random.default_rng(seed)
@@ -199,6 +212,6 @@ if __name__ == "__main__":
     plot_traffic_voronoi(env, random_a, save_filename=f"{DIR}/outputs/vis_random_weights.png")
 
     print("\n[시나리오 3] 탐색된(무작위 서치 최적) 가중치 시각화 생성 중...")
-    best_a, best_J = random_search_best_a(env, iters=2000)
+    best_a, best_J = random_search_best_a(env, iters=200)
     print(f"  -> 탐색된 최적 목적함수 값: {best_J:.6f}")
     plot_traffic_voronoi(env, best_a, save_filename=f"{DIR}/outputs/vis_anal_weights.png")
