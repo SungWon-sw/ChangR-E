@@ -36,7 +36,7 @@ class TrafficRLEnvMW:
                  rho_max=2.0,          # 허용 가중치 비 w_max/w_min
                  min_len=1.0,          # 자투리 컷 [m]
                  min_pieces=2,         # 이보다 조각이 적은 셀은 목적함수에서 제외
-                 objective="global",   # "global" | "within" | "mixed"
+                 objective="within",   # "global" | "within" | "mixed"
                  lam_scaling="none"):  # "none" | "length"  (아래 설명 참조)
         self.sites_df = pd.read_csv(sites_csv)
         self.seg_df = pd.read_csv(segments_csv)
@@ -136,7 +136,7 @@ class TrafficRLEnvMW:
 
     def step(self, action):
         # 액션을 a 공간에서 그대로 더한다. a_bound 가 곧 rho_max 제약.
-        self.a = self.a + np.asarray(action, float)
+        self.a = self.a + np.asarray(action, float) * (self.a_bound / 10.0)
         self.a -= self.a.mean()
         self.a = np.clip(self.a, -self.a_bound, self.a_bound)
         self.a -= self.a.mean()          # 클리핑 후 재중심화
