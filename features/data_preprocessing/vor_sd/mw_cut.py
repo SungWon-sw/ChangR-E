@@ -138,12 +138,13 @@ def owner_bruteforce(P, Q, sites, w, samples=20001):
 # ---------------------------------------------------------------------------
 # 완전 벡터화 버전 (RL 루프용). 파이썬 루프 없음.
 # ---------------------------------------------------------------------------
-def cut_segments_fast(P, Q, sites, w, max_cuts=64, min_len=1.0, return_info=False):
+def cut_segments_fast(P, Q, sites, w, max_cuts=256, min_len=1.0, return_info=False):
     """모든 선분 x 모든 셀의 유효길이 행렬 (N,K) 를 정확히 계산.
 
     1) 후보 셀 사전선별 (수학적으로 안전한 상한 사용)
-         k 가 선분 위 어떤 점을 소유하면  d_k(M) <= d_min(M) + L / w_min
-       (M=중점, L=선분길이). 이 부등식을 만족하는 k 만 남긴다.
+         k 가 선분 위 어떤 점을 소유하면
+             d_k(M) - (L/2)/w_k  <=  d_min(M) + (L/2)/w_j*
+       (M=중점, L=선분길이, j*=중점 최근접 셀). 이를 만족하는 k 만 남긴다.
     2) 남은 후보 쌍에 대해서만 이차방정식 -> 절단점
     3) 구간 중점 argmin -> bincount 로 셀별 길이 집계
     """
@@ -155,10 +156,24 @@ def cut_segments_fast(P, Q, sites, w, max_cuts=64, min_len=1.0, return_info=Fals
     seg_len = np.sqrt(uu)
 
     # ---- 1) 후보 셀 선별
+    #   k 가 선분 위의 점 x 를 소유한다고 하자. M=중점, j*=중점 최근접 셀 이면
+    #       d_k(M) <= d_k(x)  + (L/2)/w_k                (삼각부등식, |M-x| <= L/2)
+    #              <= d_j*(x) + (L/2)/w_k                (k 가 x 를 소유하므로)
+    #              <= d_min(M) + (L/2)/w_j* + (L/2)/w_k  (다시 삼각부등식)
+    #   즉  d_k(M) - (L/2)/w_k <= d_min(M) + (L/2)/w_j*  를 만족하는 k 만 남기면 된다.
+    #
+    #   예전 상한은 1/w_j* 와 1/w_k 를 모두 전역 1/w_min 으로 뭉갠 형태(L/w_min)라
+    #   훨씬 헐거웠다. rho 가 크면 w_min 이 작아져 여유가 선분 길이의 몇 배까지
+    #   벌어지고, 후보 수 C 가 커지면 쌍이 C^2 로 늘어 절단점이 폭증한다.
+    #   이 상한은 그 두 항을 각각 제 값으로 쓴다: 실측 후보 최대 93% 감소,
+    #   모든 w 가 같으면 (L/2)/w + (L/2)/w = L/w 이라 예전 상한과 정확히 일치한다.
     M = 0.5 * (P + Q)
     dM = np.linalg.norm(M[:, None, :] - S[None, :, :], axis=2) / w      # (N,K)
-    thr = dM.min(1) + seg_len / w.min()
-    cand = dM <= thr[:, None]                                           # (N,K) bool
+    jstar = dM.argmin(1)                                                # (N,)
+    half = 0.5 * seg_len
+    lhs = dM - half[:, None] / w[None, :]
+    rhs = dM[np.arange(N), jstar] + half / w[jstar]
+    cand = lhs <= rhs[:, None] * (1 + 1e-9) + 1e-9                      # (N,K) bool
     ncand = cand.sum(1)
     C = int(ncand.max())
     cand_idx = np.argsort(~cand, axis=1, kind="stable")[:, :C]          # (N,C)

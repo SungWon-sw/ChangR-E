@@ -117,14 +117,18 @@ class TrafficRLEnvMW:
         cnt = np.bincount(cell_i, minlength=self.K)
         s1 = np.bincount(cell_i, weights=probs, minlength=self.K)
         s2 = np.bincount(cell_i, weights=probs ** 2, minlength=self.K)
+
         with np.errstate(invalid="ignore", divide="ignore"):
             var = np.maximum(s2 / cnt - (s1 / cnt) ** 2, 0.0)
+
         stds = np.where(cnt >= self.min_pieces, np.sqrt(var), np.nan)
 
         valid = cnt >= self.min_pieces
-        within = float(np.nanmean(stds[valid])) if valid.any() else 0.0
-        glob = float(probs.std())
 
+        # 셀별 표준편차의 RMS
+        within = float(np.sqrt(np.nanmean(stds[valid] ** 2))) if valid.any() else 0.0
+
+        glob = float(probs.std())
         if self.objective == "within":
             J = within
         elif self.objective == "global":
