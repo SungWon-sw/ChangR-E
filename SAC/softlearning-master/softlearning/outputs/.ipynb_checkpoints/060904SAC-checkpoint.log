@@ -1,0 +1,724 @@
+nohup: ignoring input
+2026-09-04 00:26:53.949493: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-04 00:26:54.162868: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-04 00:26:54.218278: E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-09-04 00:26:55.142261: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-04 00:26:55.142362: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-04 00:26:55.142370: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=2.0
+2026-09-04 00:26:56.858040: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-04 00:26:57.509300: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1616] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 46705 MB memory:  -> device: 0, name: NVIDIA RTX A6000, pci bus id: 0000:b5:00.0, compute capability: 8.6
+2026-09-04 00:26:59.111038: I tensorflow/stream_executor/cuda/cuda_blas.cc:1614] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+--- [학습 루프 테스트: 동적 도로 분할 연산 시뮬레이션] ---
+[Test 1] 균등 가중치 baseline J: 0.13058294
+학습 시작...
+[dbg] ep0 gs0 J=0.13263 a_range=0.194 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep0 gs200 J=0.13155 a_range=0.691 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep0 gs400 J=0.13290 a_range=0.687 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep0 gs600 J=0.13396 a_range=0.671 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep0 gs800 J=0.13505 a_range=0.687 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 1, Reward(scaled): -13375.49, Buffer: 1000
+[dbg] ep1 gs1000 J=0.13328 a_range=0.278 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep1 gs1200 J=0.13374 a_range=0.634 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep1 gs1400 J=0.13515 a_range=0.685 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep1 gs1600 J=0.13394 a_range=0.693 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep1 gs1800 J=0.13171 a_range=0.692 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 2, Reward(scaled): -13340.84, Buffer: 2000
+[dbg] ep2 gs2000 J=0.13611 a_range=0.199 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep2 gs2200 J=0.13338 a_range=0.685 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep2 gs2400 J=0.13252 a_range=0.684 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep2 gs2600 J=0.13044 a_range=0.693 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep2 gs2800 J=0.12923 a_range=0.686 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 3, Reward(scaled): -13166.29, Buffer: 3000
+[dbg] ep3 gs3000 J=0.13331 a_range=0.308 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep3 gs3200 J=0.13343 a_range=0.687 sat=0.25 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep3 gs3400 J=0.13367 a_range=0.681 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep3 gs3600 J=0.13467 a_range=0.679 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep3 gs3800 J=0.13214 a_range=0.680 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 4, Reward(scaled): -13371.11, Buffer: 4000
+[dbg] ep4 gs4000 J=0.12890 a_range=0.195 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep4 gs4200 J=0.12787 a_range=0.660 sat=0.25 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep4 gs4400 J=0.12886 a_range=0.693 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep4 gs4600 J=0.13033 a_range=0.692 sat=0.25 alpha=0.200 q1=0.000 pi=0.000
+[dbg] ep4 gs4800 J=0.13090 a_range=0.690 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 5, Reward(scaled): -12998.82, Buffer: 5000
+[dbg] ep5 gs5000 J=0.13468 a_range=0.198 sat=0.00 alpha=0.200 q1=211.507 pi=0.658
+[dbg]   next_logp=-0.27 q_target_mean=-13.81 q_target_std=0.49
+[dbg] ep5 gs5200 J=0.13651 a_range=0.575 sat=0.00 alpha=0.196 q1=0.129 pi=20.174
+[dbg] ep5 gs5400 J=0.13823 a_range=0.692 sat=0.00 alpha=0.192 q1=0.041 pi=29.938
+[dbg] ep5 gs5600 J=0.13620 a_range=0.653 sat=0.00 alpha=0.188 q1=0.023 pi=40.329
+[dbg] ep5 gs5800 J=0.13248 a_range=0.679 sat=0.00 alpha=0.184 q1=0.023 pi=51.085
+Episode 6, Reward(scaled): -13554.33, Buffer: 6000
+[dbg] ep6 gs6000 J=0.13410 a_range=0.199 sat=0.00 alpha=0.181 q1=0.017 pi=62.218
+[dbg]   next_logp=-2.71 q_target_mean=-74.75 q_target_std=1.21
+[dbg] ep6 gs6200 J=0.13025 a_range=0.602 sat=0.00 alpha=0.177 q1=0.019 pi=73.491
+[dbg] ep6 gs6400 J=0.13169 a_range=0.655 sat=0.00 alpha=0.174 q1=0.020 pi=84.804
+[dbg] ep6 gs6600 J=0.13593 a_range=0.667 sat=0.00 alpha=0.170 q1=0.026 pi=96.213
+[dbg] ep6 gs6800 J=0.13424 a_range=0.668 sat=0.00 alpha=0.167 q1=0.048 pi=107.612
+Episode 7, Reward(scaled): -13386.65, Buffer: 7000
+[dbg] ep7 gs7000 J=0.13146 a_range=0.193 sat=0.00 alpha=0.163 q1=0.053 pi=119.010
+[dbg]   next_logp=-2.72 q_target_mean=-131.25 q_target_std=2.16
+[dbg] ep7 gs7200 J=0.13306 a_range=0.679 sat=0.00 alpha=0.160 q1=0.057 pi=130.242
+[dbg] ep7 gs7400 J=0.13494 a_range=0.666 sat=0.00 alpha=0.157 q1=0.088 pi=141.711
+[dbg] ep7 gs7600 J=0.13200 a_range=0.592 sat=0.00 alpha=0.154 q1=0.091 pi=153.082
+[dbg] ep7 gs7800 J=0.13519 a_range=0.692 sat=0.00 alpha=0.151 q1=0.087 pi=164.108
+Episode 8, Reward(scaled): -13378.09, Buffer: 8000
+[dbg] ep8 gs8000 J=0.13372 a_range=0.193 sat=0.00 alpha=0.148 q1=0.124 pi=175.035
+[dbg]   next_logp=-2.71 q_target_mean=-186.47 q_target_std=2.82
+[dbg] ep8 gs8200 J=0.13532 a_range=0.672 sat=0.00 alpha=0.145 q1=0.063 pi=185.929
+[dbg] ep8 gs8400 J=0.13434 a_range=0.632 sat=0.00 alpha=0.142 q1=0.085 pi=197.173
+[dbg] ep8 gs8600 J=0.13486 a_range=0.651 sat=0.00 alpha=0.139 q1=0.069 pi=207.731
+[dbg] ep8 gs8800 J=0.13205 a_range=0.691 sat=0.00 alpha=0.137 q1=0.221 pi=218.555
+Episode 9, Reward(scaled): -13296.16, Buffer: 9000
+[dbg] ep9 gs9000 J=0.13017 a_range=0.311 sat=0.00 alpha=0.134 q1=0.114 pi=229.154
+[dbg]   next_logp=-2.71 q_target_mean=-240.29 q_target_std=3.63
+[dbg] ep9 gs9200 J=0.13041 a_range=0.657 sat=0.00 alpha=0.131 q1=0.127 pi=239.595
+[dbg] ep9 gs9400 J=0.13066 a_range=0.693 sat=0.00 alpha=0.129 q1=0.290 pi=249.902
+[dbg] ep9 gs9600 J=0.13131 a_range=0.667 sat=0.00 alpha=0.126 q1=0.152 pi=260.372
+[dbg] ep9 gs9800 J=0.12867 a_range=0.692 sat=0.00 alpha=0.124 q1=0.133 pi=270.437
+Episode 10, Reward(scaled): -13092.65, Buffer: 10000  | eval best J=0.13188 last J=0.13225
+[dbg] ep10 gs10000 J=0.13430 a_range=0.191 sat=0.00 alpha=0.121 q1=0.125 pi=280.705
+[dbg]   next_logp=-2.67 q_target_mean=-291.01 q_target_std=4.79
+[dbg] ep10 gs10200 J=0.13423 a_range=0.681 sat=0.00 alpha=0.119 q1=0.227 pi=290.392
+[dbg] ep10 gs10400 J=0.13273 a_range=0.693 sat=0.00 alpha=0.116 q1=0.200 pi=300.196
+[dbg] ep10 gs10600 J=0.13223 a_range=0.693 sat=0.00 alpha=0.114 q1=0.259 pi=311.257
+[dbg] ep10 gs10800 J=0.13158 a_range=0.660 sat=0.00 alpha=0.112 q1=0.192 pi=320.650
+Episode 11, Reward(scaled): -13229.44, Buffer: 11000
+[dbg] ep11 gs11000 J=0.13119 a_range=0.188 sat=0.00 alpha=0.110 q1=0.178 pi=329.896
+[dbg]   next_logp=-2.68 q_target_mean=-339.55 q_target_std=5.29
+[dbg] ep11 gs11200 J=0.13239 a_range=0.657 sat=0.00 alpha=0.107 q1=0.169 pi=339.637
+[dbg] ep11 gs11400 J=0.13466 a_range=0.688 sat=0.00 alpha=0.105 q1=0.275 pi=349.224
+[dbg] ep11 gs11600 J=0.13368 a_range=0.691 sat=0.00 alpha=0.103 q1=0.324 pi=358.146
+[dbg] ep11 gs11800 J=0.13610 a_range=0.675 sat=0.25 alpha=0.101 q1=0.175 pi=367.695
+Episode 12, Reward(scaled): -13426.22, Buffer: 12000
+[dbg] ep12 gs12000 J=0.13077 a_range=0.191 sat=0.00 alpha=0.099 q1=0.295 pi=377.871
+[dbg]   next_logp=-2.64 q_target_mean=-387.28 q_target_std=5.73
+[dbg] ep12 gs12200 J=0.13172 a_range=0.615 sat=0.00 alpha=0.097 q1=0.262 pi=386.228
+[dbg] ep12 gs12400 J=0.13052 a_range=0.686 sat=0.00 alpha=0.095 q1=0.315 pi=395.669
+[dbg] ep12 gs12600 J=0.13278 a_range=0.685 sat=0.00 alpha=0.093 q1=0.280 pi=404.577
+[dbg] ep12 gs12800 J=0.13091 a_range=0.693 sat=0.00 alpha=0.092 q1=0.252 pi=413.648
+Episode 13, Reward(scaled): -13179.74, Buffer: 13000
+[dbg] ep13 gs13000 J=0.13003 a_range=0.192 sat=0.00 alpha=0.090 q1=0.280 pi=423.016
+[dbg]   next_logp=-2.61 q_target_mean=-431.06 q_target_std=5.90
+[dbg] ep13 gs13200 J=0.13070 a_range=0.621 sat=0.00 alpha=0.088 q1=0.686 pi=432.058
+[dbg] ep13 gs13400 J=0.12867 a_range=0.671 sat=0.00 alpha=0.086 q1=0.323 pi=440.297
+[dbg] ep13 gs13600 J=0.12973 a_range=0.675 sat=0.00 alpha=0.085 q1=0.316 pi=448.149
+[dbg] ep13 gs13800 J=0.13155 a_range=0.665 sat=0.00 alpha=0.083 q1=0.576 pi=456.946
+Episode 14, Reward(scaled): -13054.38, Buffer: 14000
+[dbg] ep14 gs14000 J=0.13307 a_range=0.194 sat=0.00 alpha=0.081 q1=0.328 pi=465.548
+[dbg]   next_logp=-2.58 q_target_mean=-474.01 q_target_std=7.01
+[dbg] ep14 gs14200 J=0.13313 a_range=0.687 sat=0.00 alpha=0.080 q1=0.290 pi=473.335
+[dbg] ep14 gs14400 J=0.12838 a_range=0.679 sat=0.00 alpha=0.078 q1=0.487 pi=481.896
+[dbg] ep14 gs14600 J=0.12899 a_range=0.689 sat=0.00 alpha=0.077 q1=0.521 pi=489.341
+[dbg] ep14 gs14800 J=0.13065 a_range=0.693 sat=0.00 alpha=0.075 q1=0.323 pi=497.623
+Episode 15, Reward(scaled): -13084.01, Buffer: 15000
+[dbg] ep15 gs15000 J=0.13251 a_range=0.241 sat=0.00 alpha=0.074 q1=0.488 pi=505.822
+[dbg]   next_logp=-2.54 q_target_mean=-515.35 q_target_std=7.93
+[dbg] ep15 gs15200 J=0.13718 a_range=0.691 sat=0.00 alpha=0.072 q1=0.286 pi=514.635
+[dbg] ep15 gs15400 J=0.13539 a_range=0.617 sat=0.00 alpha=0.071 q1=0.572 pi=523.646
+[dbg] ep15 gs15600 J=0.13444 a_range=0.693 sat=0.00 alpha=0.069 q1=0.785 pi=531.001
+[dbg] ep15 gs15800 J=0.13349 a_range=0.689 sat=0.00 alpha=0.068 q1=0.429 pi=538.900
+Episode 16, Reward(scaled): -13432.53, Buffer: 16000
+[dbg] ep16 gs16000 J=0.13154 a_range=0.174 sat=0.00 alpha=0.067 q1=0.804 pi=546.719
+[dbg]   next_logp=-2.28 q_target_mean=-553.01 q_target_std=8.09
+[dbg] ep16 gs16200 J=0.13305 a_range=0.671 sat=0.00 alpha=0.065 q1=0.435 pi=553.454
+[dbg] ep16 gs16400 J=0.13296 a_range=0.664 sat=0.00 alpha=0.064 q1=0.349 pi=561.600
+[dbg] ep16 gs16600 J=0.13049 a_range=0.693 sat=0.00 alpha=0.063 q1=0.785 pi=569.193
+[dbg] ep16 gs16800 J=0.13281 a_range=0.691 sat=0.00 alpha=0.062 q1=0.623 pi=576.285
+Episode 17, Reward(scaled): -13170.64, Buffer: 17000
+[dbg] ep17 gs17000 J=0.13295 a_range=0.196 sat=0.00 alpha=0.060 q1=0.726 pi=582.873
+[dbg]   next_logp=-2.26 q_target_mean=-590.59 q_target_std=8.42
+[dbg] ep17 gs17200 J=0.13426 a_range=0.673 sat=0.00 alpha=0.059 q1=0.908 pi=589.981
+[dbg] ep17 gs17400 J=0.13537 a_range=0.685 sat=0.00 alpha=0.058 q1=0.518 pi=598.695
+[dbg] ep17 gs17600 J=0.13544 a_range=0.675 sat=0.00 alpha=0.057 q1=0.387 pi=605.117
+[dbg] ep17 gs17800 J=0.13654 a_range=0.687 sat=0.00 alpha=0.056 q1=0.408 pi=612.717
+Episode 18, Reward(scaled): -13512.56, Buffer: 18000
+[dbg] ep18 gs18000 J=0.13042 a_range=0.191 sat=0.00 alpha=0.055 q1=0.657 pi=619.181
+[dbg]   next_logp=-1.82 q_target_mean=-626.76 q_target_std=9.69
+[dbg] ep18 gs18200 J=0.13114 a_range=0.658 sat=0.00 alpha=0.054 q1=0.526 pi=627.023
+[dbg] ep18 gs18400 J=0.13068 a_range=0.693 sat=0.00 alpha=0.053 q1=1.198 pi=634.033
+[dbg] ep18 gs18600 J=0.13329 a_range=0.693 sat=0.00 alpha=0.052 q1=0.515 pi=640.215
+[dbg] ep18 gs18800 J=0.13220 a_range=0.693 sat=0.00 alpha=0.051 q1=0.608 pi=647.320
+Episode 19, Reward(scaled): -13202.79, Buffer: 19000
+[dbg] ep19 gs19000 J=0.13109 a_range=0.196 sat=0.00 alpha=0.050 q1=0.483 pi=653.200
+[dbg]   next_logp=-1.96 q_target_mean=-660.62 q_target_std=8.74
+[dbg] ep19 gs19200 J=0.13160 a_range=0.692 sat=0.00 alpha=0.049 q1=0.502 pi=660.502
+[dbg] ep19 gs19400 J=0.13322 a_range=0.680 sat=0.00 alpha=0.048 q1=0.783 pi=667.151
+[dbg] ep19 gs19600 J=0.13024 a_range=0.676 sat=0.00 alpha=0.047 q1=1.111 pi=673.968
+[dbg] ep19 gs19800 J=0.13275 a_range=0.686 sat=0.00 alpha=0.046 q1=0.884 pi=678.854
+Episode 20, Reward(scaled): -13155.65, Buffer: 20000  | eval best J=0.13376 last J=0.13393
+[dbg] ep20 gs20000 J=0.13434 a_range=0.267 sat=0.00 alpha=0.045 q1=0.973 pi=685.536
+[dbg]   next_logp=-1.91 q_target_mean=-691.74 q_target_std=9.84
+[dbg] ep20 gs20200 J=0.13729 a_range=0.669 sat=0.00 alpha=0.044 q1=0.548 pi=692.279
+[dbg] ep20 gs20400 J=0.13883 a_range=0.682 sat=0.00 alpha=0.043 q1=0.423 pi=698.083
+[dbg] ep20 gs20600 J=0.13435 a_range=0.671 sat=0.00 alpha=0.043 q1=0.451 pi=706.061
+[dbg] ep20 gs20800 J=0.13455 a_range=0.690 sat=0.00 alpha=0.042 q1=1.330 pi=712.206
+Episode 21, Reward(scaled): -13502.75, Buffer: 21000
+[dbg] ep21 gs21000 J=0.12884 a_range=0.181 sat=0.00 alpha=0.041 q1=0.859 pi=716.773
+[dbg]   next_logp=-1.52 q_target_mean=-723.50 q_target_std=9.20
+[dbg] ep21 gs21200 J=0.13022 a_range=0.662 sat=0.00 alpha=0.040 q1=0.761 pi=724.147
+[dbg] ep21 gs21400 J=0.13030 a_range=0.691 sat=0.00 alpha=0.039 q1=0.619 pi=729.293
+[dbg] ep21 gs21600 J=0.12912 a_range=0.693 sat=0.00 alpha=0.039 q1=2.059 pi=734.914
+[dbg] ep21 gs21800 J=0.13214 a_range=0.671 sat=0.00 alpha=0.038 q1=1.057 pi=740.196
+Episode 22, Reward(scaled): -13125.61, Buffer: 22000
+[dbg] ep22 gs22000 J=0.13524 a_range=0.198 sat=0.00 alpha=0.037 q1=1.030 pi=746.926
+[dbg]   next_logp=-1.47 q_target_mean=-751.59 q_target_std=10.59
+[dbg] ep22 gs22200 J=0.13182 a_range=0.686 sat=0.00 alpha=0.036 q1=0.804 pi=753.897
+[dbg] ep22 gs22400 J=0.13363 a_range=0.682 sat=0.00 alpha=0.036 q1=1.495 pi=758.817
+[dbg] ep22 gs22600 J=0.12895 a_range=0.650 sat=0.00 alpha=0.035 q1=1.325 pi=764.125
+[dbg] ep22 gs22800 J=0.13195 a_range=0.692 sat=0.00 alpha=0.034 q1=0.876 pi=768.863
+Episode 23, Reward(scaled): -13128.54, Buffer: 23000
+[dbg] ep23 gs23000 J=0.13083 a_range=0.272 sat=0.00 alpha=0.034 q1=0.784 pi=772.349
+[dbg]   next_logp=-1.00 q_target_mean=-780.08 q_target_std=11.03
+[dbg] ep23 gs23200 J=0.13210 a_range=0.682 sat=0.00 alpha=0.033 q1=1.282 pi=780.792
+[dbg] ep23 gs23400 J=0.13306 a_range=0.684 sat=0.00 alpha=0.032 q1=1.644 pi=785.648
+[dbg] ep23 gs23600 J=0.13202 a_range=0.679 sat=0.00 alpha=0.032 q1=0.996 pi=789.304
+[dbg] ep23 gs23800 J=0.13240 a_range=0.673 sat=0.00 alpha=0.031 q1=0.715 pi=795.901
+Episode 24, Reward(scaled): -13272.14, Buffer: 24000
+[dbg] ep24 gs24000 J=0.12917 a_range=0.195 sat=0.00 alpha=0.031 q1=1.816 pi=802.868
+[dbg]   next_logp=-0.81 q_target_mean=-806.65 q_target_std=11.84
+[dbg] ep24 gs24200 J=0.13520 a_range=0.683 sat=0.25 alpha=0.030 q1=0.611 pi=806.691
+[dbg] ep24 gs24400 J=0.13527 a_range=0.690 sat=0.00 alpha=0.030 q1=0.648 pi=810.912
+[dbg] ep24 gs24600 J=0.13193 a_range=0.684 sat=0.00 alpha=0.029 q1=0.895 pi=815.916
+[dbg] ep24 gs24800 J=0.13048 a_range=0.686 sat=0.00 alpha=0.028 q1=0.793 pi=822.416
+Episode 25, Reward(scaled): -13286.09, Buffer: 25000
+[dbg] ep25 gs25000 J=0.12909 a_range=0.260 sat=0.00 alpha=0.028 q1=0.590 pi=827.457
+[dbg]   next_logp=-0.35 q_target_mean=-831.00 q_target_std=11.99
+[dbg] ep25 gs25200 J=0.13079 a_range=0.677 sat=0.00 alpha=0.027 q1=1.277 pi=831.213
+[dbg] ep25 gs25400 J=0.13197 a_range=0.686 sat=0.00 alpha=0.027 q1=1.644 pi=836.207
+[dbg] ep25 gs25600 J=0.13318 a_range=0.688 sat=0.00 alpha=0.026 q1=0.892 pi=840.181
+[dbg] ep25 gs25800 J=0.13159 a_range=0.690 sat=0.00 alpha=0.026 q1=1.287 pi=846.721
+Episode 26, Reward(scaled): -13143.80, Buffer: 26000
+[dbg] ep26 gs26000 J=0.13442 a_range=0.209 sat=0.00 alpha=0.025 q1=1.024 pi=850.655
+[dbg]   next_logp=-0.55 q_target_mean=-854.80 q_target_std=11.65
+[dbg] ep26 gs26200 J=0.13313 a_range=0.638 sat=0.00 alpha=0.025 q1=0.516 pi=856.780
+[dbg] ep26 gs26400 J=0.12930 a_range=0.683 sat=0.00 alpha=0.024 q1=1.196 pi=860.216
+[dbg] ep26 gs26600 J=0.13032 a_range=0.686 sat=0.00 alpha=0.024 q1=0.870 pi=866.351
+[dbg] ep26 gs26800 J=0.13059 a_range=0.646 sat=0.00 alpha=0.023 q1=2.548 pi=869.502
+Episode 27, Reward(scaled): -13156.80, Buffer: 27000
+[dbg] ep27 gs27000 J=0.13093 a_range=0.192 sat=0.00 alpha=0.023 q1=1.038 pi=873.829
+[dbg]   next_logp=-0.09 q_target_mean=-878.69 q_target_std=12.67
+[dbg] ep27 gs27200 J=0.13116 a_range=0.676 sat=0.00 alpha=0.023 q1=1.192 pi=877.323
+[dbg] ep27 gs27400 J=0.13199 a_range=0.688 sat=0.00 alpha=0.022 q1=1.090 pi=882.234
+[dbg] ep27 gs27600 J=0.13152 a_range=0.690 sat=0.00 alpha=0.022 q1=0.998 pi=888.321
+[dbg] ep27 gs27800 J=0.13087 a_range=0.673 sat=0.00 alpha=0.021 q1=0.557 pi=890.509
+Episode 28, Reward(scaled): -13153.97, Buffer: 28000
+[dbg] ep28 gs28000 J=0.13100 a_range=0.188 sat=0.00 alpha=0.021 q1=1.220 pi=894.232
+[dbg]   next_logp=-0.36 q_target_mean=-899.26 q_target_std=12.71
+[dbg] ep28 gs28200 J=0.13061 a_range=0.589 sat=0.00 alpha=0.021 q1=0.875 pi=900.089
+[dbg] ep28 gs28400 J=0.13051 a_range=0.685 sat=0.00 alpha=0.020 q1=1.003 pi=903.604
+[dbg] ep28 gs28600 J=0.13141 a_range=0.656 sat=0.00 alpha=0.020 q1=1.018 pi=907.406
+[dbg] ep28 gs28800 J=0.13078 a_range=0.693 sat=0.00 alpha=0.019 q1=1.230 pi=913.380
+Episode 29, Reward(scaled): -13094.98, Buffer: 29000
+[dbg] ep29 gs29000 J=0.13280 a_range=0.193 sat=0.00 alpha=0.019 q1=0.579 pi=916.738
+[dbg]   next_logp=+0.17 q_target_mean=-919.91 q_target_std=12.41
+[dbg] ep29 gs29200 J=0.13341 a_range=0.693 sat=0.00 alpha=0.019 q1=1.256 pi=918.939
+[dbg] ep29 gs29400 J=0.13398 a_range=0.690 sat=0.00 alpha=0.018 q1=0.872 pi=924.909
+[dbg] ep29 gs29600 J=0.13324 a_range=0.690 sat=0.00 alpha=0.018 q1=1.379 pi=929.841
+[dbg] ep29 gs29800 J=0.13339 a_range=0.647 sat=0.00 alpha=0.018 q1=1.800 pi=932.880
+Episode 30, Reward(scaled): -13306.42, Buffer: 30000  | eval best J=0.13225 last J=0.13226
+[dbg] ep30 gs30000 J=0.13156 a_range=0.184 sat=0.00 alpha=0.017 q1=0.524 pi=936.022
+[dbg]   next_logp=+0.56 q_target_mean=-940.95 q_target_std=12.89
+[dbg] ep30 gs30200 J=0.13214 a_range=0.690 sat=0.00 alpha=0.017 q1=1.688 pi=939.545
+[dbg] ep30 gs30400 J=0.13061 a_range=0.693 sat=0.00 alpha=0.017 q1=0.792 pi=945.499
+[dbg] ep30 gs30600 J=0.12908 a_range=0.693 sat=0.00 alpha=0.016 q1=0.880 pi=946.316
+[dbg] ep30 gs30800 J=0.12980 a_range=0.670 sat=0.00 alpha=0.016 q1=0.800 pi=949.972
+Episode 31, Reward(scaled): -13036.01, Buffer: 31000
+[dbg] ep31 gs31000 J=0.13234 a_range=0.192 sat=0.00 alpha=0.016 q1=0.887 pi=954.139
+[dbg]   next_logp=+0.59 q_target_mean=-956.89 q_target_std=13.63
+[dbg] ep31 gs31200 J=0.13273 a_range=0.684 sat=0.00 alpha=0.016 q1=0.872 pi=959.166
+[dbg] ep31 gs31400 J=0.13510 a_range=0.672 sat=0.00 alpha=0.015 q1=0.673 pi=961.969
+[dbg] ep31 gs31600 J=0.13126 a_range=0.663 sat=0.00 alpha=0.015 q1=0.641 pi=966.145
+[dbg] ep31 gs31800 J=0.13391 a_range=0.624 sat=0.00 alpha=0.015 q1=1.200 pi=971.198
+Episode 32, Reward(scaled): -13348.22, Buffer: 32000
+[dbg] ep32 gs32000 J=0.13226 a_range=0.220 sat=0.00 alpha=0.014 q1=0.981 pi=972.461
+[dbg]   next_logp=+1.15 q_target_mean=-977.09 q_target_std=12.80
+[dbg] ep32 gs32200 J=0.13603 a_range=0.669 sat=0.00 alpha=0.014 q1=0.638 pi=977.188
+[dbg] ep32 gs32400 J=0.13210 a_range=0.686 sat=0.00 alpha=0.014 q1=0.982 pi=980.083
+[dbg] ep32 gs32600 J=0.13126 a_range=0.674 sat=0.00 alpha=0.014 q1=1.099 pi=983.841
+[dbg] ep32 gs32800 J=0.13217 a_range=0.691 sat=0.00 alpha=0.013 q1=0.944 pi=985.780
+Episode 33, Reward(scaled): -13245.85, Buffer: 33000
+[dbg] ep33 gs33000 J=0.12980 a_range=0.302 sat=0.00 alpha=0.013 q1=1.379 pi=991.636
+[dbg]   next_logp=+1.63 q_target_mean=-994.18 q_target_std=13.15
+[dbg] ep33 gs33200 J=0.13078 a_range=0.445 sat=0.00 alpha=0.013 q1=1.226 pi=991.635
+[dbg] ep33 gs33400 J=0.13036 a_range=0.683 sat=0.00 alpha=0.013 q1=0.925 pi=996.782
+[dbg] ep33 gs33600 J=0.12981 a_range=0.661 sat=0.00 alpha=0.013 q1=0.863 pi=1000.677
+[dbg] ep33 gs33800 J=0.12946 a_range=0.688 sat=0.00 alpha=0.012 q1=1.424 pi=1003.834
+Episode 34, Reward(scaled): -13004.45, Buffer: 34000
+[dbg] ep34 gs34000 J=0.13091 a_range=0.195 sat=0.00 alpha=0.012 q1=1.748 pi=1006.950
+[dbg]   next_logp=+1.74 q_target_mean=-1009.26 q_target_std=13.29
+[dbg] ep34 gs34200 J=0.13247 a_range=0.591 sat=0.00 alpha=0.012 q1=1.408 pi=1009.290
+[dbg] ep34 gs34400 J=0.13065 a_range=0.693 sat=0.25 alpha=0.012 q1=1.013 pi=1010.795
+[dbg] ep34 gs34600 J=0.13046 a_range=0.669 sat=0.00 alpha=0.011 q1=1.398 pi=1015.833
+[dbg] ep34 gs34800 J=0.13127 a_range=0.642 sat=0.00 alpha=0.011 q1=0.584 pi=1019.000
+Episode 35, Reward(scaled): -13129.75, Buffer: 35000
+[dbg] ep35 gs35000 J=0.12914 a_range=0.196 sat=0.00 alpha=0.011 q1=0.683 pi=1020.942
+[dbg]   next_logp=+1.46 q_target_mean=-1024.38 q_target_std=13.52
+[dbg] ep35 gs35200 J=0.12869 a_range=0.498 sat=0.00 alpha=0.011 q1=1.015 pi=1024.660
+[dbg] ep35 gs35400 J=0.12925 a_range=0.561 sat=0.00 alpha=0.011 q1=1.202 pi=1026.984
+[dbg] ep35 gs35600 J=0.13060 a_range=0.693 sat=0.00 alpha=0.010 q1=1.854 pi=1029.389
+[dbg] ep35 gs35800 J=0.12968 a_range=0.690 sat=0.00 alpha=0.010 q1=0.877 pi=1032.896
+Episode 36, Reward(scaled): -12948.56, Buffer: 36000
+[dbg] ep36 gs36000 J=0.12999 a_range=0.199 sat=0.00 alpha=0.010 q1=1.356 pi=1036.012
+[dbg]   next_logp=+1.69 q_target_mean=-1037.82 q_target_std=13.56
+[dbg] ep36 gs36200 J=0.13338 a_range=0.693 sat=0.00 alpha=0.010 q1=1.849 pi=1040.220
+[dbg] ep36 gs36400 J=0.13376 a_range=0.685 sat=0.00 alpha=0.010 q1=1.416 pi=1041.595
+[dbg] ep36 gs36600 J=0.13391 a_range=0.686 sat=0.00 alpha=0.010 q1=0.780 pi=1044.878
+[dbg] ep36 gs36800 J=0.13544 a_range=0.684 sat=0.00 alpha=0.009 q1=0.796 pi=1046.853
+Episode 37, Reward(scaled): -13323.60, Buffer: 37000
+[dbg] ep37 gs37000 J=0.13144 a_range=0.291 sat=0.25 alpha=0.009 q1=0.808 pi=1050.248
+[dbg]   next_logp=+2.83 q_target_mean=-1054.13 q_target_std=13.22
+[dbg] ep37 gs37200 J=0.13109 a_range=0.525 sat=0.00 alpha=0.009 q1=0.838 pi=1053.309
+[dbg] ep37 gs37400 J=0.13208 a_range=0.690 sat=0.00 alpha=0.009 q1=0.924 pi=1055.400
+[dbg] ep37 gs37600 J=0.13164 a_range=0.687 sat=0.00 alpha=0.009 q1=2.571 pi=1057.342
+[dbg] ep37 gs37800 J=0.13178 a_range=0.689 sat=0.00 alpha=0.009 q1=0.811 pi=1060.415
+Episode 38, Reward(scaled): -13154.31, Buffer: 38000
+[dbg] ep38 gs38000 J=0.13511 a_range=0.196 sat=0.00 alpha=0.008 q1=1.494 pi=1063.839
+[dbg]   next_logp=+1.91 q_target_mean=-1066.27 q_target_std=13.03
+[dbg] ep38 gs38200 J=0.13213 a_range=0.619 sat=0.00 alpha=0.008 q1=1.423 pi=1065.333
+[dbg] ep38 gs38400 J=0.13321 a_range=0.690 sat=0.00 alpha=0.008 q1=1.133 pi=1068.015
+[dbg] ep38 gs38600 J=0.13263 a_range=0.670 sat=0.00 alpha=0.008 q1=1.969 pi=1071.918
+[dbg] ep38 gs38800 J=0.13216 a_range=0.693 sat=0.00 alpha=0.008 q1=0.958 pi=1073.953
+Episode 39, Reward(scaled): -13243.27, Buffer: 39000
+[dbg] ep39 gs39000 J=0.13293 a_range=0.187 sat=0.00 alpha=0.008 q1=0.843 pi=1076.942
+[dbg]   next_logp=+2.77 q_target_mean=-1080.30 q_target_std=15.37
+[dbg] ep39 gs39200 J=0.13338 a_range=0.510 sat=0.25 alpha=0.008 q1=1.150 pi=1079.038
+[dbg] ep39 gs39400 J=0.13474 a_range=0.644 sat=0.00 alpha=0.008 q1=1.806 pi=1080.798
+[dbg] ep39 gs39600 J=0.13892 a_range=0.689 sat=0.00 alpha=0.007 q1=1.117 pi=1083.923
+[dbg] ep39 gs39800 J=0.13603 a_range=0.688 sat=0.00 alpha=0.007 q1=0.852 pi=1084.366
+Episode 40, Reward(scaled): -13574.77, Buffer: 40000  | eval best J=0.13297 last J=0.13309
+[dbg] ep40 gs40000 J=0.12920 a_range=0.205 sat=0.00 alpha=0.007 q1=1.638 pi=1089.423
+[dbg]   next_logp=+2.60 q_target_mean=-1091.18 q_target_std=13.82
+[dbg] ep40 gs40200 J=0.12903 a_range=0.473 sat=0.00 alpha=0.007 q1=1.877 pi=1091.688
+[dbg] ep40 gs40400 J=0.12944 a_range=0.517 sat=0.00 alpha=0.007 q1=1.244 pi=1093.911
+[dbg] ep40 gs40600 J=0.12915 a_range=0.528 sat=0.00 alpha=0.007 q1=1.615 pi=1095.423
+[dbg] ep40 gs40800 J=0.12949 a_range=0.531 sat=0.00 alpha=0.007 q1=0.819 pi=1098.123
+Episode 41, Reward(scaled): -12941.65, Buffer: 41000
+[dbg] ep41 gs41000 J=0.13016 a_range=0.199 sat=0.00 alpha=0.007 q1=1.205 pi=1098.641
+[dbg]   next_logp=+2.84 q_target_mean=-1101.83 q_target_std=14.52
+[dbg] ep41 gs41200 J=0.13044 a_range=0.630 sat=0.00 alpha=0.007 q1=1.449 pi=1101.972
+[dbg] ep41 gs41400 J=0.12924 a_range=0.630 sat=0.00 alpha=0.006 q1=1.786 pi=1102.670
+[dbg] ep41 gs41600 J=0.12893 a_range=0.625 sat=0.00 alpha=0.006 q1=1.199 pi=1104.861
+[dbg] ep41 gs41800 J=0.12933 a_range=0.687 sat=0.00 alpha=0.006 q1=1.354 pi=1107.523
+Episode 42, Reward(scaled): -12965.75, Buffer: 42000
+[dbg] ep42 gs42000 J=0.13484 a_range=0.194 sat=0.00 alpha=0.006 q1=1.068 pi=1108.126
+[dbg]   next_logp=+3.03 q_target_mean=-1112.43 q_target_std=15.40
+[dbg] ep42 gs42200 J=0.13351 a_range=0.353 sat=0.00 alpha=0.006 q1=1.300 pi=1114.116
+[dbg] ep42 gs42400 J=0.13374 a_range=0.512 sat=0.00 alpha=0.006 q1=1.037 pi=1115.585
+[dbg] ep42 gs42600 J=0.13254 a_range=0.614 sat=0.00 alpha=0.006 q1=0.751 pi=1118.440
+[dbg] ep42 gs42800 J=0.13248 a_range=0.654 sat=0.00 alpha=0.006 q1=1.995 pi=1120.092
+Episode 43, Reward(scaled): -13302.51, Buffer: 43000
+[dbg] ep43 gs43000 J=0.13020 a_range=0.192 sat=0.00 alpha=0.006 q1=1.401 pi=1122.174
+[dbg]   next_logp=+4.04 q_target_mean=-1122.67 q_target_std=13.61
+[dbg] ep43 gs43200 J=0.13475 a_range=0.572 sat=0.00 alpha=0.006 q1=0.774 pi=1122.954
+[dbg] ep43 gs43400 J=0.13180 a_range=0.559 sat=0.00 alpha=0.006 q1=0.793 pi=1125.418
+[dbg] ep43 gs43600 J=0.13229 a_range=0.589 sat=0.00 alpha=0.006 q1=0.927 pi=1129.310
+[dbg] ep43 gs43800 J=0.13312 a_range=0.593 sat=0.00 alpha=0.006 q1=1.089 pi=1129.497
+Episode 44, Reward(scaled): -13302.74, Buffer: 44000
+[dbg] ep44 gs44000 J=0.13542 a_range=0.195 sat=0.00 alpha=0.006 q1=2.219 pi=1131.514
+[dbg]   next_logp=+3.99 q_target_mean=-1132.62 q_target_std=14.72
+[dbg] ep44 gs44200 J=0.13481 a_range=0.683 sat=0.00 alpha=0.005 q1=0.894 pi=1131.698
+[dbg] ep44 gs44400 J=0.13491 a_range=0.690 sat=0.00 alpha=0.005 q1=0.833 pi=1132.805
+[dbg] ep44 gs44600 J=0.13546 a_range=0.692 sat=0.00 alpha=0.005 q1=0.721 pi=1137.414
+[dbg] ep44 gs44800 J=0.13700 a_range=0.659 sat=0.00 alpha=0.005 q1=1.284 pi=1137.838
+Episode 45, Reward(scaled): -13600.85, Buffer: 45000
+[dbg] ep45 gs45000 J=0.13316 a_range=0.283 sat=0.00 alpha=0.005 q1=1.067 pi=1141.270
+[dbg]   next_logp=+4.02 q_target_mean=-1141.72 q_target_std=14.62
+[dbg] ep45 gs45200 J=0.13186 a_range=0.630 sat=0.00 alpha=0.005 q1=1.534 pi=1142.252
+[dbg] ep45 gs45400 J=0.13228 a_range=0.688 sat=0.00 alpha=0.005 q1=1.100 pi=1143.148
+[dbg] ep45 gs45600 J=0.13197 a_range=0.688 sat=0.00 alpha=0.005 q1=0.527 pi=1147.726
+[dbg] ep45 gs45800 J=0.13152 a_range=0.692 sat=0.00 alpha=0.005 q1=1.017 pi=1149.029
+Episode 46, Reward(scaled): -13188.50, Buffer: 46000
+[dbg] ep46 gs46000 J=0.13422 a_range=0.366 sat=0.00 alpha=0.005 q1=1.481 pi=1151.350
+[dbg]   next_logp=+4.42 q_target_mean=-1152.01 q_target_std=14.66
+[dbg] ep46 gs46200 J=0.13439 a_range=0.688 sat=0.00 alpha=0.005 q1=2.926 pi=1153.373
+[dbg] ep46 gs46400 J=0.13397 a_range=0.660 sat=0.00 alpha=0.005 q1=0.364 pi=1155.368
+[dbg] ep46 gs46600 J=0.13337 a_range=0.689 sat=0.00 alpha=0.005 q1=1.353 pi=1155.062
+[dbg] ep46 gs46800 J=0.13503 a_range=0.687 sat=0.00 alpha=0.005 q1=1.281 pi=1158.503
+Episode 47, Reward(scaled): -13365.23, Buffer: 47000
+[dbg] ep47 gs47000 J=0.13159 a_range=0.198 sat=0.00 alpha=0.005 q1=0.749 pi=1156.500
+[dbg]   next_logp=+4.31 q_target_mean=-1159.42 q_target_std=15.11
+[dbg] ep47 gs47200 J=0.13093 a_range=0.541 sat=0.00 alpha=0.005 q1=1.128 pi=1161.179
+[dbg] ep47 gs47400 J=0.13095 a_range=0.541 sat=0.00 alpha=0.005 q1=1.460 pi=1160.115
+[dbg] ep47 gs47600 J=0.13089 a_range=0.541 sat=0.25 alpha=0.005 q1=0.574 pi=1164.327
+[dbg] ep47 gs47800 J=0.13090 a_range=0.540 sat=0.00 alpha=0.005 q1=2.277 pi=1163.604
+Episode 48, Reward(scaled): -13094.15, Buffer: 48000
+[dbg] ep48 gs48000 J=0.12948 a_range=0.194 sat=0.00 alpha=0.005 q1=1.336 pi=1166.189
+[dbg]   next_logp=+3.34 q_target_mean=-1169.36 q_target_std=15.07
+[dbg] ep48 gs48200 J=0.13035 a_range=0.531 sat=0.00 alpha=0.005 q1=1.275 pi=1167.116
+[dbg] ep48 gs48400 J=0.12936 a_range=0.540 sat=0.00 alpha=0.005 q1=1.402 pi=1167.285
+[dbg] ep48 gs48600 J=0.12936 a_range=0.540 sat=0.00 alpha=0.005 q1=0.698 pi=1170.522
+[dbg] ep48 gs48800 J=0.12935 a_range=0.544 sat=0.00 alpha=0.005 q1=1.023 pi=1173.214
+Episode 49, Reward(scaled): -12947.95, Buffer: 49000
+[dbg] ep49 gs49000 J=0.12761 a_range=0.187 sat=0.00 alpha=0.005 q1=0.834 pi=1174.747
+[dbg]   next_logp=+3.56 q_target_mean=-1174.44 q_target_std=14.56
+[dbg] ep49 gs49200 J=0.12741 a_range=0.452 sat=0.00 alpha=0.005 q1=0.926 pi=1176.448
+[dbg] ep49 gs49400 J=0.12849 a_range=0.516 sat=0.00 alpha=0.005 q1=1.199 pi=1177.856
+[dbg] ep49 gs49600 J=0.12893 a_range=0.523 sat=0.00 alpha=0.005 q1=2.456 pi=1177.928
+[dbg] ep49 gs49800 J=0.12883 a_range=0.524 sat=0.00 alpha=0.005 q1=1.135 pi=1179.006
+Episode 50, Reward(scaled): -12841.09, Buffer: 50000  | eval best J=0.13165 last J=0.13176
+[dbg] ep50 gs50000 J=0.13108 a_range=0.189 sat=0.00 alpha=0.005 q1=1.114 pi=1181.785
+[dbg]   next_logp=+3.89 q_target_mean=-1181.98 q_target_std=14.33
+[dbg] ep50 gs50200 J=0.13153 a_range=0.357 sat=0.00 alpha=0.005 q1=0.880 pi=1183.163
+[dbg] ep50 gs50400 J=0.13176 a_range=0.517 sat=0.00 alpha=0.005 q1=1.455 pi=1184.706
+[dbg] ep50 gs50600 J=0.13237 a_range=0.692 sat=0.00 alpha=0.005 q1=0.991 pi=1184.092
+[dbg] ep50 gs50800 J=0.13180 a_range=0.682 sat=0.00 alpha=0.005 q1=2.273 pi=1187.628
+Episode 51, Reward(scaled): -13174.90, Buffer: 51000
+[dbg] ep51 gs51000 J=0.13361 a_range=0.252 sat=0.00 alpha=0.005 q1=0.990 pi=1187.565
+[dbg]   next_logp=+3.53 q_target_mean=-1187.86 q_target_std=15.52
+[dbg] ep51 gs51200 J=0.13304 a_range=0.474 sat=0.00 alpha=0.005 q1=0.600 pi=1187.445
+[dbg] ep51 gs51400 J=0.13350 a_range=0.454 sat=0.00 alpha=0.005 q1=0.760 pi=1189.899
+[dbg] ep51 gs51600 J=0.13355 a_range=0.468 sat=0.00 alpha=0.005 q1=1.224 pi=1191.930
+[dbg] ep51 gs51800 J=0.13396 a_range=0.585 sat=0.00 alpha=0.005 q1=1.498 pi=1193.310
+Episode 52, Reward(scaled): -13381.69, Buffer: 52000
+[dbg] ep52 gs52000 J=0.13303 a_range=0.206 sat=0.00 alpha=0.005 q1=0.880 pi=1194.811
+[dbg]   next_logp=+3.98 q_target_mean=-1196.88 q_target_std=16.67
+[dbg] ep52 gs52200 J=0.13308 a_range=0.499 sat=0.00 alpha=0.005 q1=1.201 pi=1195.619
+[dbg] ep52 gs52400 J=0.13315 a_range=0.690 sat=0.00 alpha=0.005 q1=1.995 pi=1196.766
+[dbg] ep52 gs52600 J=0.13232 a_range=0.598 sat=0.00 alpha=0.005 q1=1.098 pi=1198.063
+[dbg] ep52 gs52800 J=0.13185 a_range=0.619 sat=0.00 alpha=0.005 q1=0.628 pi=1199.654
+Episode 53, Reward(scaled): -13260.54, Buffer: 53000
+[dbg] ep53 gs53000 J=0.13125 a_range=0.193 sat=0.00 alpha=0.005 q1=0.800 pi=1200.294
+[dbg]   next_logp=+4.02 q_target_mean=-1203.03 q_target_std=15.54
+[dbg] ep53 gs53200 J=0.13132 a_range=0.382 sat=0.00 alpha=0.005 q1=1.312 pi=1201.993
+[dbg] ep53 gs53400 J=0.13083 a_range=0.390 sat=0.00 alpha=0.005 q1=2.265 pi=1202.670
+[dbg] ep53 gs53600 J=0.13106 a_range=0.390 sat=0.00 alpha=0.005 q1=1.098 pi=1205.045
+[dbg] ep53 gs53800 J=0.13121 a_range=0.390 sat=0.00 alpha=0.005 q1=0.970 pi=1204.557
+Episode 54, Reward(scaled): -13109.79, Buffer: 54000
+[dbg] ep54 gs54000 J=0.13291 a_range=0.384 sat=0.25 alpha=0.005 q1=0.940 pi=1206.448
+[dbg]   next_logp=+4.05 q_target_mean=-1208.16 q_target_std=15.46
+[dbg] ep54 gs54200 J=0.13305 a_range=0.671 sat=0.00 alpha=0.005 q1=0.782 pi=1208.045
+[dbg] ep54 gs54400 J=0.13280 a_range=0.693 sat=0.00 alpha=0.005 q1=0.816 pi=1207.616
+[dbg] ep54 gs54600 J=0.13228 a_range=0.692 sat=0.00 alpha=0.005 q1=0.889 pi=1210.553
+[dbg] ep54 gs54800 J=0.13221 a_range=0.693 sat=0.00 alpha=0.005 q1=0.948 pi=1210.728
+Episode 55, Reward(scaled): -13258.84, Buffer: 55000
+[dbg] ep55 gs55000 J=0.12710 a_range=0.192 sat=0.00 alpha=0.005 q1=0.941 pi=1213.372
+[dbg]   next_logp=+4.56 q_target_mean=-1213.86 q_target_std=15.08
+[dbg] ep55 gs55200 J=0.12957 a_range=0.690 sat=0.00 alpha=0.005 q1=0.638 pi=1213.809
+[dbg] ep55 gs55400 J=0.13043 a_range=0.688 sat=0.00 alpha=0.005 q1=1.376 pi=1214.651
+[dbg] ep55 gs55600 J=0.12947 a_range=0.691 sat=0.00 alpha=0.006 q1=1.317 pi=1216.342
+[dbg] ep55 gs55800 J=0.12838 a_range=0.683 sat=0.00 alpha=0.006 q1=0.885 pi=1215.774
+Episode 56, Reward(scaled): -12955.72, Buffer: 56000
+[dbg] ep56 gs56000 J=0.12987 a_range=0.194 sat=0.25 alpha=0.006 q1=1.268 pi=1217.307
+[dbg]   next_logp=+4.59 q_target_mean=-1218.11 q_target_std=13.94
+[dbg] ep56 gs56200 J=0.13021 a_range=0.358 sat=0.00 alpha=0.006 q1=0.969 pi=1218.180
+[dbg] ep56 gs56400 J=0.13065 a_range=0.536 sat=0.00 alpha=0.006 q1=1.166 pi=1219.799
+[dbg] ep56 gs56600 J=0.13069 a_range=0.536 sat=0.00 alpha=0.006 q1=0.935 pi=1221.306
+[dbg] ep56 gs56800 J=0.13111 a_range=0.522 sat=0.00 alpha=0.006 q1=1.563 pi=1220.837
+Episode 57, Reward(scaled): -13063.67, Buffer: 57000
+[dbg] ep57 gs57000 J=0.13523 a_range=0.192 sat=0.00 alpha=0.006 q1=0.712 pi=1222.036
+[dbg]   next_logp=+3.70 q_target_mean=-1224.16 q_target_std=15.22
+[dbg] ep57 gs57200 J=0.13307 a_range=0.610 sat=0.00 alpha=0.006 q1=0.902 pi=1225.311
+[dbg] ep57 gs57400 J=0.13176 a_range=0.689 sat=0.00 alpha=0.006 q1=0.740 pi=1225.263
+[dbg] ep57 gs57600 J=0.13165 a_range=0.689 sat=0.00 alpha=0.006 q1=1.109 pi=1225.571
+[dbg] ep57 gs57800 J=0.13108 a_range=0.693 sat=0.00 alpha=0.006 q1=1.637 pi=1226.567
+Episode 58, Reward(scaled): -13175.93, Buffer: 58000
+[dbg] ep58 gs58000 J=0.13256 a_range=0.220 sat=0.00 alpha=0.006 q1=1.642 pi=1226.690
+[dbg]   next_logp=+3.96 q_target_mean=-1229.37 q_target_std=16.62
+[dbg] ep58 gs58200 J=0.13331 a_range=0.559 sat=0.00 alpha=0.006 q1=0.960 pi=1228.901
+[dbg] ep58 gs58400 J=0.13263 a_range=0.631 sat=0.00 alpha=0.006 q1=1.388 pi=1230.152
+[dbg] ep58 gs58600 J=0.13358 a_range=0.654 sat=0.00 alpha=0.006 q1=3.014 pi=1229.608
+[dbg] ep58 gs58800 J=0.13348 a_range=0.692 sat=0.00 alpha=0.006 q1=0.534 pi=1230.949
+Episode 59, Reward(scaled): -13408.20, Buffer: 59000
+[dbg] ep59 gs59000 J=0.13031 a_range=0.188 sat=0.00 alpha=0.006 q1=0.712 pi=1233.496
+[dbg]   next_logp=+4.93 q_target_mean=-1231.30 q_target_std=14.86
+[dbg] ep59 gs59200 J=0.13080 a_range=0.506 sat=0.00 alpha=0.006 q1=0.715 pi=1231.437
+[dbg] ep59 gs59400 J=0.13218 a_range=0.668 sat=0.00 alpha=0.006 q1=0.607 pi=1235.079
+[dbg] ep59 gs59600 J=0.13168 a_range=0.669 sat=0.00 alpha=0.006 q1=3.273 pi=1235.018
+[dbg] ep59 gs59800 J=0.13225 a_range=0.675 sat=0.00 alpha=0.006 q1=1.944 pi=1236.230
+Episode 60, Reward(scaled): -13156.95, Buffer: 60000  | eval best J=0.13050 last J=0.13050
+[dbg] ep60 gs60000 J=0.13620 a_range=0.191 sat=0.00 alpha=0.006 q1=1.271 pi=1236.975
+[dbg]   next_logp=+3.75 q_target_mean=-1237.95 q_target_std=15.30
+[dbg] ep60 gs60200 J=0.13389 a_range=0.687 sat=0.00 alpha=0.006 q1=2.097 pi=1238.907
+[dbg] ep60 gs60400 J=0.13231 a_range=0.669 sat=0.00 alpha=0.006 q1=0.777 pi=1239.037
+[dbg] ep60 gs60600 J=0.13252 a_range=0.684 sat=0.00 alpha=0.006 q1=0.397 pi=1238.572
+[dbg] ep60 gs60800 J=0.13304 a_range=0.687 sat=0.00 alpha=0.006 q1=1.440 pi=1239.861
+Episode 61, Reward(scaled): -13330.78, Buffer: 61000
+[dbg] ep61 gs61000 J=0.13486 a_range=0.303 sat=0.00 alpha=0.006 q1=2.685 pi=1240.572
+[dbg]   next_logp=+3.76 q_target_mean=-1241.25 q_target_std=15.73
+[dbg] ep61 gs61200 J=0.13482 a_range=0.657 sat=0.00 alpha=0.006 q1=0.861 pi=1241.402
+[dbg] ep61 gs61400 J=0.13525 a_range=0.662 sat=0.00 alpha=0.006 q1=1.666 pi=1243.578
+[dbg] ep61 gs61600 J=0.13522 a_range=0.667 sat=0.25 alpha=0.006 q1=1.279 pi=1242.419
+[dbg] ep61 gs61800 J=0.13551 a_range=0.668 sat=0.00 alpha=0.006 q1=0.698 pi=1244.418
+Episode 62, Reward(scaled): -13525.41, Buffer: 62000
+[dbg] ep62 gs62000 J=0.13346 a_range=0.338 sat=0.00 alpha=0.006 q1=1.427 pi=1243.485
+[dbg]   next_logp=+4.57 q_target_mean=-1247.07 q_target_std=15.34
+[dbg] ep62 gs62200 J=0.13422 a_range=0.683 sat=0.00 alpha=0.006 q1=1.552 pi=1247.021
+[dbg] ep62 gs62400 J=0.13297 a_range=0.679 sat=0.00 alpha=0.006 q1=1.072 pi=1247.581
+[dbg] ep62 gs62600 J=0.13142 a_range=0.678 sat=0.00 alpha=0.006 q1=0.579 pi=1246.595
+[dbg] ep62 gs62800 J=0.13155 a_range=0.669 sat=0.25 alpha=0.006 q1=1.708 pi=1248.993
+Episode 63, Reward(scaled): -13272.66, Buffer: 63000
+[dbg] ep63 gs63000 J=0.13385 a_range=0.171 sat=0.00 alpha=0.006 q1=1.096 pi=1248.867
+[dbg]   next_logp=+4.22 q_target_mean=-1251.29 q_target_std=17.56
+[dbg] ep63 gs63200 J=0.13269 a_range=0.675 sat=0.00 alpha=0.006 q1=1.035 pi=1248.756
+[dbg] ep63 gs63400 J=0.13173 a_range=0.569 sat=0.00 alpha=0.006 q1=1.166 pi=1250.855
+[dbg] ep63 gs63600 J=0.13323 a_range=0.645 sat=0.00 alpha=0.006 q1=1.359 pi=1253.491
+[dbg] ep63 gs63800 J=0.13277 a_range=0.594 sat=0.00 alpha=0.006 q1=1.143 pi=1253.339
+Episode 64, Reward(scaled): -13278.11, Buffer: 64000
+[dbg] ep64 gs64000 J=0.13518 a_range=0.277 sat=0.00 alpha=0.006 q1=0.774 pi=1253.783
+[dbg]   next_logp=+4.16 q_target_mean=-1255.05 q_target_std=16.08
+[dbg] ep64 gs64200 J=0.13515 a_range=0.574 sat=0.00 alpha=0.006 q1=1.277 pi=1253.794
+[dbg] ep64 gs64400 J=0.13541 a_range=0.577 sat=0.00 alpha=0.006 q1=1.861 pi=1255.716
+[dbg] ep64 gs64600 J=0.13576 a_range=0.578 sat=0.00 alpha=0.006 q1=2.068 pi=1254.188
+[dbg] ep64 gs64800 J=0.13554 a_range=0.580 sat=0.25 alpha=0.005 q1=1.216 pi=1254.976
+Episode 65, Reward(scaled): -13553.30, Buffer: 65000
+[dbg] ep65 gs65000 J=0.13129 a_range=0.198 sat=0.00 alpha=0.005 q1=0.880 pi=1257.840
+[dbg]   next_logp=+4.17 q_target_mean=-1258.01 q_target_std=17.41
+[dbg] ep65 gs65200 J=0.13072 a_range=0.416 sat=0.00 alpha=0.005 q1=1.350 pi=1256.679
+[dbg] ep65 gs65400 J=0.13062 a_range=0.413 sat=0.00 alpha=0.005 q1=1.846 pi=1259.354
+[dbg] ep65 gs65600 J=0.13117 a_range=0.485 sat=0.00 alpha=0.005 q1=0.857 pi=1259.495
+[dbg] ep65 gs65800 J=0.13112 a_range=0.461 sat=0.00 alpha=0.005 q1=0.748 pi=1260.014
+Episode 66, Reward(scaled): -13100.74, Buffer: 66000
+[dbg] ep66 gs66000 J=0.13100 a_range=0.195 sat=0.00 alpha=0.005 q1=1.208 pi=1259.934
+[dbg]   next_logp=+3.63 q_target_mean=-1258.69 q_target_std=15.77
+[dbg] ep66 gs66200 J=0.13167 a_range=0.538 sat=0.00 alpha=0.005 q1=1.085 pi=1260.296
+[dbg] ep66 gs66400 J=0.13164 a_range=0.538 sat=0.00 alpha=0.005 q1=0.736 pi=1262.003
+[dbg] ep66 gs66600 J=0.13166 a_range=0.569 sat=0.00 alpha=0.006 q1=0.824 pi=1264.205
+[dbg] ep66 gs66800 J=0.13125 a_range=0.569 sat=0.00 alpha=0.006 q1=0.757 pi=1262.101
+Episode 67, Reward(scaled): -13149.60, Buffer: 67000
+[dbg] ep67 gs67000 J=0.13408 a_range=0.197 sat=0.00 alpha=0.006 q1=1.769 pi=1262.868
+[dbg]   next_logp=+4.01 q_target_mean=-1265.62 q_target_std=15.95
+[dbg] ep67 gs67200 J=0.13640 a_range=0.421 sat=0.00 alpha=0.005 q1=1.145 pi=1263.356
+[dbg] ep67 gs67400 J=0.13551 a_range=0.614 sat=0.25 alpha=0.005 q1=1.254 pi=1263.635
+[dbg] ep67 gs67600 J=0.13548 a_range=0.614 sat=0.00 alpha=0.005 q1=2.071 pi=1266.665
+[dbg] ep67 gs67800 J=0.13559 a_range=0.616 sat=0.25 alpha=0.006 q1=0.701 pi=1266.221
+Episode 68, Reward(scaled): -13525.98, Buffer: 68000
+[dbg] ep68 gs68000 J=0.13000 a_range=0.196 sat=0.00 alpha=0.005 q1=1.467 pi=1266.621
+[dbg]   next_logp=+3.38 q_target_mean=-1267.00 q_target_std=16.06
+[dbg] ep68 gs68200 J=0.13061 a_range=0.392 sat=0.00 alpha=0.005 q1=2.570 pi=1266.949
+[dbg] ep68 gs68400 J=0.13018 a_range=0.444 sat=0.00 alpha=0.005 q1=1.011 pi=1268.439
+[dbg] ep68 gs68600 J=0.13021 a_range=0.397 sat=0.00 alpha=0.005 q1=1.222 pi=1267.380
+[dbg] ep68 gs68800 J=0.13041 a_range=0.535 sat=0.00 alpha=0.005 q1=0.855 pi=1269.796
+Episode 69, Reward(scaled): -13028.37, Buffer: 69000
+[dbg] ep69 gs69000 J=0.13054 a_range=0.195 sat=0.00 alpha=0.006 q1=1.004 pi=1270.120
+[dbg]   next_logp=+4.76 q_target_mean=-1268.67 q_target_std=16.48
+[dbg] ep69 gs69200 J=0.12860 a_range=0.555 sat=0.00 alpha=0.005 q1=1.247 pi=1268.920
+[dbg] ep69 gs69400 J=0.13082 a_range=0.659 sat=0.25 alpha=0.006 q1=1.397 pi=1269.841
+[dbg] ep69 gs69600 J=0.13081 a_range=0.659 sat=0.00 alpha=0.006 q1=1.063 pi=1269.998
+[dbg] ep69 gs69800 J=0.12995 a_range=0.668 sat=0.00 alpha=0.005 q1=1.937 pi=1272.218
+Episode 70, Reward(scaled): -13017.19, Buffer: 70000  | eval best J=0.13355 last J=0.13427
+[dbg] ep70 gs70000 J=0.12882 a_range=0.197 sat=0.25 alpha=0.005 q1=0.972 pi=1271.418
+[dbg]   next_logp=+3.86 q_target_mean=-1273.35 q_target_std=16.70
+[dbg] ep70 gs70200 J=0.12866 a_range=0.294 sat=0.50 alpha=0.005 q1=0.935 pi=1272.228
+[dbg] ep70 gs70400 J=0.12817 a_range=0.383 sat=0.00 alpha=0.005 q1=0.838 pi=1274.441
+[dbg] ep70 gs70600 J=0.12860 a_range=0.378 sat=0.00 alpha=0.005 q1=0.859 pi=1275.285
+[dbg] ep70 gs70800 J=0.12874 a_range=0.386 sat=0.25 alpha=0.005 q1=1.102 pi=1274.814
+Episode 71, Reward(scaled): -12859.27, Buffer: 71000
+[dbg] ep71 gs71000 J=0.12924 a_range=0.191 sat=0.00 alpha=0.005 q1=0.946 pi=1274.675
+[dbg]   next_logp=+4.25 q_target_mean=-1276.51 q_target_std=15.84
+[dbg] ep71 gs71200 J=0.12903 a_range=0.205 sat=0.00 alpha=0.005 q1=2.076 pi=1274.692
+[dbg] ep71 gs71400 J=0.12908 a_range=0.438 sat=0.00 alpha=0.005 q1=2.166 pi=1274.529
+[dbg] ep71 gs71600 J=0.12879 a_range=0.455 sat=0.00 alpha=0.005 q1=0.705 pi=1275.395
+[dbg] ep71 gs71800 J=0.12890 a_range=0.457 sat=0.25 alpha=0.005 q1=0.846 pi=1275.745
+Episode 72, Reward(scaled): -12893.84, Buffer: 72000
+[dbg] ep72 gs72000 J=0.13245 a_range=0.192 sat=0.00 alpha=0.005 q1=1.373 pi=1277.997
+[dbg]   next_logp=+3.44 q_target_mean=-1276.06 q_target_std=18.41
+[dbg] ep72 gs72200 J=0.13293 a_range=0.454 sat=0.00 alpha=0.005 q1=1.394 pi=1277.676
+[dbg] ep72 gs72400 J=0.13237 a_range=0.466 sat=0.00 alpha=0.005 q1=1.598 pi=1277.138
+[dbg] ep72 gs72600 J=0.13398 a_range=0.518 sat=0.00 alpha=0.005 q1=0.574 pi=1278.083
+[dbg] ep72 gs72800 J=0.13179 a_range=0.522 sat=0.00 alpha=0.005 q1=0.536 pi=1279.045
+Episode 73, Reward(scaled): -13290.35, Buffer: 73000
+[dbg] ep73 gs73000 J=0.12932 a_range=0.198 sat=0.50 alpha=0.005 q1=1.132 pi=1279.442
+[dbg]   next_logp=+4.61 q_target_mean=-1281.76 q_target_std=16.01
+[dbg] ep73 gs73200 J=0.12932 a_range=0.198 sat=0.00 alpha=0.005 q1=0.739 pi=1279.286
+[dbg] ep73 gs73400 J=0.12932 a_range=0.198 sat=0.25 alpha=0.005 q1=0.738 pi=1280.211
+[dbg] ep73 gs73600 J=0.12932 a_range=0.198 sat=0.25 alpha=0.005 q1=0.588 pi=1279.030
+[dbg] ep73 gs73800 J=0.12932 a_range=0.198 sat=0.00 alpha=0.005 q1=0.749 pi=1280.056
+Episode 74, Reward(scaled): -12931.85, Buffer: 74000
+[dbg] ep74 gs74000 J=0.13030 a_range=0.194 sat=0.00 alpha=0.005 q1=1.082 pi=1279.592
+[dbg]   next_logp=+3.50 q_target_mean=-1280.46 q_target_std=15.62
+[dbg] ep74 gs74200 J=0.13023 a_range=0.360 sat=0.00 alpha=0.005 q1=0.745 pi=1282.499
+[dbg] ep74 gs74400 J=0.13051 a_range=0.365 sat=0.25 alpha=0.005 q1=1.110 pi=1280.850
+[dbg] ep74 gs74600 J=0.13021 a_range=0.472 sat=0.25 alpha=0.005 q1=1.716 pi=1281.384
+[dbg] ep74 gs74800 J=0.13023 a_range=0.472 sat=0.25 alpha=0.005 q1=1.013 pi=1280.329
+Episode 75, Reward(scaled): -13028.89, Buffer: 75000
+[dbg] ep75 gs75000 J=0.13114 a_range=0.259 sat=0.00 alpha=0.005 q1=1.028 pi=1282.060
+[dbg]   next_logp=+4.14 q_target_mean=-1284.26 q_target_std=16.54
+[dbg] ep75 gs75200 J=0.13070 a_range=0.426 sat=0.25 alpha=0.005 q1=0.731 pi=1284.657
+[dbg] ep75 gs75400 J=0.13101 a_range=0.426 sat=0.00 alpha=0.005 q1=1.451 pi=1281.341
+[dbg] ep75 gs75600 J=0.13101 a_range=0.426 sat=0.00 alpha=0.006 q1=1.532 pi=1284.819
+[dbg] ep75 gs75800 J=0.13149 a_range=0.430 sat=0.25 alpha=0.006 q1=0.955 pi=1284.326
+Episode 76, Reward(scaled): -13112.45, Buffer: 76000
+[dbg] ep76 gs76000 J=0.13328 a_range=0.194 sat=0.00 alpha=0.006 q1=1.401 pi=1285.442
+[dbg]   next_logp=+3.72 q_target_mean=-1284.12 q_target_std=15.99
+[dbg] ep76 gs76200 J=0.13054 a_range=0.653 sat=0.00 alpha=0.006 q1=0.576 pi=1285.644
+[dbg] ep76 gs76400 J=0.13443 a_range=0.610 sat=0.00 alpha=0.006 q1=0.964 pi=1286.591
+[dbg] ep76 gs76600 J=0.13446 a_range=0.693 sat=0.00 alpha=0.006 q1=1.640 pi=1287.486
+[dbg] ep76 gs76800 J=0.13469 a_range=0.676 sat=0.00 alpha=0.006 q1=1.737 pi=1287.782
+Episode 77, Reward(scaled): -13415.86, Buffer: 77000
+[dbg] ep77 gs77000 J=0.13110 a_range=0.194 sat=0.00 alpha=0.006 q1=0.830 pi=1286.501
+[dbg]   next_logp=+4.39 q_target_mean=-1288.16 q_target_std=17.07
+[dbg] ep77 gs77200 J=0.13111 a_range=0.271 sat=0.00 alpha=0.006 q1=0.587 pi=1286.839
+[dbg] ep77 gs77400 J=0.13117 a_range=0.273 sat=0.00 alpha=0.006 q1=1.134 pi=1289.956
+[dbg] ep77 gs77600 J=0.13117 a_range=0.273 sat=0.00 alpha=0.006 q1=0.810 pi=1287.902
+[dbg] ep77 gs77800 J=0.13118 a_range=0.267 sat=0.00 alpha=0.006 q1=1.916 pi=1287.722
+Episode 78, Reward(scaled): -13115.86, Buffer: 78000
+[dbg] ep78 gs78000 J=0.13225 a_range=0.198 sat=0.00 alpha=0.006 q1=1.273 pi=1289.998
+[dbg]   next_logp=+4.04 q_target_mean=-1290.48 q_target_std=17.27
+[dbg] ep78 gs78200 J=0.13192 a_range=0.187 sat=0.00 alpha=0.006 q1=0.686 pi=1288.150
+[dbg] ep78 gs78400 J=0.13192 a_range=0.187 sat=0.50 alpha=0.006 q1=0.576 pi=1288.245
+[dbg] ep78 gs78600 J=0.13183 a_range=0.187 sat=0.50 alpha=0.006 q1=2.044 pi=1289.952
+[dbg] ep78 gs78800 J=0.13183 a_range=0.187 sat=0.25 alpha=0.006 q1=0.812 pi=1291.082
+Episode 79, Reward(scaled): -13190.36, Buffer: 79000
+[dbg] ep79 gs79000 J=0.13305 a_range=0.187 sat=0.25 alpha=0.006 q1=1.733 pi=1290.505
+[dbg]   next_logp=+4.31 q_target_mean=-1290.61 q_target_std=16.06
+[dbg] ep79 gs79200 J=0.13308 a_range=0.431 sat=0.25 alpha=0.006 q1=1.949 pi=1289.692
+[dbg] ep79 gs79400 J=0.13306 a_range=0.436 sat=0.00 alpha=0.006 q1=1.530 pi=1289.026
+[dbg] ep79 gs79600 J=0.13303 a_range=0.437 sat=0.50 alpha=0.006 q1=3.997 pi=1290.740
+[dbg] ep79 gs79800 J=0.13303 a_range=0.437 sat=0.25 alpha=0.006 q1=1.039 pi=1290.384
+Episode 80, Reward(scaled): -13304.62, Buffer: 80000  | eval best J=0.13129 last J=0.13129
+[dbg] ep80 gs80000 J=0.13178 a_range=0.193 sat=0.00 alpha=0.006 q1=0.867 pi=1291.754
+[dbg]   next_logp=+3.92 q_target_mean=-1293.21 q_target_std=16.48
+[dbg] ep80 gs80200 J=0.13195 a_range=0.353 sat=0.00 alpha=0.006 q1=1.048 pi=1292.691
+[dbg] ep80 gs80400 J=0.13182 a_range=0.446 sat=0.25 alpha=0.006 q1=1.012 pi=1294.149
+[dbg] ep80 gs80600 J=0.13039 a_range=0.446 sat=0.25 alpha=0.006 q1=1.585 pi=1292.783
+[dbg] ep80 gs80800 J=0.13037 a_range=0.447 sat=0.00 alpha=0.006 q1=0.970 pi=1294.502
+Episode 81, Reward(scaled): -13116.31, Buffer: 81000
+[dbg] ep81 gs81000 J=0.13315 a_range=0.193 sat=0.00 alpha=0.006 q1=0.576 pi=1292.122
+[dbg]   next_logp=+3.65 q_target_mean=-1294.19 q_target_std=16.04
+[dbg] ep81 gs81200 J=0.13215 a_range=0.502 sat=0.00 alpha=0.006 q1=0.497 pi=1294.332
+[dbg] ep81 gs81400 J=0.13315 a_range=0.672 sat=0.25 alpha=0.006 q1=0.844 pi=1293.573
+[dbg] ep81 gs81600 J=0.13163 a_range=0.658 sat=0.00 alpha=0.006 q1=0.845 pi=1294.118
+[dbg] ep81 gs81800 J=0.13269 a_range=0.677 sat=0.00 alpha=0.006 q1=0.881 pi=1293.060
+Episode 82, Reward(scaled): -13242.51, Buffer: 82000
+[dbg] ep82 gs82000 J=0.13210 a_range=0.195 sat=0.00 alpha=0.006 q1=1.998 pi=1295.742
+[dbg]   next_logp=+3.57 q_target_mean=-1295.66 q_target_std=16.66
+[dbg] ep82 gs82200 J=0.13202 a_range=0.301 sat=0.00 alpha=0.006 q1=1.372 pi=1294.217
+[dbg] ep82 gs82400 J=0.13216 a_range=0.309 sat=0.00 alpha=0.006 q1=0.774 pi=1295.157
+[dbg] ep82 gs82600 J=0.13261 a_range=0.315 sat=0.00 alpha=0.006 q1=1.783 pi=1295.120
+[dbg] ep82 gs82800 J=0.13265 a_range=0.315 sat=0.00 alpha=0.006 q1=0.820 pi=1296.243
+Episode 83, Reward(scaled): -13241.08, Buffer: 83000
+[dbg] ep83 gs83000 J=0.13662 a_range=0.194 sat=0.00 alpha=0.006 q1=0.765 pi=1295.355
+[dbg]   next_logp=+3.55 q_target_mean=-1297.79 q_target_std=16.92
+[dbg] ep83 gs83200 J=0.13659 a_range=0.253 sat=0.25 alpha=0.006 q1=1.021 pi=1297.062
+[dbg] ep83 gs83400 J=0.13639 a_range=0.472 sat=0.00 alpha=0.006 q1=0.664 pi=1297.704
+[dbg] ep83 gs83600 J=0.13638 a_range=0.331 sat=0.25 alpha=0.006 q1=0.848 pi=1298.151
+[dbg] ep83 gs83800 J=0.13660 a_range=0.428 sat=0.00 alpha=0.006 q1=0.464 pi=1297.513
+Episode 84, Reward(scaled): -13650.18, Buffer: 84000
+[dbg] ep84 gs84000 J=0.13154 a_range=0.192 sat=0.00 alpha=0.006 q1=0.443 pi=1299.529
+[dbg]   next_logp=+4.14 q_target_mean=-1298.56 q_target_std=17.75
+[dbg] ep84 gs84200 J=0.13149 a_range=0.408 sat=0.00 alpha=0.006 q1=1.019 pi=1299.856
+[dbg] ep84 gs84400 J=0.13151 a_range=0.449 sat=0.00 alpha=0.006 q1=1.265 pi=1298.256
+[dbg] ep84 gs84600 J=0.13152 a_range=0.449 sat=0.00 alpha=0.006 q1=1.336 pi=1296.910
+[dbg] ep84 gs84800 J=0.13152 a_range=0.449 sat=0.00 alpha=0.006 q1=1.805 pi=1300.488
+Episode 85, Reward(scaled): -13149.81, Buffer: 85000
+[dbg] ep85 gs85000 J=0.13142 a_range=0.194 sat=0.00 alpha=0.006 q1=1.278 pi=1300.205
+[dbg]   next_logp=+3.73 q_target_mean=-1301.01 q_target_std=18.36
+[dbg] ep85 gs85200 J=0.13142 a_range=0.194 sat=0.00 alpha=0.006 q1=0.485 pi=1301.869
+[dbg] ep85 gs85400 J=0.13141 a_range=0.194 sat=0.25 alpha=0.006 q1=0.786 pi=1300.004
+[dbg] ep85 gs85600 J=0.13141 a_range=0.194 sat=0.00 alpha=0.006 q1=1.281 pi=1300.398
+[dbg] ep85 gs85800 J=0.13140 a_range=0.194 sat=0.00 alpha=0.006 q1=0.927 pi=1299.891
+Episode 86, Reward(scaled): -13141.08, Buffer: 86000
+[dbg] ep86 gs86000 J=0.13113 a_range=0.267 sat=0.00 alpha=0.006 q1=0.406 pi=1299.336
+[dbg]   next_logp=+3.79 q_target_mean=-1300.00 q_target_std=17.85
+[dbg] ep86 gs86200 J=0.13089 a_range=0.449 sat=0.00 alpha=0.006 q1=0.667 pi=1300.364
+[dbg] ep86 gs86400 J=0.13090 a_range=0.449 sat=0.00 alpha=0.006 q1=2.045 pi=1299.740
+[dbg] ep86 gs86600 J=0.13091 a_range=0.452 sat=0.00 alpha=0.006 q1=1.164 pi=1301.452
+[dbg] ep86 gs86800 J=0.13092 a_range=0.451 sat=0.00 alpha=0.006 q1=0.829 pi=1301.782
+Episode 87, Reward(scaled): -13090.72, Buffer: 87000
+[dbg] ep87 gs87000 J=0.13255 a_range=0.193 sat=0.00 alpha=0.006 q1=0.864 pi=1301.619
+[dbg]   next_logp=+3.48 q_target_mean=-1303.09 q_target_std=16.81
+[dbg] ep87 gs87200 J=0.13248 a_range=0.450 sat=0.00 alpha=0.006 q1=1.014 pi=1303.096
+[dbg] ep87 gs87400 J=0.13243 a_range=0.420 sat=0.00 alpha=0.006 q1=0.380 pi=1301.999
+[dbg] ep87 gs87600 J=0.13254 a_range=0.464 sat=0.00 alpha=0.006 q1=0.827 pi=1302.007
+[dbg] ep87 gs87800 J=0.13279 a_range=0.497 sat=0.00 alpha=0.006 q1=0.446 pi=1302.234
+Episode 88, Reward(scaled): -13250.50, Buffer: 88000
+[dbg] ep88 gs88000 J=0.13265 a_range=0.189 sat=0.00 alpha=0.006 q1=0.784 pi=1302.781
+[dbg]   next_logp=+4.40 q_target_mean=-1302.09 q_target_std=16.05
+[dbg] ep88 gs88200 J=0.13165 a_range=0.561 sat=0.00 alpha=0.006 q1=0.846 pi=1303.828
+[dbg] ep88 gs88400 J=0.13196 a_range=0.561 sat=0.00 alpha=0.006 q1=2.318 pi=1302.984
+[dbg] ep88 gs88600 J=0.13312 a_range=0.558 sat=0.00 alpha=0.006 q1=1.090 pi=1305.633
+[dbg] ep88 gs88800 J=0.13258 a_range=0.555 sat=0.00 alpha=0.006 q1=1.700 pi=1303.103
+Episode 89, Reward(scaled): -13258.45, Buffer: 89000
+[dbg] ep89 gs89000 J=0.13327 a_range=0.189 sat=0.00 alpha=0.006 q1=2.270 pi=1303.699
+[dbg]   next_logp=+4.24 q_target_mean=-1303.35 q_target_std=15.86
+[dbg] ep89 gs89200 J=0.13185 a_range=0.675 sat=0.00 alpha=0.006 q1=0.451 pi=1302.726
+[dbg] ep89 gs89400 J=0.13494 a_range=0.685 sat=0.00 alpha=0.006 q1=1.149 pi=1303.621
+[dbg] ep89 gs89600 J=0.13245 a_range=0.686 sat=0.00 alpha=0.006 q1=1.547 pi=1306.014
+[dbg] ep89 gs89800 J=0.13200 a_range=0.671 sat=0.00 alpha=0.006 q1=0.766 pi=1306.043
+Episode 90, Reward(scaled): -13287.93, Buffer: 90000  | eval best J=0.13311 last J=0.13336
+[dbg] ep90 gs90000 J=0.13446 a_range=0.196 sat=0.00 alpha=0.006 q1=1.038 pi=1304.113
+[dbg]   next_logp=+3.65 q_target_mean=-1305.54 q_target_std=17.45
+[dbg] ep90 gs90200 J=0.13562 a_range=0.455 sat=0.00 alpha=0.006 q1=1.687 pi=1304.703
+[dbg] ep90 gs90400 J=0.13491 a_range=0.463 sat=0.00 alpha=0.006 q1=0.841 pi=1304.270
+[dbg] ep90 gs90600 J=0.13491 a_range=0.463 sat=0.00 alpha=0.006 q1=0.591 pi=1305.613
+[dbg] ep90 gs90800 J=0.13491 a_range=0.463 sat=0.00 alpha=0.006 q1=1.048 pi=1306.006
+Episode 91, Reward(scaled): -13501.78, Buffer: 91000
+[dbg] ep91 gs91000 J=0.13383 a_range=0.198 sat=0.00 alpha=0.006 q1=0.649 pi=1305.438
+[dbg]   next_logp=+4.60 q_target_mean=-1306.39 q_target_std=16.84
+[dbg] ep91 gs91200 J=0.13518 a_range=0.690 sat=0.00 alpha=0.006 q1=0.999 pi=1305.837
+[dbg] ep91 gs91400 J=0.13523 a_range=0.692 sat=0.00 alpha=0.006 q1=2.067 pi=1307.564
+[dbg] ep91 gs91600 J=0.13516 a_range=0.692 sat=0.25 alpha=0.006 q1=0.477 pi=1305.810
+[dbg] ep91 gs91800 J=0.13505 a_range=0.691 sat=0.00 alpha=0.006 q1=0.743 pi=1307.045
+Episode 92, Reward(scaled): -13506.75, Buffer: 92000
+[dbg] ep92 gs92000 J=0.13345 a_range=0.197 sat=0.00 alpha=0.006 q1=0.349 pi=1306.185
+[dbg]   next_logp=+4.35 q_target_mean=-1306.61 q_target_std=16.87
+[dbg] ep92 gs92200 J=0.12841 a_range=0.638 sat=0.00 alpha=0.006 q1=0.714 pi=1307.089
+[dbg] ep92 gs92400 J=0.12851 a_range=0.622 sat=0.00 alpha=0.006 q1=0.701 pi=1307.573
+[dbg] ep92 gs92600 J=0.12850 a_range=0.622 sat=0.25 alpha=0.006 q1=0.777 pi=1308.911
+[dbg] ep92 gs92800 J=0.12850 a_range=0.622 sat=0.00 alpha=0.006 q1=0.491 pi=1307.438
+Episode 93, Reward(scaled): -12890.88, Buffer: 93000
+[dbg] ep93 gs93000 J=0.13277 a_range=0.193 sat=0.00 alpha=0.006 q1=1.748 pi=1308.117
+[dbg]   next_logp=+3.84 q_target_mean=-1308.20 q_target_std=18.44
+[dbg] ep93 gs93200 J=0.13275 a_range=0.459 sat=0.00 alpha=0.006 q1=0.821 pi=1308.070
+[dbg] ep93 gs93400 J=0.13331 a_range=0.496 sat=0.25 alpha=0.006 q1=0.745 pi=1308.622
+[dbg] ep93 gs93600 J=0.13318 a_range=0.496 sat=0.00 alpha=0.006 q1=1.204 pi=1307.798
+[dbg] ep93 gs93800 J=0.13318 a_range=0.496 sat=0.00 alpha=0.006 q1=0.789 pi=1308.095
+Episode 94, Reward(scaled): -13309.74, Buffer: 94000
+[dbg] ep94 gs94000 J=0.12926 a_range=0.187 sat=0.00 alpha=0.006 q1=0.754 pi=1309.611
+[dbg]   next_logp=+4.60 q_target_mean=-1307.11 q_target_std=17.22
+[dbg] ep94 gs94200 J=0.12970 a_range=0.540 sat=0.00 alpha=0.006 q1=1.189 pi=1308.807
+[dbg] ep94 gs94400 J=0.13009 a_range=0.551 sat=0.25 alpha=0.006 q1=0.699 pi=1310.273
+[dbg] ep94 gs94600 J=0.12937 a_range=0.544 sat=0.00 alpha=0.006 q1=0.992 pi=1310.170
+[dbg] ep94 gs94800 J=0.12964 a_range=0.544 sat=0.00 alpha=0.006 q1=0.748 pi=1309.463
+Episode 95, Reward(scaled): -12980.07, Buffer: 95000
+[dbg] ep95 gs95000 J=0.13483 a_range=0.190 sat=0.00 alpha=0.006 q1=0.889 pi=1309.757
+[dbg]   next_logp=+3.63 q_target_mean=-1308.78 q_target_std=16.61
+[dbg] ep95 gs95200 J=0.13517 a_range=0.580 sat=0.00 alpha=0.006 q1=1.026 pi=1307.632
+[dbg] ep95 gs95400 J=0.13478 a_range=0.596 sat=0.50 alpha=0.006 q1=0.744 pi=1312.123
+[dbg] ep95 gs95600 J=0.13331 a_range=0.620 sat=0.00 alpha=0.006 q1=0.612 pi=1310.321
+[dbg] ep95 gs95800 J=0.13326 a_range=0.624 sat=0.00 alpha=0.006 q1=1.528 pi=1310.829
+Episode 96, Reward(scaled): -13435.53, Buffer: 96000
+[dbg] ep96 gs96000 J=0.13185 a_range=0.183 sat=0.00 alpha=0.006 q1=0.674 pi=1311.117
+[dbg]   next_logp=+3.67 q_target_mean=-1311.70 q_target_std=17.20
+[dbg] ep96 gs96200 J=0.13184 a_range=0.183 sat=0.00 alpha=0.006 q1=0.806 pi=1309.322
+[dbg] ep96 gs96400 J=0.13239 a_range=0.684 sat=0.00 alpha=0.006 q1=0.700 pi=1310.022
+[dbg] ep96 gs96600 J=0.13287 a_range=0.690 sat=0.00 alpha=0.006 q1=0.574 pi=1312.433
+[dbg] ep96 gs96800 J=0.13286 a_range=0.690 sat=0.00 alpha=0.006 q1=0.661 pi=1311.845
+Episode 97, Reward(scaled): -13257.76, Buffer: 97000
+[dbg] ep97 gs97000 J=0.13036 a_range=0.193 sat=0.00 alpha=0.006 q1=1.522 pi=1310.913
+[dbg]   next_logp=+3.73 q_target_mean=-1311.35 q_target_std=17.00
+[dbg] ep97 gs97200 J=0.13013 a_range=0.359 sat=0.00 alpha=0.006 q1=0.776 pi=1311.329
+[dbg] ep97 gs97400 J=0.13087 a_range=0.459 sat=0.00 alpha=0.006 q1=0.622 pi=1311.288
+[dbg] ep97 gs97600 J=0.12932 a_range=0.556 sat=0.00 alpha=0.006 q1=1.145 pi=1311.955
+[dbg] ep97 gs97800 J=0.12930 a_range=0.547 sat=0.00 alpha=0.006 q1=0.434 pi=1310.601
+Episode 98, Reward(scaled): -12984.15, Buffer: 98000
+[dbg] ep98 gs98000 J=0.13133 a_range=0.193 sat=0.00 alpha=0.006 q1=0.707 pi=1310.854
+[dbg]   next_logp=+3.94 q_target_mean=-1311.83 q_target_std=17.48
+[dbg] ep98 gs98200 J=0.13141 a_range=0.238 sat=0.00 alpha=0.006 q1=1.199 pi=1311.232
+[dbg] ep98 gs98400 J=0.13142 a_range=0.239 sat=0.00 alpha=0.006 q1=0.614 pi=1311.497
+[dbg] ep98 gs98600 J=0.13142 a_range=0.239 sat=0.00 alpha=0.006 q1=0.806 pi=1312.506
+[dbg] ep98 gs98800 J=0.13140 a_range=0.242 sat=0.00 alpha=0.006 q1=1.519 pi=1312.920
+Episode 99, Reward(scaled): -13140.36, Buffer: 99000
+[dbg] ep99 gs99000 J=0.12960 a_range=0.198 sat=0.00 alpha=0.006 q1=1.142 pi=1311.342
+[dbg]   next_logp=+4.76 q_target_mean=-1314.07 q_target_std=17.45
+[dbg] ep99 gs99200 J=0.13008 a_range=0.255 sat=0.00 alpha=0.006 q1=1.156 pi=1313.960
+[dbg] ep99 gs99400 J=0.12986 a_range=0.484 sat=0.00 alpha=0.006 q1=0.505 pi=1312.914
+[dbg] ep99 gs99600 J=0.12971 a_range=0.512 sat=0.25 alpha=0.006 q1=1.886 pi=1312.625
+[dbg] ep99 gs99800 J=0.12971 a_range=0.513 sat=0.25 alpha=0.006 q1=1.018 pi=1314.728
+Episode 100, Reward(scaled): -12977.28, Buffer: 100000  | eval best J=0.12817 last J=0.12817
+학습 완료!
+finalA (best J 방문): 0.12585820905087122
+finalW: [-0.00253706 -0.34315048 -0.0621002   0.07803819  0.01668443 -0.00282272
+ -0.173428   -0.30561     0.05929577 -0.00303511  0.11636636 -0.26178374
+  0.20334377  0.01820429 -0.33931749  0.0970608   0.02618154  0.00549724
+ -0.06581082  0.02309243 -0.00363557 -0.00378667  0.25724473  0.30099321
+  0.02648596 -0.01725065  0.29194232 -0.04110575 -0.19212432  0.313456
+ -0.12944495  0.0634443   0.04732431 -0.0959199  -0.11059494  0.0091896
+ -0.01530365 -0.02641489  0.06880822 -0.03490858 -0.07191572 -0.1880781
+  0.18011446 -0.19895382  0.14257068 -0.03851483  0.10940651  0.05078259
+  0.1687142   0.03433574  0.1171774  -0.07189608 -0.08772835 -0.11638427
+  0.04850994  0.12929166]

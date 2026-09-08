@@ -1,0 +1,879 @@
+nohup: ignoring input
+2026-09-04 08:28:24.715209: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-04 08:28:24.888365: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-04 08:28:24.931006: E tensorflow/stream_executor/cuda/cuda_blas.cc:2981] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-09-04 08:28:25.625563: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-04 08:28:25.625668: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libnvinfer_plugin.so.7'; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: :/usr/local/cuda-11.2/lib64:/usr/local/cuda-11.2/lib64
+2026-09-04 08:28:25.625679: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=5.0
+2026-09-04 08:28:27.201237: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-09-04 08:28:27.822900: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1616] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 46705 MB memory:  -> device: 0, name: NVIDIA RTX A6000, pci bus id: 0000:b5:00.0, compute capability: 8.6
+2026-09-04 08:28:29.207680: I tensorflow/stream_executor/cuda/cuda_blas.cc:1614] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+
+--- [학습 루프 테스트: 동적 도로 분할 연산 시뮬레이션] ---
+[Test 1] 균등 가중치 baseline J: 0.13058294
+학습 시작...
+[dbg] ep0 gs0 J=0.13569 a_range=0.548 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 1, Reward(scaled): 4.97, Buffer: 64
+Episode 2, Reward(scaled): -1.03, Buffer: 128
+Episode 3, Reward(scaled): -1.41, Buffer: 192
+[dbg] ep3 gs200 J=0.13409 a_range=1.609 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 4, Reward(scaled): -2.86, Buffer: 256
+Episode 5, Reward(scaled): -2.56, Buffer: 320
+Episode 6, Reward(scaled): -7.56, Buffer: 384
+[dbg] ep6 gs400 J=0.13123 a_range=1.609 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 7, Reward(scaled): -9.73, Buffer: 448
+Episode 8, Reward(scaled): 6.48, Buffer: 512
+Episode 9, Reward(scaled): -2.04, Buffer: 576
+[dbg] ep9 gs600 J=0.13028 a_range=1.609 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 10, Reward(scaled): -8.06, Buffer: 640
+Episode 11, Reward(scaled): -4.43, Buffer: 704
+Episode 12, Reward(scaled): 5.48, Buffer: 768
+[dbg] ep12 gs800 J=0.12909 a_range=1.609 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 13, Reward(scaled): -5.04, Buffer: 832
+Episode 14, Reward(scaled): -5.18, Buffer: 896
+Episode 15, Reward(scaled): 0.27, Buffer: 960
+[dbg] ep15 gs1000 J=0.13282 a_range=1.609 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 16, Reward(scaled): 6.76, Buffer: 1024
+Episode 17, Reward(scaled): -8.15, Buffer: 1088
+Episode 18, Reward(scaled): -0.99, Buffer: 1152
+[dbg] ep18 gs1200 J=0.12757 a_range=1.609 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 19, Reward(scaled): 2.86, Buffer: 1216
+Episode 20, Reward(scaled): -6.00, Buffer: 1280
+Episode 21, Reward(scaled): 1.00, Buffer: 1344
+[dbg] ep21 gs1400 J=0.12938 a_range=1.609 sat=0.00 alpha=0.200 q1=0.000 pi=0.000
+Episode 22, Reward(scaled): 4.59, Buffer: 1408
+Episode 23, Reward(scaled): 3.12, Buffer: 1472
+Episode 24, Reward(scaled): -4.48, Buffer: 1536
+Episode 25, Reward(scaled): -1.61, Buffer: 1600
+[dbg] ep25 gs1600 J=0.13416 a_range=0.601 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 26, Reward(scaled): -1.70, Buffer: 1664
+Episode 27, Reward(scaled): 6.77, Buffer: 1728
+Episode 28, Reward(scaled): -5.98, Buffer: 1792
+[dbg] ep28 gs1800 J=0.13474 a_range=1.520 sat=0.02 alpha=0.200 q1=0.000 pi=0.000
+Episode 29, Reward(scaled): 1.98, Buffer: 1856
+Episode 30, Reward(scaled): 0.30, Buffer: 1920
+Episode 31, Reward(scaled): -4.32, Buffer: 1984
+[dbg] ep31 gs2000 J=0.13579 a_range=1.609 sat=0.05 alpha=0.200 q1=12.448 pi=-1.721
+[dbg]   next_logp=-10.55 q_target_mean=+1.77 q_target_std=3.26
+Episode 32, Reward(scaled): 1.82, Buffer: 2048
+Episode 33, Reward(scaled): 5.23, Buffer: 2112
+Episode 34, Reward(scaled): 13.27, Buffer: 2176
+[dbg] ep34 gs2200 J=0.11921 a_range=1.609 sat=0.00 alpha=0.196 q1=6.100 pi=-19.597
+Episode 35, Reward(scaled): 19.68, Buffer: 2240
+Episode 36, Reward(scaled): 20.48, Buffer: 2304
+Episode 37, Reward(scaled): 20.49, Buffer: 2368
+[dbg] ep37 gs2400 J=0.11423 a_range=1.609 sat=0.00 alpha=0.192 q1=4.506 pi=-25.655
+Episode 38, Reward(scaled): 21.75, Buffer: 2432
+Episode 39, Reward(scaled): 13.98, Buffer: 2496
+Episode 40, Reward(scaled): 17.14, Buffer: 2560
+[dbg] ep40 gs2600 J=0.11211 a_range=1.609 sat=0.00 alpha=0.188 q1=4.192 pi=-32.087
+Episode 41, Reward(scaled): 14.81, Buffer: 2624
+Episode 42, Reward(scaled): 14.31, Buffer: 2688
+Episode 43, Reward(scaled): 15.08, Buffer: 2752
+[dbg] ep43 gs2800 J=0.11441 a_range=1.609 sat=0.00 alpha=0.185 q1=2.512 pi=-38.174
+Episode 44, Reward(scaled): 24.41, Buffer: 2816
+Episode 45, Reward(scaled): 14.56, Buffer: 2880
+Episode 46, Reward(scaled): 21.07, Buffer: 2944
+[dbg] ep46 gs3000 J=0.11576 a_range=1.609 sat=0.00 alpha=0.181 q1=1.728 pi=-43.729
+[dbg]   next_logp=-33.60 q_target_mean=+43.25 q_target_std=3.66
+Episode 47, Reward(scaled): 16.04, Buffer: 3008
+Episode 48, Reward(scaled): 9.32, Buffer: 3072
+Episode 49, Reward(scaled): 18.89, Buffer: 3136
+Episode 50, Reward(scaled): 10.55, Buffer: 3200
+[dbg] ep50 gs3200 J=0.13394 a_range=0.591 sat=0.00 alpha=0.177 q1=1.221 pi=-49.601
+Episode 51, Reward(scaled): 16.96, Buffer: 3264
+Episode 52, Reward(scaled): 14.40, Buffer: 3328
+Episode 53, Reward(scaled): 13.16, Buffer: 3392
+[dbg] ep53 gs3400 J=0.11542 a_range=1.609 sat=0.00 alpha=0.174 q1=1.161 pi=-55.236
+Episode 54, Reward(scaled): 15.80, Buffer: 3456
+Episode 55, Reward(scaled): 15.09, Buffer: 3520
+Episode 56, Reward(scaled): 18.44, Buffer: 3584
+[dbg] ep56 gs3600 J=0.12010 a_range=1.609 sat=0.00 alpha=0.170 q1=0.959 pi=-60.490
+Episode 57, Reward(scaled): 8.88, Buffer: 3648
+Episode 58, Reward(scaled): 16.74, Buffer: 3712
+Episode 59, Reward(scaled): 17.95, Buffer: 3776
+[dbg] ep59 gs3800 J=0.11925 a_range=1.609 sat=0.00 alpha=0.167 q1=0.645 pi=-66.499
+Episode 60, Reward(scaled): 16.08, Buffer: 3840
+Episode 61, Reward(scaled): 11.55, Buffer: 3904
+Episode 62, Reward(scaled): 10.85, Buffer: 3968
+[dbg] ep62 gs4000 J=0.11933 a_range=1.609 sat=0.00 alpha=0.164 q1=0.647 pi=-71.467
+[dbg]   next_logp=-34.64 q_target_mean=+70.07 q_target_std=5.10
+Episode 63, Reward(scaled): 13.54, Buffer: 4032
+Episode 64, Reward(scaled): 15.03, Buffer: 4096
+Episode 65, Reward(scaled): 9.76, Buffer: 4160
+[dbg] ep65 gs4200 J=0.12356 a_range=1.609 sat=0.00 alpha=0.160 q1=0.632 pi=-76.367
+Episode 66, Reward(scaled): 13.57, Buffer: 4224
+Episode 67, Reward(scaled): 12.98, Buffer: 4288
+Episode 68, Reward(scaled): 13.90, Buffer: 4352
+[dbg] ep68 gs4400 J=0.12144 a_range=1.609 sat=0.00 alpha=0.157 q1=0.619 pi=-81.435
+Episode 69, Reward(scaled): 13.19, Buffer: 4416
+Episode 70, Reward(scaled): 10.71, Buffer: 4480
+Episode 71, Reward(scaled): 6.85, Buffer: 4544
+[dbg] ep71 gs4600 J=0.12108 a_range=1.609 sat=0.00 alpha=0.154 q1=0.545 pi=-85.548
+Episode 72, Reward(scaled): 7.36, Buffer: 4608
+Episode 73, Reward(scaled): 20.06, Buffer: 4672
+Episode 74, Reward(scaled): 3.22, Buffer: 4736
+Episode 75, Reward(scaled): 22.11, Buffer: 4800
+[dbg] ep75 gs4800 J=0.13013 a_range=0.616 sat=0.00 alpha=0.151 q1=0.508 pi=-90.306
+Episode 76, Reward(scaled): 14.36, Buffer: 4864
+Episode 77, Reward(scaled): 13.73, Buffer: 4928
+Episode 78, Reward(scaled): 12.49, Buffer: 4992
+[dbg] ep78 gs5000 J=0.12327 a_range=1.609 sat=0.02 alpha=0.148 q1=0.442 pi=-94.453
+[dbg]   next_logp=-35.30 q_target_mean=+94.11 q_target_std=6.16
+Episode 79, Reward(scaled): 11.44, Buffer: 5056
+Episode 80, Reward(scaled): 13.78, Buffer: 5120
+Episode 81, Reward(scaled): 13.23, Buffer: 5184
+[dbg] ep81 gs5200 J=0.12376 a_range=1.609 sat=0.00 alpha=0.145 q1=0.435 pi=-98.783
+Episode 82, Reward(scaled): 11.85, Buffer: 5248
+Episode 83, Reward(scaled): 15.97, Buffer: 5312
+Episode 84, Reward(scaled): 7.84, Buffer: 5376
+[dbg] ep84 gs5400 J=0.12270 a_range=1.609 sat=0.00 alpha=0.142 q1=0.419 pi=-103.513
+Episode 85, Reward(scaled): 4.80, Buffer: 5440
+Episode 86, Reward(scaled): 1.70, Buffer: 5504
+Episode 87, Reward(scaled): 8.65, Buffer: 5568
+[dbg] ep87 gs5600 J=0.12490 a_range=1.609 sat=0.00 alpha=0.139 q1=0.324 pi=-106.771
+Episode 88, Reward(scaled): 11.09, Buffer: 5632
+Episode 89, Reward(scaled): 14.59, Buffer: 5696
+Episode 90, Reward(scaled): 9.94, Buffer: 5760
+[dbg] ep90 gs5800 J=0.12526 a_range=1.609 sat=0.04 alpha=0.136 q1=0.325 pi=-110.518
+Episode 91, Reward(scaled): 8.47, Buffer: 5824
+Episode 92, Reward(scaled): 15.92, Buffer: 5888
+Episode 93, Reward(scaled): 18.10, Buffer: 5952
+[dbg] ep93 gs6000 J=0.12101 a_range=1.609 sat=0.00 alpha=0.134 q1=0.307 pi=-114.331
+[dbg]   next_logp=-36.27 q_target_mean=+112.39 q_target_std=6.20
+Episode 94, Reward(scaled): 12.11, Buffer: 6016
+Episode 95, Reward(scaled): 5.76, Buffer: 6080
+Episode 96, Reward(scaled): 3.01, Buffer: 6144
+[dbg] ep96 gs6200 J=0.13061 a_range=1.609 sat=0.00 alpha=0.131 q1=0.252 pi=-117.884
+Episode 97, Reward(scaled): 6.82, Buffer: 6208
+Episode 98, Reward(scaled): 15.41, Buffer: 6272
+Episode 99, Reward(scaled): 8.00, Buffer: 6336
+Episode 100, Reward(scaled): 5.79, Buffer: 6400  | eval best J=0.11458 last J=0.12634
+[dbg] ep100 gs6400 J=0.13096 a_range=0.577 sat=0.00 alpha=0.128 q1=0.267 pi=-121.479
+Episode 101, Reward(scaled): 20.95, Buffer: 6464
+Episode 102, Reward(scaled): 2.63, Buffer: 6528
+Episode 103, Reward(scaled): 7.18, Buffer: 6592
+[dbg] ep103 gs6600 J=0.12787 a_range=1.609 sat=0.00 alpha=0.126 q1=0.268 pi=-123.942
+Episode 104, Reward(scaled): 5.98, Buffer: 6656
+Episode 105, Reward(scaled): 2.35, Buffer: 6720
+Episode 106, Reward(scaled): 7.71, Buffer: 6784
+[dbg] ep106 gs6800 J=0.12779 a_range=1.609 sat=0.00 alpha=0.123 q1=0.225 pi=-127.124
+Episode 107, Reward(scaled): 5.08, Buffer: 6848
+Episode 108, Reward(scaled): 10.24, Buffer: 6912
+Episode 109, Reward(scaled): 7.83, Buffer: 6976
+[dbg] ep109 gs7000 J=0.12583 a_range=1.609 sat=0.00 alpha=0.121 q1=0.237 pi=-130.028
+[dbg]   next_logp=-36.61 q_target_mean=+128.72 q_target_std=6.28
+Episode 110, Reward(scaled): 12.32, Buffer: 7040
+Episode 111, Reward(scaled): 9.39, Buffer: 7104
+Episode 112, Reward(scaled): 8.63, Buffer: 7168
+[dbg] ep112 gs7200 J=0.13175 a_range=1.609 sat=0.00 alpha=0.118 q1=0.147 pi=-133.804
+Episode 113, Reward(scaled): 8.40, Buffer: 7232
+Episode 114, Reward(scaled): 8.99, Buffer: 7296
+Episode 115, Reward(scaled): 2.45, Buffer: 7360
+[dbg] ep115 gs7400 J=0.12922 a_range=1.609 sat=0.00 alpha=0.116 q1=0.205 pi=-136.257
+Episode 116, Reward(scaled): 14.39, Buffer: 7424
+Episode 117, Reward(scaled): 11.26, Buffer: 7488
+Episode 118, Reward(scaled): 7.82, Buffer: 7552
+[dbg] ep118 gs7600 J=0.12827 a_range=1.609 sat=0.00 alpha=0.114 q1=0.182 pi=-138.108
+Episode 119, Reward(scaled): 6.75, Buffer: 7616
+Episode 120, Reward(scaled): 12.79, Buffer: 7680
+Episode 121, Reward(scaled): 5.99, Buffer: 7744
+[dbg] ep121 gs7800 J=0.12643 a_range=1.609 sat=0.00 alpha=0.111 q1=0.216 pi=-141.615
+Episode 122, Reward(scaled): 11.40, Buffer: 7808
+Episode 123, Reward(scaled): 4.89, Buffer: 7872
+Episode 124, Reward(scaled): 9.14, Buffer: 7936
+Episode 125, Reward(scaled): 5.40, Buffer: 8000
+[dbg] ep125 gs8000 J=0.13125 a_range=0.616 sat=0.00 alpha=0.109 q1=0.169 pi=-144.545
+[dbg]   next_logp=-37.03 q_target_mean=+142.38 q_target_std=6.14
+Episode 126, Reward(scaled): 12.68, Buffer: 8064
+Episode 127, Reward(scaled): 7.03, Buffer: 8128
+Episode 128, Reward(scaled): 14.00, Buffer: 8192
+[dbg] ep128 gs8200 J=0.12676 a_range=1.552 sat=0.00 alpha=0.107 q1=0.184 pi=-147.005
+Episode 129, Reward(scaled): 10.91, Buffer: 8256
+Episode 130, Reward(scaled): 2.06, Buffer: 8320
+Episode 131, Reward(scaled): 7.90, Buffer: 8384
+[dbg] ep131 gs8400 J=0.12987 a_range=1.609 sat=0.00 alpha=0.105 q1=0.132 pi=-148.840
+Episode 132, Reward(scaled): 5.41, Buffer: 8448
+Episode 133, Reward(scaled): -2.38, Buffer: 8512
+Episode 134, Reward(scaled): 2.35, Buffer: 8576
+[dbg] ep134 gs8600 J=0.12599 a_range=1.609 sat=0.00 alpha=0.103 q1=0.128 pi=-150.780
+Episode 135, Reward(scaled): 14.11, Buffer: 8640
+Episode 136, Reward(scaled): 8.76, Buffer: 8704
+Episode 137, Reward(scaled): 5.73, Buffer: 8768
+[dbg] ep137 gs8800 J=0.12131 a_range=1.609 sat=0.02 alpha=0.101 q1=0.099 pi=-153.007
+Episode 138, Reward(scaled): 14.10, Buffer: 8832
+Episode 139, Reward(scaled): -1.69, Buffer: 8896
+Episode 140, Reward(scaled): 9.90, Buffer: 8960
+[dbg] ep140 gs9000 J=0.12460 a_range=1.609 sat=0.00 alpha=0.099 q1=0.105 pi=-154.649
+[dbg]   next_logp=-37.14 q_target_mean=+153.20 q_target_std=5.64
+Episode 141, Reward(scaled): 1.81, Buffer: 9024
+Episode 142, Reward(scaled): 12.63, Buffer: 9088
+Episode 143, Reward(scaled): 8.04, Buffer: 9152
+[dbg] ep143 gs9200 J=0.11693 a_range=1.609 sat=0.02 alpha=0.097 q1=0.072 pi=-156.784
+Episode 144, Reward(scaled): 17.08, Buffer: 9216
+Episode 145, Reward(scaled): 6.76, Buffer: 9280
+Episode 146, Reward(scaled): 4.10, Buffer: 9344
+[dbg] ep146 gs9400 J=0.12645 a_range=1.609 sat=0.00 alpha=0.095 q1=0.062 pi=-158.615
+Episode 147, Reward(scaled): -1.47, Buffer: 9408
+Episode 148, Reward(scaled): 2.96, Buffer: 9472
+Episode 149, Reward(scaled): 15.42, Buffer: 9536
+Episode 150, Reward(scaled): 6.41, Buffer: 9600
+[dbg] ep150 gs9600 J=0.12916 a_range=0.650 sat=0.00 alpha=0.093 q1=0.085 pi=-160.158
+Episode 151, Reward(scaled): 4.09, Buffer: 9664
+Episode 152, Reward(scaled): 2.38, Buffer: 9728
+Episode 153, Reward(scaled): 10.79, Buffer: 9792
+[dbg] ep153 gs9800 J=0.12429 a_range=1.609 sat=0.00 alpha=0.091 q1=0.069 pi=-162.390
+Episode 154, Reward(scaled): 6.37, Buffer: 9856
+Episode 155, Reward(scaled): 18.49, Buffer: 9920
+Episode 156, Reward(scaled): 6.09, Buffer: 9984
+[dbg] ep156 gs10000 J=0.12357 a_range=1.609 sat=0.00 alpha=0.089 q1=0.062 pi=-164.250
+[dbg]   next_logp=-37.20 q_target_mean=+161.54 q_target_std=5.39
+Episode 157, Reward(scaled): 5.98, Buffer: 10048
+Episode 158, Reward(scaled): 11.05, Buffer: 10112
+Episode 159, Reward(scaled): 2.46, Buffer: 10176
+[dbg] ep159 gs10200 J=0.12576 a_range=1.609 sat=0.00 alpha=0.088 q1=0.060 pi=-165.296
+Episode 160, Reward(scaled): 11.97, Buffer: 10240
+Episode 161, Reward(scaled): 18.58, Buffer: 10304
+Episode 162, Reward(scaled): 5.63, Buffer: 10368
+[dbg] ep162 gs10400 J=0.12622 a_range=1.609 sat=0.00 alpha=0.086 q1=0.058 pi=-165.801
+Episode 163, Reward(scaled): 13.27, Buffer: 10432
+Episode 164, Reward(scaled): 10.94, Buffer: 10496
+Episode 165, Reward(scaled): 9.59, Buffer: 10560
+[dbg] ep165 gs10600 J=0.12977 a_range=1.609 sat=0.00 alpha=0.084 q1=0.052 pi=-167.230
+Episode 166, Reward(scaled): 11.30, Buffer: 10624
+Episode 167, Reward(scaled): 6.19, Buffer: 10688
+Episode 168, Reward(scaled): 6.80, Buffer: 10752
+[dbg] ep168 gs10800 J=0.11765 a_range=1.609 sat=0.00 alpha=0.082 q1=0.072 pi=-169.000
+Episode 169, Reward(scaled): 9.81, Buffer: 10816
+Episode 170, Reward(scaled): 11.81, Buffer: 10880
+Episode 171, Reward(scaled): 13.30, Buffer: 10944
+[dbg] ep171 gs11000 J=0.12560 a_range=1.609 sat=0.00 alpha=0.081 q1=0.037 pi=-170.182
+[dbg]   next_logp=-37.48 q_target_mean=+168.30 q_target_std=5.49
+Episode 172, Reward(scaled): 11.27, Buffer: 11008
+Episode 173, Reward(scaled): 13.90, Buffer: 11072
+Episode 174, Reward(scaled): 9.58, Buffer: 11136
+Episode 175, Reward(scaled): 0.53, Buffer: 11200
+[dbg] ep175 gs11200 J=0.13506 a_range=0.607 sat=0.00 alpha=0.079 q1=0.048 pi=-171.869
+Episode 176, Reward(scaled): 6.33, Buffer: 11264
+Episode 177, Reward(scaled): 10.94, Buffer: 11328
+Episode 178, Reward(scaled): 6.26, Buffer: 11392
+[dbg] ep178 gs11400 J=0.12191 a_range=1.609 sat=0.00 alpha=0.078 q1=0.042 pi=-172.590
+Episode 179, Reward(scaled): 13.98, Buffer: 11456
+Episode 180, Reward(scaled): 9.68, Buffer: 11520
+Episode 181, Reward(scaled): 13.22, Buffer: 11584
+[dbg] ep181 gs11600 J=0.12470 a_range=1.609 sat=0.00 alpha=0.076 q1=0.042 pi=-173.366
+Episode 182, Reward(scaled): 10.28, Buffer: 11648
+Episode 183, Reward(scaled): 12.71, Buffer: 11712
+Episode 184, Reward(scaled): 15.13, Buffer: 11776
+[dbg] ep184 gs11800 J=0.11505 a_range=1.609 sat=0.00 alpha=0.075 q1=0.038 pi=-174.780
+Episode 185, Reward(scaled): 15.32, Buffer: 11840
+Episode 186, Reward(scaled): 14.89, Buffer: 11904
+Episode 187, Reward(scaled): 13.22, Buffer: 11968
+[dbg] ep187 gs12000 J=0.11954 a_range=1.609 sat=0.00 alpha=0.073 q1=0.032 pi=-175.068
+[dbg]   next_logp=-37.43 q_target_mean=+172.86 q_target_std=5.75
+Episode 188, Reward(scaled): 10.43, Buffer: 12032
+Episode 189, Reward(scaled): 14.69, Buffer: 12096
+Episode 190, Reward(scaled): 15.54, Buffer: 12160
+[dbg] ep190 gs12200 J=0.11660 a_range=1.609 sat=0.00 alpha=0.072 q1=0.031 pi=-175.697
+Episode 191, Reward(scaled): 12.43, Buffer: 12224
+Episode 192, Reward(scaled): 11.58, Buffer: 12288
+Episode 193, Reward(scaled): 5.39, Buffer: 12352
+[dbg] ep193 gs12400 J=0.12093 a_range=1.609 sat=0.00 alpha=0.070 q1=0.033 pi=-177.110
+Episode 194, Reward(scaled): 13.74, Buffer: 12416
+Episode 195, Reward(scaled): 12.69, Buffer: 12480
+Episode 196, Reward(scaled): 12.87, Buffer: 12544
+[dbg] ep196 gs12600 J=0.12213 a_range=1.609 sat=0.00 alpha=0.069 q1=0.025 pi=-177.412
+Episode 197, Reward(scaled): 20.98, Buffer: 12608
+Episode 198, Reward(scaled): 9.52, Buffer: 12672
+Episode 199, Reward(scaled): 5.16, Buffer: 12736
+Episode 200, Reward(scaled): 12.23, Buffer: 12800  | eval best J=0.11056 last J=0.11327
+[dbg] ep200 gs12800 J=0.12942 a_range=0.548 sat=0.00 alpha=0.068 q1=0.023 pi=-177.779
+Episode 201, Reward(scaled): 19.41, Buffer: 12864
+Episode 202, Reward(scaled): 13.54, Buffer: 12928
+Episode 203, Reward(scaled): 10.14, Buffer: 12992
+[dbg] ep203 gs13000 J=0.12534 a_range=1.583 sat=0.00 alpha=0.066 q1=0.020 pi=-178.536
+[dbg]   next_logp=-37.02 q_target_mean=+177.09 q_target_std=5.35
+Episode 204, Reward(scaled): 10.36, Buffer: 13056
+Episode 205, Reward(scaled): 14.95, Buffer: 13120
+Episode 206, Reward(scaled): 17.44, Buffer: 13184
+[dbg] ep206 gs13200 J=0.12540 a_range=1.609 sat=0.02 alpha=0.065 q1=0.023 pi=-178.178
+Episode 207, Reward(scaled): 16.27, Buffer: 13248
+Episode 208, Reward(scaled): 13.27, Buffer: 13312
+Episode 209, Reward(scaled): 22.70, Buffer: 13376
+[dbg] ep209 gs13400 J=0.12012 a_range=1.609 sat=0.00 alpha=0.064 q1=0.020 pi=-179.450
+Episode 210, Reward(scaled): 19.67, Buffer: 13440
+Episode 211, Reward(scaled): 15.43, Buffer: 13504
+Episode 212, Reward(scaled): 19.76, Buffer: 13568
+[dbg] ep212 gs13600 J=0.11890 a_range=1.609 sat=0.00 alpha=0.062 q1=0.018 pi=-180.175
+Episode 213, Reward(scaled): 19.40, Buffer: 13632
+Episode 214, Reward(scaled): 10.54, Buffer: 13696
+Episode 215, Reward(scaled): 10.99, Buffer: 13760
+[dbg] ep215 gs13800 J=0.11550 a_range=1.609 sat=0.00 alpha=0.061 q1=0.016 pi=-180.840
+Episode 216, Reward(scaled): 15.90, Buffer: 13824
+Episode 217, Reward(scaled): 17.41, Buffer: 13888
+Episode 218, Reward(scaled): 15.51, Buffer: 13952
+[dbg] ep218 gs14000 J=0.11513 a_range=1.609 sat=0.00 alpha=0.060 q1=0.028 pi=-180.826
+[dbg]   next_logp=-37.01 q_target_mean=+178.43 q_target_std=5.34
+Episode 219, Reward(scaled): 14.47, Buffer: 14016
+Episode 220, Reward(scaled): 11.45, Buffer: 14080
+Episode 221, Reward(scaled): 11.26, Buffer: 14144
+[dbg] ep221 gs14200 J=0.11747 a_range=1.609 sat=0.00 alpha=0.059 q1=0.032 pi=-180.869
+Episode 222, Reward(scaled): 18.49, Buffer: 14208
+Episode 223, Reward(scaled): 17.03, Buffer: 14272
+Episode 224, Reward(scaled): 17.70, Buffer: 14336
+Episode 225, Reward(scaled): 16.48, Buffer: 14400
+[dbg] ep225 gs14400 J=0.13002 a_range=0.572 sat=0.00 alpha=0.058 q1=0.018 pi=-180.323
+Episode 226, Reward(scaled): 10.49, Buffer: 14464
+Episode 227, Reward(scaled): 13.75, Buffer: 14528
+Episode 228, Reward(scaled): 20.27, Buffer: 14592
+[dbg] ep228 gs14600 J=0.12431 a_range=1.609 sat=0.00 alpha=0.056 q1=0.018 pi=-180.851
+Episode 229, Reward(scaled): 18.76, Buffer: 14656
+Episode 230, Reward(scaled): 10.78, Buffer: 14720
+Episode 231, Reward(scaled): 15.37, Buffer: 14784
+[dbg] ep231 gs14800 J=0.11680 a_range=1.609 sat=0.02 alpha=0.055 q1=0.019 pi=-181.525
+Episode 232, Reward(scaled): 15.86, Buffer: 14848
+Episode 233, Reward(scaled): 12.74, Buffer: 14912
+Episode 234, Reward(scaled): 10.40, Buffer: 14976
+[dbg] ep234 gs15000 J=0.12231 a_range=1.609 sat=0.00 alpha=0.054 q1=0.016 pi=-181.788
+[dbg]   next_logp=-36.99 q_target_mean=+180.12 q_target_std=5.48
+Episode 235, Reward(scaled): 11.71, Buffer: 15040
+Episode 236, Reward(scaled): 17.17, Buffer: 15104
+Episode 237, Reward(scaled): 14.77, Buffer: 15168
+[dbg] ep237 gs15200 J=0.11226 a_range=1.609 sat=0.00 alpha=0.053 q1=0.015 pi=-181.648
+Episode 238, Reward(scaled): 18.60, Buffer: 15232
+Episode 239, Reward(scaled): 17.07, Buffer: 15296
+Episode 240, Reward(scaled): 16.57, Buffer: 15360
+[dbg] ep240 gs15400 J=0.11390 a_range=1.609 sat=0.00 alpha=0.052 q1=0.011 pi=-180.959
+Episode 241, Reward(scaled): 10.52, Buffer: 15424
+Episode 242, Reward(scaled): 13.90, Buffer: 15488
+Episode 243, Reward(scaled): 17.63, Buffer: 15552
+[dbg] ep243 gs15600 J=0.11607 a_range=1.609 sat=0.00 alpha=0.051 q1=0.014 pi=-181.622
+Episode 244, Reward(scaled): 19.52, Buffer: 15616
+Episode 245, Reward(scaled): 15.47, Buffer: 15680
+Episode 246, Reward(scaled): 15.71, Buffer: 15744
+[dbg] ep246 gs15800 J=0.11476 a_range=1.609 sat=0.00 alpha=0.050 q1=0.017 pi=-181.152
+Episode 247, Reward(scaled): 19.21, Buffer: 15808
+Episode 248, Reward(scaled): 19.70, Buffer: 15872
+Episode 249, Reward(scaled): 9.19, Buffer: 15936
+Episode 250, Reward(scaled): 13.67, Buffer: 16000
+[dbg] ep250 gs16000 J=0.13074 a_range=0.570 sat=0.00 alpha=0.049 q1=0.011 pi=-181.454
+[dbg]   next_logp=-36.57 q_target_mean=+179.79 q_target_std=5.64
+Episode 251, Reward(scaled): 17.52, Buffer: 16064
+Episode 252, Reward(scaled): 15.38, Buffer: 16128
+Episode 253, Reward(scaled): 13.15, Buffer: 16192
+[dbg] ep253 gs16200 J=0.12445 a_range=1.609 sat=0.00 alpha=0.048 q1=0.012 pi=-181.363
+Episode 254, Reward(scaled): 12.87, Buffer: 16256
+Episode 255, Reward(scaled): 16.77, Buffer: 16320
+Episode 256, Reward(scaled): 18.91, Buffer: 16384
+[dbg] ep256 gs16400 J=0.11791 a_range=1.609 sat=0.00 alpha=0.047 q1=0.014 pi=-181.427
+Episode 257, Reward(scaled): 14.05, Buffer: 16448
+Episode 258, Reward(scaled): 11.84, Buffer: 16512
+Episode 259, Reward(scaled): 18.71, Buffer: 16576
+[dbg] ep259 gs16600 J=0.11382 a_range=1.609 sat=0.00 alpha=0.046 q1=0.014 pi=-181.340
+Episode 260, Reward(scaled): 17.88, Buffer: 16640
+Episode 261, Reward(scaled): 16.44, Buffer: 16704
+Episode 262, Reward(scaled): 18.56, Buffer: 16768
+[dbg] ep262 gs16800 J=0.11768 a_range=1.609 sat=0.00 alpha=0.045 q1=0.011 pi=-180.719
+Episode 263, Reward(scaled): 24.94, Buffer: 16832
+Episode 264, Reward(scaled): 17.24, Buffer: 16896
+Episode 265, Reward(scaled): 13.01, Buffer: 16960
+[dbg] ep265 gs17000 J=0.11844 a_range=1.609 sat=0.00 alpha=0.044 q1=0.008 pi=-180.635
+[dbg]   next_logp=-36.50 q_target_mean=+178.84 q_target_std=5.64
+Episode 266, Reward(scaled): 12.99, Buffer: 17024
+Episode 267, Reward(scaled): 21.66, Buffer: 17088
+Episode 268, Reward(scaled): 16.73, Buffer: 17152
+[dbg] ep268 gs17200 J=0.11375 a_range=1.609 sat=0.02 alpha=0.044 q1=0.012 pi=-179.723
+Episode 269, Reward(scaled): 19.77, Buffer: 17216
+Episode 270, Reward(scaled): 21.40, Buffer: 17280
+Episode 271, Reward(scaled): 12.68, Buffer: 17344
+[dbg] ep271 gs17400 J=0.11515 a_range=1.609 sat=0.00 alpha=0.043 q1=0.014 pi=-179.918
+Episode 272, Reward(scaled): 18.36, Buffer: 17408
+Episode 273, Reward(scaled): 14.55, Buffer: 17472
+Episode 274, Reward(scaled): 13.34, Buffer: 17536
+Episode 275, Reward(scaled): 15.40, Buffer: 17600
+[dbg] ep275 gs17600 J=0.13211 a_range=0.553 sat=0.00 alpha=0.042 q1=0.011 pi=-179.442
+Episode 276, Reward(scaled): 15.92, Buffer: 17664
+Episode 277, Reward(scaled): 15.71, Buffer: 17728
+Episode 278, Reward(scaled): 17.61, Buffer: 17792
+[dbg] ep278 gs17800 J=0.11927 a_range=1.609 sat=0.00 alpha=0.041 q1=0.011 pi=-179.231
+Episode 279, Reward(scaled): 14.62, Buffer: 17856
+Episode 280, Reward(scaled): 17.05, Buffer: 17920
+Episode 281, Reward(scaled): 13.45, Buffer: 17984
+[dbg] ep281 gs18000 J=0.11750 a_range=1.609 sat=0.00 alpha=0.040 q1=0.010 pi=-178.794
+[dbg]   next_logp=-36.48 q_target_mean=+176.96 q_target_std=5.43
+Episode 282, Reward(scaled): 18.16, Buffer: 18048
+Episode 283, Reward(scaled): 14.45, Buffer: 18112
+Episode 284, Reward(scaled): 12.27, Buffer: 18176
+[dbg] ep284 gs18200 J=0.11366 a_range=1.609 sat=0.00 alpha=0.039 q1=0.013 pi=-178.387
+Episode 285, Reward(scaled): 23.66, Buffer: 18240
+Episode 286, Reward(scaled): 17.67, Buffer: 18304
+Episode 287, Reward(scaled): 11.23, Buffer: 18368
+[dbg] ep287 gs18400 J=0.11963 a_range=1.609 sat=0.00 alpha=0.039 q1=0.009 pi=-177.910
+Episode 288, Reward(scaled): 16.75, Buffer: 18432
+Episode 289, Reward(scaled): 14.60, Buffer: 18496
+Episode 290, Reward(scaled): 19.57, Buffer: 18560
+[dbg] ep290 gs18600 J=0.11371 a_range=1.609 sat=0.00 alpha=0.038 q1=0.010 pi=-177.185
+Episode 291, Reward(scaled): 22.00, Buffer: 18624
+Episode 292, Reward(scaled): 16.94, Buffer: 18688
+Episode 293, Reward(scaled): 15.06, Buffer: 18752
+[dbg] ep293 gs18800 J=0.11717 a_range=1.609 sat=0.00 alpha=0.037 q1=0.018 pi=-177.731
+Episode 294, Reward(scaled): 16.13, Buffer: 18816
+Episode 295, Reward(scaled): 16.67, Buffer: 18880
+Episode 296, Reward(scaled): 14.08, Buffer: 18944
+[dbg] ep296 gs19000 J=0.10993 a_range=1.609 sat=0.00 alpha=0.036 q1=0.013 pi=-176.951
+[dbg]   next_logp=-36.08 q_target_mean=+175.49 q_target_std=6.10
+Episode 297, Reward(scaled): 18.86, Buffer: 19008
+Episode 298, Reward(scaled): 24.57, Buffer: 19072
+Episode 299, Reward(scaled): 17.56, Buffer: 19136
+Episode 300, Reward(scaled): 17.64, Buffer: 19200  | eval best J=0.10760 last J=0.10814
+[dbg] ep300 gs19200 J=0.12819 a_range=0.573 sat=0.00 alpha=0.036 q1=0.008 pi=-176.903
+Episode 301, Reward(scaled): 17.52, Buffer: 19264
+Episode 302, Reward(scaled): 19.28, Buffer: 19328
+Episode 303, Reward(scaled): 17.60, Buffer: 19392
+[dbg] ep303 gs19400 J=0.12216 a_range=1.609 sat=0.00 alpha=0.035 q1=0.013 pi=-176.093
+Episode 304, Reward(scaled): 17.12, Buffer: 19456
+Episode 305, Reward(scaled): 16.22, Buffer: 19520
+Episode 306, Reward(scaled): 17.15, Buffer: 19584
+[dbg] ep306 gs19600 J=0.11389 a_range=1.609 sat=0.00 alpha=0.034 q1=0.013 pi=-175.218
+Episode 307, Reward(scaled): 20.50, Buffer: 19648
+Episode 308, Reward(scaled): 20.28, Buffer: 19712
+Episode 309, Reward(scaled): 15.39, Buffer: 19776
+[dbg] ep309 gs19800 J=0.11922 a_range=1.609 sat=0.00 alpha=0.034 q1=0.013 pi=-174.290
+Episode 310, Reward(scaled): 17.16, Buffer: 19840
+Episode 311, Reward(scaled): 17.64, Buffer: 19904
+Episode 312, Reward(scaled): 16.27, Buffer: 19968
+[dbg] ep312 gs20000 J=0.11818 a_range=1.609 sat=0.00 alpha=0.033 q1=0.010 pi=-173.967
+[dbg]   next_logp=-35.58 q_target_mean=+172.55 q_target_std=5.60
+Episode 313, Reward(scaled): 20.62, Buffer: 20032
+Episode 314, Reward(scaled): 23.08, Buffer: 20096
+Episode 315, Reward(scaled): 17.81, Buffer: 20160
+[dbg] ep315 gs20200 J=0.11250 a_range=1.609 sat=0.00 alpha=0.032 q1=0.009 pi=-173.760
+Episode 316, Reward(scaled): 20.42, Buffer: 20224
+Episode 317, Reward(scaled): 19.87, Buffer: 20288
+Episode 318, Reward(scaled): 14.93, Buffer: 20352
+[dbg] ep318 gs20400 J=0.11109 a_range=1.609 sat=0.00 alpha=0.032 q1=0.009 pi=-173.147
+Episode 319, Reward(scaled): 17.28, Buffer: 20416
+Episode 320, Reward(scaled): 14.97, Buffer: 20480
+Episode 321, Reward(scaled): 18.54, Buffer: 20544
+[dbg] ep321 gs20600 J=0.11101 a_range=1.609 sat=0.00 alpha=0.031 q1=0.009 pi=-172.576
+Episode 322, Reward(scaled): 22.78, Buffer: 20608
+Episode 323, Reward(scaled): 15.44, Buffer: 20672
+Episode 324, Reward(scaled): 18.36, Buffer: 20736
+Episode 325, Reward(scaled): 15.78, Buffer: 20800
+[dbg] ep325 gs20800 J=0.12289 a_range=0.628 sat=0.00 alpha=0.030 q1=0.011 pi=-171.616
+Episode 326, Reward(scaled): 15.80, Buffer: 20864
+Episode 327, Reward(scaled): 22.10, Buffer: 20928
+Episode 328, Reward(scaled): 12.78, Buffer: 20992
+[dbg] ep328 gs21000 J=0.11887 a_range=1.609 sat=0.00 alpha=0.030 q1=0.019 pi=-171.053
+[dbg]   next_logp=-35.50 q_target_mean=+168.93 q_target_std=5.92
+Episode 329, Reward(scaled): 19.54, Buffer: 21056
+Episode 330, Reward(scaled): 19.70, Buffer: 21120
+Episode 331, Reward(scaled): 20.00, Buffer: 21184
+[dbg] ep331 gs21200 J=0.11463 a_range=1.609 sat=0.02 alpha=0.029 q1=0.011 pi=-170.932
+Episode 332, Reward(scaled): 12.10, Buffer: 21248
+Episode 333, Reward(scaled): 13.22, Buffer: 21312
+Episode 334, Reward(scaled): 11.53, Buffer: 21376
+[dbg] ep334 gs21400 J=0.11906 a_range=1.609 sat=0.00 alpha=0.029 q1=0.011 pi=-169.975
+Episode 335, Reward(scaled): 16.70, Buffer: 21440
+Episode 336, Reward(scaled): 19.13, Buffer: 21504
+Episode 337, Reward(scaled): 18.39, Buffer: 21568
+[dbg] ep337 gs21600 J=0.11013 a_range=1.609 sat=0.00 alpha=0.028 q1=0.009 pi=-169.560
+Episode 338, Reward(scaled): 22.44, Buffer: 21632
+Episode 339, Reward(scaled): 18.35, Buffer: 21696
+Episode 340, Reward(scaled): 16.68, Buffer: 21760
+[dbg] ep340 gs21800 J=0.11384 a_range=1.609 sat=0.00 alpha=0.028 q1=0.015 pi=-168.645
+Episode 341, Reward(scaled): 20.33, Buffer: 21824
+Episode 342, Reward(scaled): 22.25, Buffer: 21888
+Episode 343, Reward(scaled): 20.33, Buffer: 21952
+[dbg] ep343 gs22000 J=0.11315 a_range=1.609 sat=0.00 alpha=0.027 q1=0.016 pi=-167.926
+[dbg]   next_logp=-35.09 q_target_mean=+165.47 q_target_std=5.76
+Episode 344, Reward(scaled): 17.38, Buffer: 22016
+Episode 345, Reward(scaled): 25.78, Buffer: 22080
+Episode 346, Reward(scaled): 21.87, Buffer: 22144
+[dbg] ep346 gs22200 J=0.11294 a_range=1.609 sat=0.00 alpha=0.026 q1=0.012 pi=-166.824
+Episode 347, Reward(scaled): 21.70, Buffer: 22208
+Episode 348, Reward(scaled): 18.17, Buffer: 22272
+Episode 349, Reward(scaled): 22.29, Buffer: 22336
+Episode 350, Reward(scaled): 20.23, Buffer: 22400
+[dbg] ep350 gs22400 J=0.12425 a_range=0.581 sat=0.00 alpha=0.026 q1=0.013 pi=-165.803
+Episode 351, Reward(scaled): 18.47, Buffer: 22464
+Episode 352, Reward(scaled): 22.15, Buffer: 22528
+Episode 353, Reward(scaled): 17.45, Buffer: 22592
+[dbg] ep353 gs22600 J=0.11513 a_range=1.609 sat=0.00 alpha=0.025 q1=0.011 pi=-165.926
+Episode 354, Reward(scaled): 15.61, Buffer: 22656
+Episode 355, Reward(scaled): 26.60, Buffer: 22720
+Episode 356, Reward(scaled): 21.82, Buffer: 22784
+[dbg] ep356 gs22800 J=0.11528 a_range=1.609 sat=0.02 alpha=0.025 q1=0.011 pi=-164.884
+Episode 357, Reward(scaled): 18.20, Buffer: 22848
+Episode 358, Reward(scaled): 13.40, Buffer: 22912
+Episode 359, Reward(scaled): 21.60, Buffer: 22976
+[dbg] ep359 gs23000 J=0.10876 a_range=1.609 sat=0.00 alpha=0.024 q1=0.015 pi=-163.919
+[dbg]   next_logp=-34.35 q_target_mean=+161.59 q_target_std=5.49
+Episode 360, Reward(scaled): 21.90, Buffer: 23040
+Episode 361, Reward(scaled): 19.07, Buffer: 23104
+Episode 362, Reward(scaled): 14.36, Buffer: 23168
+[dbg] ep362 gs23200 J=0.11338 a_range=1.609 sat=0.02 alpha=0.024 q1=0.028 pi=-163.044
+Episode 363, Reward(scaled): 19.85, Buffer: 23232
+Episode 364, Reward(scaled): 18.27, Buffer: 23296
+Episode 365, Reward(scaled): 14.65, Buffer: 23360
+[dbg] ep365 gs23400 J=0.11341 a_range=1.609 sat=0.00 alpha=0.023 q1=0.011 pi=-161.988
+Episode 366, Reward(scaled): 20.17, Buffer: 23424
+Episode 367, Reward(scaled): 20.59, Buffer: 23488
+Episode 368, Reward(scaled): 22.71, Buffer: 23552
+[dbg] ep368 gs23600 J=0.11057 a_range=1.609 sat=0.02 alpha=0.023 q1=0.012 pi=-161.265
+Episode 369, Reward(scaled): 24.21, Buffer: 23616
+Episode 370, Reward(scaled): 21.52, Buffer: 23680
+Episode 371, Reward(scaled): 18.51, Buffer: 23744
+[dbg] ep371 gs23800 J=0.11108 a_range=1.609 sat=0.00 alpha=0.023 q1=0.019 pi=-161.065
+Episode 372, Reward(scaled): 23.04, Buffer: 23808
+Episode 373, Reward(scaled): 21.52, Buffer: 23872
+Episode 374, Reward(scaled): 14.78, Buffer: 23936
+Episode 375, Reward(scaled): 19.69, Buffer: 24000
+[dbg] ep375 gs24000 J=0.12883 a_range=0.582 sat=0.00 alpha=0.022 q1=0.029 pi=-160.021
+[dbg]   next_logp=-33.53 q_target_mean=+157.96 q_target_std=5.67
+Episode 376, Reward(scaled): 14.74, Buffer: 24064
+Episode 377, Reward(scaled): 17.54, Buffer: 24128
+Episode 378, Reward(scaled): 18.18, Buffer: 24192
+[dbg] ep378 gs24200 J=0.11611 a_range=1.609 sat=0.00 alpha=0.022 q1=0.015 pi=-158.330
+Episode 379, Reward(scaled): 14.64, Buffer: 24256
+Episode 380, Reward(scaled): 17.99, Buffer: 24320
+Episode 381, Reward(scaled): 18.34, Buffer: 24384
+[dbg] ep381 gs24400 J=0.11731 a_range=1.609 sat=0.00 alpha=0.021 q1=0.019 pi=-158.588
+Episode 382, Reward(scaled): 19.44, Buffer: 24448
+Episode 383, Reward(scaled): 21.60, Buffer: 24512
+Episode 384, Reward(scaled): 24.50, Buffer: 24576
+[dbg] ep384 gs24600 J=0.11128 a_range=1.609 sat=0.02 alpha=0.021 q1=0.012 pi=-157.415
+Episode 385, Reward(scaled): 20.18, Buffer: 24640
+Episode 386, Reward(scaled): 22.52, Buffer: 24704
+Episode 387, Reward(scaled): 19.58, Buffer: 24768
+[dbg] ep387 gs24800 J=0.11248 a_range=1.609 sat=0.00 alpha=0.020 q1=0.013 pi=-156.654
+Episode 388, Reward(scaled): 22.23, Buffer: 24832
+Episode 389, Reward(scaled): 22.79, Buffer: 24896
+Episode 390, Reward(scaled): 19.36, Buffer: 24960
+[dbg] ep390 gs25000 J=0.11330 a_range=1.609 sat=0.00 alpha=0.020 q1=0.013 pi=-154.841
+[dbg]   next_logp=-33.37 q_target_mean=+154.06 q_target_std=6.26
+Episode 391, Reward(scaled): 26.25, Buffer: 25024
+Episode 392, Reward(scaled): 18.50, Buffer: 25088
+Episode 393, Reward(scaled): 18.55, Buffer: 25152
+[dbg] ep393 gs25200 J=0.11250 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-154.909
+Episode 394, Reward(scaled): 20.44, Buffer: 25216
+Episode 395, Reward(scaled): 22.06, Buffer: 25280
+Episode 396, Reward(scaled): 24.11, Buffer: 25344
+[dbg] ep396 gs25400 J=0.11180 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-153.999
+Episode 397, Reward(scaled): 19.66, Buffer: 25408
+Episode 398, Reward(scaled): 23.68, Buffer: 25472
+Episode 399, Reward(scaled): 25.27, Buffer: 25536
+Episode 400, Reward(scaled): 22.39, Buffer: 25600  | eval best J=0.10541 last J=0.10773
+[dbg] ep400 gs25600 J=0.12583 a_range=0.579 sat=0.00 alpha=0.020 q1=0.016 pi=-152.809
+Episode 401, Reward(scaled): 23.01, Buffer: 25664
+Episode 402, Reward(scaled): 23.61, Buffer: 25728
+Episode 403, Reward(scaled): 17.02, Buffer: 25792
+[dbg] ep403 gs25800 J=0.11373 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-152.434
+Episode 404, Reward(scaled): 17.98, Buffer: 25856
+Episode 405, Reward(scaled): 22.69, Buffer: 25920
+Episode 406, Reward(scaled): 19.17, Buffer: 25984
+[dbg] ep406 gs26000 J=0.11502 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-151.717
+[dbg]   next_logp=-34.24 q_target_mean=+150.05 q_target_std=6.46
+Episode 407, Reward(scaled): 19.19, Buffer: 26048
+Episode 408, Reward(scaled): 16.94, Buffer: 26112
+Episode 409, Reward(scaled): 16.63, Buffer: 26176
+[dbg] ep409 gs26200 J=0.11196 a_range=1.609 sat=0.00 alpha=0.020 q1=0.025 pi=-150.490
+Episode 410, Reward(scaled): 15.51, Buffer: 26240
+Episode 411, Reward(scaled): 24.60, Buffer: 26304
+Episode 412, Reward(scaled): 21.19, Buffer: 26368
+[dbg] ep412 gs26400 J=0.11300 a_range=1.609 sat=0.00 alpha=0.020 q1=0.016 pi=-149.499
+Episode 413, Reward(scaled): 19.63, Buffer: 26432
+Episode 414, Reward(scaled): 14.81, Buffer: 26496
+Episode 415, Reward(scaled): 26.30, Buffer: 26560
+[dbg] ep415 gs26600 J=0.11408 a_range=1.609 sat=0.00 alpha=0.020 q1=0.020 pi=-148.729
+Episode 416, Reward(scaled): 26.42, Buffer: 26624
+Episode 417, Reward(scaled): 20.59, Buffer: 26688
+Episode 418, Reward(scaled): 20.63, Buffer: 26752
+[dbg] ep418 gs26800 J=0.11518 a_range=1.609 sat=0.00 alpha=0.020 q1=0.025 pi=-148.030
+Episode 419, Reward(scaled): 20.42, Buffer: 26816
+Episode 420, Reward(scaled): 22.09, Buffer: 26880
+Episode 421, Reward(scaled): 27.34, Buffer: 26944
+[dbg] ep421 gs27000 J=0.11511 a_range=1.609 sat=0.00 alpha=0.020 q1=0.015 pi=-146.938
+[dbg]   next_logp=-33.46 q_target_mean=+145.98 q_target_std=6.37
+Episode 422, Reward(scaled): 19.23, Buffer: 27008
+Episode 423, Reward(scaled): 17.51, Buffer: 27072
+Episode 424, Reward(scaled): 22.40, Buffer: 27136
+Episode 425, Reward(scaled): 17.09, Buffer: 27200
+[dbg] ep425 gs27200 J=0.12791 a_range=0.604 sat=0.00 alpha=0.020 q1=0.024 pi=-146.782
+Episode 426, Reward(scaled): 24.28, Buffer: 27264
+Episode 427, Reward(scaled): 17.87, Buffer: 27328
+Episode 428, Reward(scaled): 25.46, Buffer: 27392
+[dbg] ep428 gs27400 J=0.11132 a_range=1.609 sat=0.00 alpha=0.020 q1=0.018 pi=-145.716
+Episode 429, Reward(scaled): 17.70, Buffer: 27456
+Episode 430, Reward(scaled): 23.77, Buffer: 27520
+Episode 431, Reward(scaled): 20.95, Buffer: 27584
+[dbg] ep431 gs27600 J=0.11200 a_range=1.609 sat=0.00 alpha=0.020 q1=0.024 pi=-145.266
+Episode 432, Reward(scaled): 18.21, Buffer: 27648
+Episode 433, Reward(scaled): 20.75, Buffer: 27712
+Episode 434, Reward(scaled): 21.96, Buffer: 27776
+[dbg] ep434 gs27800 J=0.11354 a_range=1.609 sat=0.00 alpha=0.020 q1=0.021 pi=-145.368
+Episode 435, Reward(scaled): 17.12, Buffer: 27840
+Episode 436, Reward(scaled): 23.87, Buffer: 27904
+Episode 437, Reward(scaled): 19.15, Buffer: 27968
+[dbg] ep437 gs28000 J=0.11083 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-144.766
+[dbg]   next_logp=-33.31 q_target_mean=+142.20 q_target_std=6.14
+Episode 438, Reward(scaled): 20.28, Buffer: 28032
+Episode 439, Reward(scaled): 22.39, Buffer: 28096
+Episode 440, Reward(scaled): 21.98, Buffer: 28160
+[dbg] ep440 gs28200 J=0.11361 a_range=1.609 sat=0.00 alpha=0.020 q1=0.020 pi=-143.037
+Episode 441, Reward(scaled): 20.56, Buffer: 28224
+Episode 442, Reward(scaled): 19.01, Buffer: 28288
+Episode 443, Reward(scaled): 23.96, Buffer: 28352
+[dbg] ep443 gs28400 J=0.11051 a_range=1.609 sat=0.00 alpha=0.020 q1=0.016 pi=-142.391
+Episode 444, Reward(scaled): 21.06, Buffer: 28416
+Episode 445, Reward(scaled): 25.32, Buffer: 28480
+Episode 446, Reward(scaled): 22.30, Buffer: 28544
+[dbg] ep446 gs28600 J=0.11704 a_range=1.609 sat=0.00 alpha=0.020 q1=0.018 pi=-141.926
+Episode 447, Reward(scaled): 17.25, Buffer: 28608
+Episode 448, Reward(scaled): 23.15, Buffer: 28672
+Episode 449, Reward(scaled): 23.10, Buffer: 28736
+Episode 450, Reward(scaled): 19.13, Buffer: 28800
+[dbg] ep450 gs28800 J=0.12508 a_range=0.570 sat=0.00 alpha=0.020 q1=0.016 pi=-141.406
+Episode 451, Reward(scaled): 20.29, Buffer: 28864
+Episode 452, Reward(scaled): 16.49, Buffer: 28928
+Episode 453, Reward(scaled): 16.81, Buffer: 28992
+[dbg] ep453 gs29000 J=0.11347 a_range=1.609 sat=0.00 alpha=0.020 q1=0.024 pi=-139.926
+[dbg]   next_logp=-33.08 q_target_mean=+139.05 q_target_std=6.26
+Episode 454, Reward(scaled): 20.23, Buffer: 29056
+Episode 455, Reward(scaled): 19.76, Buffer: 29120
+Episode 456, Reward(scaled): 19.44, Buffer: 29184
+[dbg] ep456 gs29200 J=0.11165 a_range=1.609 sat=0.00 alpha=0.020 q1=0.031 pi=-139.788
+Episode 457, Reward(scaled): 21.01, Buffer: 29248
+Episode 458, Reward(scaled): 23.27, Buffer: 29312
+Episode 459, Reward(scaled): 19.83, Buffer: 29376
+[dbg] ep459 gs29400 J=0.11313 a_range=1.609 sat=0.02 alpha=0.020 q1=0.016 pi=-138.482
+Episode 460, Reward(scaled): 20.46, Buffer: 29440
+Episode 461, Reward(scaled): 17.80, Buffer: 29504
+Episode 462, Reward(scaled): 22.67, Buffer: 29568
+[dbg] ep462 gs29600 J=0.11105 a_range=1.609 sat=0.02 alpha=0.020 q1=0.019 pi=-138.200
+Episode 463, Reward(scaled): 18.65, Buffer: 29632
+Episode 464, Reward(scaled): 18.95, Buffer: 29696
+Episode 465, Reward(scaled): 20.99, Buffer: 29760
+[dbg] ep465 gs29800 J=0.10843 a_range=1.609 sat=0.00 alpha=0.020 q1=0.024 pi=-137.255
+Episode 466, Reward(scaled): 20.76, Buffer: 29824
+Episode 467, Reward(scaled): 18.44, Buffer: 29888
+Episode 468, Reward(scaled): 23.02, Buffer: 29952
+[dbg] ep468 gs30000 J=0.10926 a_range=1.609 sat=0.00 alpha=0.020 q1=0.049 pi=-137.231
+[dbg]   next_logp=-33.58 q_target_mean=+135.55 q_target_std=6.37
+Episode 469, Reward(scaled): 20.33, Buffer: 30016
+Episode 470, Reward(scaled): 18.51, Buffer: 30080
+Episode 471, Reward(scaled): 18.80, Buffer: 30144
+[dbg] ep471 gs30200 J=0.11036 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-135.958
+Episode 472, Reward(scaled): 20.01, Buffer: 30208
+Episode 473, Reward(scaled): 21.54, Buffer: 30272
+Episode 474, Reward(scaled): 20.06, Buffer: 30336
+Episode 475, Reward(scaled): 24.41, Buffer: 30400
+[dbg] ep475 gs30400 J=0.12728 a_range=0.627 sat=0.00 alpha=0.020 q1=0.018 pi=-136.129
+Episode 476, Reward(scaled): 13.44, Buffer: 30464
+Episode 477, Reward(scaled): 20.28, Buffer: 30528
+Episode 478, Reward(scaled): 21.67, Buffer: 30592
+[dbg] ep478 gs30600 J=0.11481 a_range=1.609 sat=0.00 alpha=0.020 q1=0.022 pi=-134.240
+Episode 479, Reward(scaled): 25.46, Buffer: 30656
+Episode 480, Reward(scaled): 18.33, Buffer: 30720
+Episode 481, Reward(scaled): 21.90, Buffer: 30784
+[dbg] ep481 gs30800 J=0.11110 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-134.039
+Episode 482, Reward(scaled): 23.43, Buffer: 30848
+Episode 483, Reward(scaled): 18.89, Buffer: 30912
+Episode 484, Reward(scaled): 17.59, Buffer: 30976
+[dbg] ep484 gs31000 J=0.11465 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-133.600
+[dbg]   next_logp=-33.81 q_target_mean=+132.02 q_target_std=6.04
+Episode 485, Reward(scaled): 17.86, Buffer: 31040
+Episode 486, Reward(scaled): 16.11, Buffer: 31104
+Episode 487, Reward(scaled): 16.33, Buffer: 31168
+[dbg] ep487 gs31200 J=0.11278 a_range=1.609 sat=0.00 alpha=0.020 q1=0.016 pi=-133.642
+Episode 488, Reward(scaled): 25.53, Buffer: 31232
+Episode 489, Reward(scaled): 22.26, Buffer: 31296
+Episode 490, Reward(scaled): 24.62, Buffer: 31360
+[dbg] ep490 gs31400 J=0.11239 a_range=1.609 sat=0.04 alpha=0.020 q1=0.020 pi=-132.646
+Episode 491, Reward(scaled): 21.23, Buffer: 31424
+Episode 492, Reward(scaled): 23.29, Buffer: 31488
+Episode 493, Reward(scaled): 24.83, Buffer: 31552
+[dbg] ep493 gs31600 J=0.11398 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-131.915
+Episode 494, Reward(scaled): 21.47, Buffer: 31616
+Episode 495, Reward(scaled): 21.92, Buffer: 31680
+Episode 496, Reward(scaled): 17.98, Buffer: 31744
+[dbg] ep496 gs31800 J=0.11194 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-131.336
+Episode 497, Reward(scaled): 18.99, Buffer: 31808
+Episode 498, Reward(scaled): 23.99, Buffer: 31872
+Episode 499, Reward(scaled): 21.23, Buffer: 31936
+Episode 500, Reward(scaled): 14.29, Buffer: 32000  | eval best J=0.10485 last J=0.10934
+[dbg] ep500 gs32000 J=0.13067 a_range=0.608 sat=0.00 alpha=0.020 q1=0.021 pi=-131.157
+[dbg]   next_logp=-33.63 q_target_mean=+129.83 q_target_std=6.57
+Episode 501, Reward(scaled): 17.45, Buffer: 32064
+Episode 502, Reward(scaled): 17.64, Buffer: 32128
+Episode 503, Reward(scaled): 18.99, Buffer: 32192
+[dbg] ep503 gs32200 J=0.11477 a_range=1.609 sat=0.00 alpha=0.020 q1=0.021 pi=-130.437
+Episode 504, Reward(scaled): 18.06, Buffer: 32256
+Episode 505, Reward(scaled): 23.84, Buffer: 32320
+Episode 506, Reward(scaled): 16.54, Buffer: 32384
+[dbg] ep506 gs32400 J=0.11308 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-129.836
+Episode 507, Reward(scaled): 20.07, Buffer: 32448
+Episode 508, Reward(scaled): 20.08, Buffer: 32512
+Episode 509, Reward(scaled): 17.39, Buffer: 32576
+[dbg] ep509 gs32600 J=0.10975 a_range=1.609 sat=0.00 alpha=0.020 q1=0.022 pi=-129.544
+Episode 510, Reward(scaled): 22.15, Buffer: 32640
+Episode 511, Reward(scaled): 20.76, Buffer: 32704
+Episode 512, Reward(scaled): 19.62, Buffer: 32768
+[dbg] ep512 gs32800 J=0.11200 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-128.019
+Episode 513, Reward(scaled): 16.35, Buffer: 32832
+Episode 514, Reward(scaled): 18.58, Buffer: 32896
+Episode 515, Reward(scaled): 16.59, Buffer: 32960
+[dbg] ep515 gs33000 J=0.10962 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-127.692
+[dbg]   next_logp=-33.52 q_target_mean=+126.78 q_target_std=6.40
+Episode 516, Reward(scaled): 21.57, Buffer: 33024
+Episode 517, Reward(scaled): 17.91, Buffer: 33088
+Episode 518, Reward(scaled): 22.19, Buffer: 33152
+[dbg] ep518 gs33200 J=0.11490 a_range=1.609 sat=0.00 alpha=0.020 q1=0.024 pi=-127.328
+Episode 519, Reward(scaled): 21.44, Buffer: 33216
+Episode 520, Reward(scaled): 19.29, Buffer: 33280
+Episode 521, Reward(scaled): 22.13, Buffer: 33344
+[dbg] ep521 gs33400 J=0.11157 a_range=1.609 sat=0.00 alpha=0.020 q1=0.019 pi=-127.013
+Episode 522, Reward(scaled): 19.41, Buffer: 33408
+Episode 523, Reward(scaled): 20.09, Buffer: 33472
+Episode 524, Reward(scaled): 19.47, Buffer: 33536
+Episode 525, Reward(scaled): 16.29, Buffer: 33600
+[dbg] ep525 gs33600 J=0.12837 a_range=0.556 sat=0.02 alpha=0.020 q1=0.018 pi=-126.008
+Episode 526, Reward(scaled): 14.68, Buffer: 33664
+Episode 527, Reward(scaled): 12.58, Buffer: 33728
+Episode 528, Reward(scaled): 17.28, Buffer: 33792
+[dbg] ep528 gs33800 J=0.11978 a_range=1.609 sat=0.00 alpha=0.020 q1=0.021 pi=-125.950
+Episode 529, Reward(scaled): 18.70, Buffer: 33856
+Episode 530, Reward(scaled): 17.93, Buffer: 33920
+Episode 531, Reward(scaled): 18.74, Buffer: 33984
+[dbg] ep531 gs34000 J=0.11371 a_range=1.609 sat=0.00 alpha=0.020 q1=0.032 pi=-125.584
+[dbg]   next_logp=-33.63 q_target_mean=+124.33 q_target_std=6.47
+Episode 532, Reward(scaled): 24.70, Buffer: 34048
+Episode 533, Reward(scaled): 19.90, Buffer: 34112
+Episode 534, Reward(scaled): 19.76, Buffer: 34176
+[dbg] ep534 gs34200 J=0.11338 a_range=1.609 sat=0.00 alpha=0.020 q1=0.018 pi=-124.849
+Episode 535, Reward(scaled): 25.22, Buffer: 34240
+Episode 536, Reward(scaled): 17.52, Buffer: 34304
+Episode 537, Reward(scaled): 22.34, Buffer: 34368
+[dbg] ep537 gs34400 J=0.10848 a_range=1.609 sat=0.00 alpha=0.020 q1=0.022 pi=-124.504
+Episode 538, Reward(scaled): 24.32, Buffer: 34432
+Episode 539, Reward(scaled): 17.34, Buffer: 34496
+Episode 540, Reward(scaled): 15.85, Buffer: 34560
+[dbg] ep540 gs34600 J=0.10894 a_range=1.609 sat=0.04 alpha=0.020 q1=0.019 pi=-124.239
+Episode 541, Reward(scaled): 16.96, Buffer: 34624
+Episode 542, Reward(scaled): 13.26, Buffer: 34688
+Episode 543, Reward(scaled): 21.39, Buffer: 34752
+[dbg] ep543 gs34800 J=0.11260 a_range=1.609 sat=0.00 alpha=0.020 q1=0.030 pi=-122.989
+Episode 544, Reward(scaled): 17.57, Buffer: 34816
+Episode 545, Reward(scaled): 18.70, Buffer: 34880
+Episode 546, Reward(scaled): 20.02, Buffer: 34944
+[dbg] ep546 gs35000 J=0.11324 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-124.081
+[dbg]   next_logp=-33.88 q_target_mean=+121.22 q_target_std=6.14
+Episode 547, Reward(scaled): 25.07, Buffer: 35008
+Episode 548, Reward(scaled): 12.17, Buffer: 35072
+Episode 549, Reward(scaled): 17.31, Buffer: 35136
+Episode 550, Reward(scaled): 15.49, Buffer: 35200
+[dbg] ep550 gs35200 J=0.12607 a_range=0.548 sat=0.00 alpha=0.020 q1=0.020 pi=-122.105
+Episode 551, Reward(scaled): 18.67, Buffer: 35264
+Episode 552, Reward(scaled): 22.99, Buffer: 35328
+Episode 553, Reward(scaled): 17.82, Buffer: 35392
+[dbg] ep553 gs35400 J=0.11474 a_range=1.609 sat=0.00 alpha=0.020 q1=0.015 pi=-122.106
+Episode 554, Reward(scaled): 17.45, Buffer: 35456
+Episode 555, Reward(scaled): 19.07, Buffer: 35520
+Episode 556, Reward(scaled): 24.36, Buffer: 35584
+[dbg] ep556 gs35600 J=0.11034 a_range=1.609 sat=0.00 alpha=0.020 q1=0.018 pi=-121.533
+Episode 557, Reward(scaled): 23.01, Buffer: 35648
+Episode 558, Reward(scaled): 20.30, Buffer: 35712
+Episode 559, Reward(scaled): 18.08, Buffer: 35776
+[dbg] ep559 gs35800 J=0.10999 a_range=1.609 sat=0.00 alpha=0.020 q1=0.020 pi=-121.009
+Episode 560, Reward(scaled): 21.46, Buffer: 35840
+Episode 561, Reward(scaled): 22.08, Buffer: 35904
+Episode 562, Reward(scaled): 20.68, Buffer: 35968
+[dbg] ep562 gs36000 J=0.11089 a_range=1.609 sat=0.00 alpha=0.020 q1=0.015 pi=-120.848
+[dbg]   next_logp=-33.66 q_target_mean=+119.80 q_target_std=6.63
+Episode 563, Reward(scaled): 23.24, Buffer: 36032
+Episode 564, Reward(scaled): 18.14, Buffer: 36096
+Episode 565, Reward(scaled): 16.60, Buffer: 36160
+[dbg] ep565 gs36200 J=0.11242 a_range=1.609 sat=0.00 alpha=0.020 q1=0.026 pi=-119.855
+Episode 566, Reward(scaled): 20.23, Buffer: 36224
+Episode 567, Reward(scaled): 21.00, Buffer: 36288
+Episode 568, Reward(scaled): 17.41, Buffer: 36352
+[dbg] ep568 gs36400 J=0.11271 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-119.042
+Episode 569, Reward(scaled): 20.42, Buffer: 36416
+Episode 570, Reward(scaled): 22.09, Buffer: 36480
+Episode 571, Reward(scaled): 14.26, Buffer: 36544
+[dbg] ep571 gs36600 J=0.11197 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-118.914
+Episode 572, Reward(scaled): 22.38, Buffer: 36608
+Episode 573, Reward(scaled): 22.71, Buffer: 36672
+Episode 574, Reward(scaled): 21.69, Buffer: 36736
+Episode 575, Reward(scaled): 24.57, Buffer: 36800
+[dbg] ep575 gs36800 J=0.12230 a_range=0.576 sat=0.00 alpha=0.020 q1=0.017 pi=-117.749
+Episode 576, Reward(scaled): 21.36, Buffer: 36864
+Episode 577, Reward(scaled): 12.62, Buffer: 36928
+Episode 578, Reward(scaled): 26.41, Buffer: 36992
+[dbg] ep578 gs37000 J=0.11719 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-117.775
+[dbg]   next_logp=-33.59 q_target_mean=+116.27 q_target_std=6.40
+Episode 579, Reward(scaled): 19.49, Buffer: 37056
+Episode 580, Reward(scaled): 15.78, Buffer: 37120
+Episode 581, Reward(scaled): 11.41, Buffer: 37184
+[dbg] ep581 gs37200 J=0.10997 a_range=1.609 sat=0.00 alpha=0.020 q1=0.024 pi=-117.468
+Episode 582, Reward(scaled): 16.48, Buffer: 37248
+Episode 583, Reward(scaled): 17.80, Buffer: 37312
+Episode 584, Reward(scaled): 24.05, Buffer: 37376
+[dbg] ep584 gs37400 J=0.11516 a_range=1.609 sat=0.00 alpha=0.020 q1=0.022 pi=-117.261
+Episode 585, Reward(scaled): 18.65, Buffer: 37440
+Episode 586, Reward(scaled): 22.96, Buffer: 37504
+Episode 587, Reward(scaled): 22.70, Buffer: 37568
+[dbg] ep587 gs37600 J=0.10886 a_range=1.609 sat=0.00 alpha=0.020 q1=0.016 pi=-116.397
+Episode 588, Reward(scaled): 21.26, Buffer: 37632
+Episode 589, Reward(scaled): 17.63, Buffer: 37696
+Episode 590, Reward(scaled): 17.09, Buffer: 37760
+[dbg] ep590 gs37800 J=0.10966 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-116.942
+Episode 591, Reward(scaled): 16.20, Buffer: 37824
+Episode 592, Reward(scaled): 18.40, Buffer: 37888
+Episode 593, Reward(scaled): 21.38, Buffer: 37952
+[dbg] ep593 gs38000 J=0.11448 a_range=1.609 sat=0.00 alpha=0.020 q1=0.015 pi=-115.695
+[dbg]   next_logp=-33.44 q_target_mean=+115.17 q_target_std=6.49
+Episode 594, Reward(scaled): 18.97, Buffer: 38016
+Episode 595, Reward(scaled): 19.97, Buffer: 38080
+Episode 596, Reward(scaled): 18.36, Buffer: 38144
+[dbg] ep596 gs38200 J=0.11312 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-115.341
+Episode 597, Reward(scaled): 18.55, Buffer: 38208
+Episode 598, Reward(scaled): 12.77, Buffer: 38272
+Episode 599, Reward(scaled): 19.62, Buffer: 38336
+Episode 600, Reward(scaled): 20.73, Buffer: 38400  | eval best J=0.10566 last J=0.10799
+[dbg] ep600 gs38400 J=0.12489 a_range=0.560 sat=0.00 alpha=0.020 q1=0.017 pi=-115.042
+Episode 601, Reward(scaled): 15.86, Buffer: 38464
+Episode 602, Reward(scaled): 20.43, Buffer: 38528
+Episode 603, Reward(scaled): 21.27, Buffer: 38592
+[dbg] ep603 gs38600 J=0.11206 a_range=1.609 sat=0.00 alpha=0.020 q1=0.016 pi=-113.830
+Episode 604, Reward(scaled): 20.06, Buffer: 38656
+Episode 605, Reward(scaled): 20.98, Buffer: 38720
+Episode 606, Reward(scaled): 23.73, Buffer: 38784
+[dbg] ep606 gs38800 J=0.11665 a_range=1.609 sat=0.00 alpha=0.020 q1=0.020 pi=-113.982
+Episode 607, Reward(scaled): 17.81, Buffer: 38848
+Episode 608, Reward(scaled): 20.91, Buffer: 38912
+Episode 609, Reward(scaled): 17.98, Buffer: 38976
+[dbg] ep609 gs39000 J=0.11319 a_range=1.609 sat=0.00 alpha=0.020 q1=0.016 pi=-114.041
+[dbg]   next_logp=-34.42 q_target_mean=+111.85 q_target_std=6.06
+Episode 610, Reward(scaled): 22.83, Buffer: 39040
+Episode 611, Reward(scaled): 22.10, Buffer: 39104
+Episode 612, Reward(scaled): 19.62, Buffer: 39168
+[dbg] ep612 gs39200 J=0.11067 a_range=1.609 sat=0.00 alpha=0.020 q1=0.018 pi=-112.694
+Episode 613, Reward(scaled): 19.20, Buffer: 39232
+Episode 614, Reward(scaled): 19.20, Buffer: 39296
+Episode 615, Reward(scaled): 19.99, Buffer: 39360
+[dbg] ep615 gs39400 J=0.11028 a_range=1.609 sat=0.00 alpha=0.020 q1=0.017 pi=-111.992
+Episode 616, Reward(scaled): 26.51, Buffer: 39424
+Episode 617, Reward(scaled): 17.48, Buffer: 39488
+Episode 618, Reward(scaled): 23.35, Buffer: 39552
+[dbg] ep618 gs39600 J=0.11656 a_range=1.609 sat=0.00 alpha=0.020 q1=0.024 pi=-112.038
+Episode 619, Reward(scaled): 21.07, Buffer: 39616
+Episode 620, Reward(scaled): 23.90, Buffer: 39680
+Episode 621, Reward(scaled): 17.58, Buffer: 39744
+[dbg] ep621 gs39800 J=0.11512 a_range=1.609 sat=0.02 alpha=0.020 q1=0.013 pi=-112.040
+Episode 622, Reward(scaled): 16.28, Buffer: 39808
+Episode 623, Reward(scaled): 22.46, Buffer: 39872
+Episode 624, Reward(scaled): 19.28, Buffer: 39936

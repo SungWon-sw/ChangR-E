@@ -76,23 +76,33 @@ class SimpleEnv:
 # =====================
 # 하이퍼파라미터
 # =====================
+SEED = 0
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
+
 HIDDEN_SIZE = 256
-BUFFER_SIZE = 100000
+BUFFER_SIZE = 200000
 BATCH_SIZE = 256
-NUM_EPISODES = 100
-MAX_STEPS = 1000
-SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
-SITES_FILE    = f"{DIR}/outputs/pems_d07_sites.csv"
+NUM_EPISODES = 2000        # 짧은 에피소드 -> 개수 늘림 (2000*64 = 128k step)
+MAX_STEPS = 64             # reset -> 몇 스텝 refine. 1000 은 return 이 상수에 묻힘
+WARMUP_STEPS = 2000
+REWARD_SCALE = 5000.0      # 개선량 보상 r=J_prev-J 는 스텝당 ~1e-3 -> 키운다
+EVAL_EVERY = 100           # N 에피소드마다 결정론 롤아웃 평가
+RHO_MAX = 5.0              # within 은 큰 rho_max 에서 셀 굶기기로 뚫린다. 3~5 권장.
+OBJECTIVE = "within"       # (근본 수정은 objective 재설계: 조각수 가중 within + 굶은셀 페널티 + min_len>=50)
+SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_0841_after.csv"
+SITES_FILE    = f"{DIR}/outputs_2008/pems_d07_sites.csv"
 META_FILE     = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
 env = TrafficRLEnvMW(
     segments_csv=SEGMENTS_FILE, 
     sites_csv=SITES_FILE, 
-    meta_txt=META_FILE
+    meta_txt=META_FILE,
+    rho_max=RHO_MAX,
+    objective=OBJECTIVE,
 )
-STATE_DIM = env.K
-ACTION_DIM = 4
-# ACTION_DIM = env.K
+STATE_DIM = env.obs_dim      # [a(K), 셀별 std(K), 굶은셀 마스크(K), J(1)]
+ACTION_DIM = env.K           # 사이트별 Δa
 # =====================
 # 네트워크 초기화
 # =====================
@@ -112,9 +122,8 @@ buffer = ReplayBuffer(max_size=BUFFER_SIZE, state_dim=STATE_DIM, action_dim=ACTI
 try:
     print("\n--- [학습 루프 테스트: 동적 도로 분할 연산 시뮬레이션] ---")
     
-    uniform_weights = np.zeros(env.K)
-    tst1, tst2, tst3, tst4 = env.step(uniform_weights)
-    print(f"[Test 1] 균등 가중치(유클리드) 적용 시 평균 표준편차: {-tst2:.8f}")
+    _, _, _, info0 = env.step(np.zeros(ACTION_DIM))   # 무영향 액션 -> baseline J
+    print(f"[Test 1] 균등 가중치 baseline J: {info0['J']:.8f}")
     
 except FileNotFoundError as e:
     print(f"\n[오류] 데이터 파일을 찾을 수 없습니다: {e}")
@@ -127,12 +136,27 @@ import os
 # 학습 루프
 # =====================
 print("학습 시작...")
-WARMUP_STEPS = 5000  # 추가
 
+
+def eval_policy(n_steps=MAX_STEPS):
+    """결정론 롤아웃 (tanh(mu)). 정책이 실제로 뭘 배웠는지 본다."""
+    s = np.asarray(env.reset(), np.float32)
+    best = np.inf
+    info = {"J": np.nan}
+    for _ in range(n_steps):
+        a, _ = policy(tf.expand_dims(s, 0), deterministic=True)
+        s, _, _, info = env.step(a[0].numpy())
+        s = np.asarray(s, np.float32)
+        best = min(best, info["J"])
+    return best, info["J"]
+
+
+global_step = 0
 for episode in range(NUM_EPISODES):
-    state = env.reset()
-    episode_reward = 0
-    
+    state = np.asarray(env.reset(), np.float32)
+    episode_reward = 0.0
+    q1_loss = policy_loss = alpha_loss = 0.0
+
     for step in range(MAX_STEPS):
         if buffer.size < WARMUP_STEPS:
             action = np.random.uniform(-1, 1, size=(ACTION_DIM,)).astype('float32')
@@ -141,8 +165,10 @@ for episode in range(NUM_EPISODES):
             action = action[0].numpy()
         
         # 환경과 상호작용
-        next_state, reward, done, _ = env.step(action)
-        
+        next_state, reward, done, info = env.step(action)
+        next_state = np.asarray(next_state, np.float32)
+        reward *= REWARD_SCALE
+
         # 리플레이 버퍼에 저장
         buffer.add(state, action, reward, next_state, float(done))
         episode_reward += reward
@@ -153,18 +179,38 @@ for episode in range(NUM_EPISODES):
             
             # critic -> actor -> alpha -> target 을 그래프 하나로 실행 (@tf.function)
             q1_loss, q2_loss, policy_loss, alpha_loss = sac.train_step(batch)
-        
+
+        # ---- 계측 ----
+        if global_step % 200 == 0:
+            sat = float(np.mean(np.abs(action) > 0.99))
+            da  = float(env.a.max() - env.a.min())
+            print(f"[dbg] ep{episode} gs{global_step} J={info['J']:.5f} "
+                  f"a_range={da:.3f} sat={sat:.2f} alpha={float(sac.alpha):.3f} "
+                  f"q1={float(q1_loss):.3f} pi={float(policy_loss):.3f}")
+        if buffer.size > WARMUP_STEPS and global_step % 1000 == 0:
+            b = buffer.sample(BATCH_SIZE)
+            na, nlp = policy(b[3])
+            mq = tf.minimum(q1(tf.concat([b[3], na], -1)), q2(tf.concat([b[3], na], -1)))
+            qt = b[2] + (1.0 - b[4]) * 0.99 * (mq - sac.alpha * nlp)
+            print(f"[dbg]   next_logp={float(tf.reduce_mean(nlp)):+.2f} "
+                  f"q_target_mean={float(tf.reduce_mean(qt)):+.2f} "
+                  f"q_target_std={float(tf.math.reduce_std(qt)):.2f}")
+
         state = next_state
-        
+        global_step += 1
+
         if done:
             break
     
-    if (episode + 1) % 1 == 0:
-        print(f"Episode {episode + 1}, Reward: {episode_reward:.2f}, Buffer Size: {buffer.size}")
+    msg = f"Episode {episode + 1}, Reward(scaled): {episode_reward:.2f}, Buffer: {buffer.size}"
+    if (episode + 1) % EVAL_EVERY == 0 and buffer.size > WARMUP_STEPS:
+        b_best, b_last = eval_policy()
+        msg += f"  | eval best J={b_best:.5f} last J={b_last:.5f}"
+    print(msg)
 
 print("학습 완료!")
-print(env.finalA)
-print(env.finalW)
+print("finalA (best J 방문):", env.finalA)
+print("finalW:", env.finalW)
 
 
 # # =====================

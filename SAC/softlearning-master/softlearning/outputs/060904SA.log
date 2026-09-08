@@ -1,0 +1,48 @@
+nohup: ignoring input
+[MW Env] 분기점 56개, 도로 선분 1831개, 이웃간격 중앙값 2453 m, rho_max=2.0
+[baseline] J(a=0) = 0.13058294   budget: 12000 evals, 2 chains x 3 cycles x 1973 steps
+[chain0] start J=0.13058294  T0=4.797e-04  (mean|dJ|=3.325e-04, evals=82, 7s)
+[chain0] step   500  cyc 0  T=6.99e-05  scale=0.608  acc=0.32  J=0.11642881  best=0.11642881  evals=582  55s
+[chain0] step  1000  cyc 0  T=1.02e-05  scale=0.166  acc=0.10  J=0.11207893  best=0.11207893  evals=1082  113s
+[chain0] step  1500  cyc 0  T=1.48e-06  scale=0.053  acc=0.15  J=0.11145722  best=0.11145700  evals=1582  173s
+[chain0] cycle 0 done -> best=0.11123798
+[chain0] step  2000  cyc 1  T=1.54e-04  scale=0.020  acc=0.22  J=0.11210049  best=0.11123798  evals=2082  230s
+[chain0] step  2500  cyc 1  T=2.92e-05  scale=0.046  acc=0.30  J=0.11177112  best=0.11123798  evals=2582  290s
+[chain0] step  3000  cyc 1  T=5.55e-06  scale=0.033  acc=0.14  J=0.11117243  best=0.11116374  evals=3082  348s
+[chain0] step  3500  cyc 1  T=1.05e-06  scale=0.020  acc=0.10  J=0.11089512  best=0.11089474  evals=3582  405s
+[chain0] cycle 1 done -> best=0.11074079
+[chain0] step  4000  cyc 2  T=6.16e-05  scale=0.020  acc=0.36  J=0.11137366  best=0.11074079  evals=4082  462s
+[chain0] step  4500  cyc 2  T=1.45e-05  scale=0.035  acc=0.31  J=0.11124624  best=0.11074079  evals=4582  526s
+[chain0] step  5000  cyc 2  T=3.42e-06  scale=0.020  acc=0.17  J=0.11080680  best=0.11074079  evals=5082  591s
+[chain0] step  5500  cyc 2  T=8.05e-07  scale=0.020  acc=0.07  J=0.11071022  best=0.11071022  evals=5582  657s
+[chain0] cycle 2 done -> best=0.11064823
+[chain1] start J=0.13520853  T0=6.790e-04  (mean|dJ|=4.706e-04, evals=6082, 718s)
+[chain1] step   500  cyc 0  T=9.89e-05  scale=0.608  acc=0.27  J=0.11769423  best=0.11702946  evals=6582  779s
+[chain1] step  1000  cyc 0  T=1.44e-05  scale=0.374  acc=0.18  J=0.11273913  best=0.11273913  evals=7082  843s
+[chain1] step  1500  cyc 0  T=2.10e-06  scale=0.053  acc=0.16  J=0.11099382  best=0.11098949  evals=7582  892s
+[chain1] cycle 0 done -> best=0.11046968
+[chain1] step  2000  cyc 1  T=2.17e-04  scale=0.020  acc=0.24  J=0.11108067  best=0.11046968  evals=8082  951s
+[chain1] step  2500  cyc 1  T=4.13e-05  scale=0.053  acc=0.49  J=0.11181818  best=0.11046968  evals=8582  1003s
+[chain1] step  3000  cyc 1  T=7.85e-06  scale=0.053  acc=0.22  J=0.11053203  best=0.11046968  evals=9082  1049s
+[chain1] step  3500  cyc 1  T=1.49e-06  scale=0.020  acc=0.12  J=0.11036307  best=0.11036307  evals=9582  1094s
+[chain1] cycle 1 done -> best=0.11003976
+[chain1] step  4000  cyc 2  T=8.71e-05  scale=0.020  acc=0.42  J=0.11053102  best=0.11003976  evals=10082  1138s
+[chain1] step  4500  cyc 2  T=2.05e-05  scale=0.023  acc=0.27  J=0.11073714  best=0.11003976  evals=10582  1184s
+[chain1] step  5000  cyc 2  T=4.84e-06  scale=0.023  acc=0.20  J=0.11025871  best=0.11003976  evals=11082  1230s
+[chain1] step  5500  cyc 2  T=1.14e-06  scale=0.020  acc=0.09  J=0.11010207  best=0.11003976  evals=11582  1275s
+[chain1] cycle 2 done -> best=0.11003353
+
+============================================================
+BEST J        = 0.11003353
+baseline J    = 0.13058294
+improvement   = 15.74%  (0.130583 -> 0.110034)
+rho used      = 1.9930 (<= 2.0)
+total evals   = 12001,  wall = 1313s
+best a saved  -> sa_best_a.npy
+a = [-0.27541 -0.34118 -0.11488  0.34316  0.32837  0.31837 -0.29652 -0.34649 -0.09905  0.33627  0.23393  0.32379 -0.34258
+  0.28179  0.34001  0.0441   0.2763  -0.23337 -0.18671  0.25992 -0.33462  0.23497  0.3298   0.11863  0.23785 -0.01742
+  0.16083  0.13844  0.14926  0.23279  0.27748 -0.02944 -0.29673 -0.08795  0.16008 -0.32976 -0.29901 -0.11009 -0.34241
+ -0.07726  0.16927 -0.32006 -0.05927 -0.32926  0.29874 -0.16938 -0.16341  0.32434 -0.16241 -0.26408  0.06337  0.31653
+ -0.31779 -0.17033  0.1228  -0.30431]
+============================================================
+plot saved -> sa_result.png
