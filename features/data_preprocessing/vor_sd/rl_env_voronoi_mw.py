@@ -21,8 +21,10 @@ TrafficRLEnv — MW(곱셈가중) 보로노이 버전.
 import numpy as np
 import pandas as pd
 from scipy.spatial import KDTree
+from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import dijkstra
 
-from features.data_preprocessing.vor_sd.mw_cut import cut_segments_fast
+from features.data_preprocessing.vor_sd.mw_cut import graph_cut_segments_fast
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
 
 from math import sqrt
@@ -63,6 +65,7 @@ class TrafficRLEnvMW:
         self.P = self.seg_df[["x1", "y1"]].values.astype(float)
         self.Q = self.seg_df[["x2", "y2"]].values.astype(float)
         self.seg_len = np.linalg.norm(self.Q - self.P, axis=1)
+        self._build_road_graph()
 
         # bbox 는 더 이상 필요 없다 (셀을 자르지 않고 선분만 다루므로).
         self.rho_max = float(rho_max)
@@ -85,6 +88,24 @@ class TrafficRLEnvMW:
         self.x_min, self.y_min = self.site_coords.min(axis=0)
         self.x_max, self.y_max = self.site_coords.max(axis=0)
 
+    def _build_road_graph(self):
+        """도로 선분을 길이 가중 무방향 그래프로 만들고 사이트를 노드에 매핑한다."""
+        coords = np.unique(np.vstack([self.P, self.Q]), axis=0)
+        self.graph_coords = coords
+        self.edge_u = np.argmin(np.linalg.norm(self.P[:, None] - coords[None, :], axis=2), axis=1)
+        self.edge_v = np.argmin(np.linalg.norm(self.Q[:, None] - coords[None, :], axis=2), axis=1)
+        rows = np.r_[self.edge_u, self.edge_v]
+        cols = np.r_[self.edge_v, self.edge_u]
+        data = np.r_[self.seg_len, self.seg_len]
+        graph = coo_matrix((data, (rows, cols)), shape=(len(coords), len(coords)))
+        site_to_node = np.linalg.norm(self.site_coords[:, None] - coords[None, :], axis=2)
+        self.site_node = site_to_node.argmin(axis=1)
+        self.site_graph_distance = site_to_node.min(axis=1)
+        self.node_dist = dijkstra(graph.tocsr(), directed=False,
+                                  indices=self.site_node)
+        print(f"[MW Env] 그래프 노드 {len(coords)}개, 사이트-도로 노드 매핑 최대오차 "
+              f"{self.site_graph_distance.max():.1f} m")
+
     # ------------------------------------------------------------------
     def weights(self, a=None):
         a = self.a if a is None else np.asarray(a, float)
@@ -98,8 +119,9 @@ class TrafficRLEnvMW:
         w = self.weights(a)
 
         # 1) 선분을 MW 셀 경계로 정확히 절단 -> (N, K) 유효길이
-        Lmat, info = cut_segments_fast(self.P, self.Q, self.site_coords, w,
-                                       min_len=self.min_len, return_info=True)
+        Lmat, info = graph_cut_segments_fast(
+            self.P, self.Q, self.edge_u, self.edge_v, self.site_node,
+            self.node_dist, w, min_len=self.min_len, return_info=True)
         seg_i, cell_i = np.nonzero(Lmat)
         if len(seg_i) == 0:
             return 0.0, np.zeros(self.K), info

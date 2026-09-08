@@ -20,6 +20,71 @@ MW 셀이 비볼록이든, 여러 조각이든, 구멍이 있든 자동으로 �
 import numpy as np
 
 
+def graph_cut_segments_fast(P, Q, edge_u, edge_v, site_node, node_dist,
+                            w, min_len=1.0, return_info=False):
+    """도로 그래프 최단거리 기반 MW 셀의 간선별 유효 길이를 계산한다."""
+    P = np.asarray(P, float)
+    Q = np.asarray(Q, float)
+    edge_u = np.asarray(edge_u, int)
+    edge_v = np.asarray(edge_v, int)
+    node_dist = np.asarray(node_dist, float)
+    w = np.asarray(w, float)
+    N, K = len(P), len(site_node)
+    seg_len = np.linalg.norm(Q - P, axis=1)
+    du = node_dist[:, edge_u]
+    dv = node_dist[:, edge_v]
+    finite = np.isfinite(du) & np.isfinite(dv)
+
+    seg_out, cell_out, len_out = [], [], []
+    for n in range(N):
+        L = seg_len[n]
+        if L <= 0 or not finite[n].any():
+            continue
+        switches = (dv[n] + L - du[n]) / (2.0 * L)
+        cuts = np.r_[0.0, switches[finite[n]], 1.0]
+        cuts = np.unique(np.clip(cuts, 0.0, 1.0))
+        roots = []
+        for lo, hi in zip(cuts[:-1], cuts[1:]):
+            if hi - lo <= 1e-12:
+                continue
+            mid = (lo + hi) / 2.0
+            use_u = du[n] + mid * L <= dv[n] + (1.0 - mid) * L
+            intercept = np.where(use_u, du[n], dv[n] + L) / w
+            slope = np.where(use_u, L, -L) / w
+            valid = finite[n]
+            for i in range(K):
+                if not valid[i]:
+                    continue
+                denom = slope[i] - slope
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    cross = (intercept - intercept[i]) / denom
+                ok = valid & (np.arange(K) != i) & (np.abs(denom) > 1e-12)
+                roots.extend(cross[ok & (cross > lo + 1e-12) & (cross < hi - 1e-12)])
+        cuts = np.unique(np.r_[cuts, roots])
+        mids = (cuts[:-1] + cuts[1:]) / 2.0
+        length = np.diff(cuts) * L
+        d = np.minimum(du[n][None, :] + mids[:, None] * L,
+                       dv[n][None, :] + (1.0 - mids[:, None]) * L) / w
+        d[:, ~finite[n]] = np.inf
+        owner = d.argmin(axis=1)
+        for cell in np.unique(owner):
+            owned = length[owner == cell].sum()
+            if owned >= min_len:
+                seg_out.append(n)
+                cell_out.append(int(cell))
+                len_out.append(owned)
+
+    Lmat = np.zeros((N, K), float)
+    if seg_out:
+        Lmat[seg_out, cell_out] = len_out
+    if return_info:
+        return Lmat, {
+            "graph_nodes": int(node_dist.shape[1]),
+            "unreachable_sites": int((~np.isfinite(node_dist)).sum()),
+        }
+    return Lmat
+
+
 def _roots_stable(alpha, beta, gamma, lin_eps=1e-12):
     """벡터화된 수치안정 이차방정식. (N,) 배열 3개 -> (N,2) 근 (없으면 nan).
 

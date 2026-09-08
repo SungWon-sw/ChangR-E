@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW, VF_MS
-from features.data_preprocessing.vor_sd.mw_cut import cut_segments_fast
+from features.data_preprocessing.vor_sd.mw_cut import graph_cut_segments_fast
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
 
 
@@ -38,7 +38,9 @@ def compute_mw_stats(env, a):
     """
     w = env.weights(a)
 
-    Lmat = cut_segments_fast(env.P, env.Q, env.site_coords, w, min_len=env.min_len)
+    Lmat = graph_cut_segments_fast(
+        env.P, env.Q, env.edge_u, env.edge_v, env.site_node,
+        env.node_dist, w, min_len=env.min_len)
     seg_i, cell_i = np.nonzero(Lmat)
     L_eff = Lmat[seg_i, cell_i]
 

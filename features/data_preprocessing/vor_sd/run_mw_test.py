@@ -80,13 +80,15 @@ def preflight(segments_csv, sites_csv, meta_txt):
 
 
 def diagnose(env, rho_list=(1.5, 2.0, 3.0)):
-    from mw_cut import cut_segments_fast
+    from mw_cut import graph_cut_segments_fast
     print("\n" + "=" * 68)
     print("[3] 감도 진단 — 가중치에 반응하는 데이터가 몇 %인가")
     print("=" * 68)
 
     def owners(a):
-        Lm = cut_segments_fast(env.P, env.Q, env.site_coords, env.weights(a), min_len=0.0)
+        Lm = graph_cut_segments_fast(
+            env.P, env.Q, env.edge_u, env.edge_v, env.site_node,
+            env.node_dist, env.weights(a), min_len=0.0)
         return (Lm > 0).sum(1), Lm.argmax(1)
 
     n0, o0 = owners(np.zeros(env.K))
