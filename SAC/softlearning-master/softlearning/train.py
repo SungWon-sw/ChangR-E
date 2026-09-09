@@ -114,7 +114,7 @@ try:
     
     uniform_weights = np.zeros(env.K)
     tst1, tst2, tst3, tst4 = env.step(uniform_weights)
-    print(f"[Test 1] 균등 가중치(유클리드) 적용 시 평균 표준편차: {-tst2:.8f}")
+    print(f"[Test 1] 균등 가중치(도로 그래프 최단거리 기반) 적용 시 평균 표준편차: {-tst2:.8f}")
     
 except FileNotFoundError as e:
     print(f"\n[오류] 데이터 파일을 찾을 수 없습니다: {e}")

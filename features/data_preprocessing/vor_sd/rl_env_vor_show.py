@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from scipy.spatial import KDTree
 
 # 이 파일(vor_sd/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
 # rl_env_voronoi_mw.py 가 절대 패키지 경로(features.data_preprocessing.vor_sd...)로
@@ -73,8 +74,10 @@ def compute_mw_stats(env, a):
 def rasterize_owner_grid(env, w, grid_res=300, pad=4000):
     """
     MW(Apollonius) 셀은 비볼록/비연결일 수 있어 폴리곤으로 그리기 어렵다.
-    대신 평면을 촘촘한 격자로 샘플링해 각 점의 소유 사이트(d_i = |x-p_i|/w_i 최소)를 구해
-    래스터(pcolormesh)로 영역을 채운다.
+    대신 평면을 촘촘한 격자로 샘플링해 각 점의 소유 사이트를 구해 래스터(pcolormesh)로
+    영역을 채운다. 소유권은 도로 그래프 최단거리 기준(evaluate() 와 동일 metric)이며,
+    격자점은 도로 위에 있지 않으므로 가장 가까운 그래프 노드까지의 최단거리에
+    그 노드까지의 직선거리를 더해 근사한다: d_i = (node_dist[i, nearest_node] + offset) / w_i.
     """
     x_min, y_min = env.site_coords.min(axis=0) - pad
     x_max, y_max = env.site_coords.max(axis=0) + pad
@@ -84,7 +87,8 @@ def rasterize_owner_grid(env, w, grid_res=300, pad=4000):
     XX, YY = np.meshgrid(xs, ys)
     pts = np.stack([XX.ravel(), YY.ravel()], axis=1)
 
-    d = np.linalg.norm(pts[:, None, :] - env.site_coords[None, :, :], axis=2) / w[None, :]
+    node_offset, nearest_node = KDTree(env.graph_coords).query(pts)
+    d = (env.node_dist[:, nearest_node].T + node_offset[:, None]) / w[None, :]
     owner = d.argmin(1).reshape(grid_res, grid_res)
 
     return XX, YY, owner, (x_min, y_min, x_max, y_max)

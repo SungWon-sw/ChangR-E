@@ -147,15 +147,23 @@ def plot(env, a_best, path="mw_data_test.png", sub=12):
     t = np.linspace(0, 1, sub + 1)
     A = env.P[:, None, :] + t[None, :-1, None] * (env.Q - env.P)[:, None, :]
     B = env.P[:, None, :] + t[None, 1:, None] * (env.Q - env.P)[:, None, :]
-    M = 0.5 * (A + B)
     segs = np.stack([A.reshape(-1, 2), B.reshape(-1, 2)], axis=1)
+
+    # 도로 그래프 최단거리 기준 소유 셀 판정 (evaluate()/graph_cut_segments_fast 와 동일 metric).
+    # sub 개 하위 조각의 중점마다 두 끝점 중 더 가까운 쪽을 거쳐가는 거리로 근사한다.
+    t_mid = 0.5 * (t[:-1] + t[1:])                     # (sub,)
+    du = env.node_dist[:, env.edge_u]                  # (K,N)
+    dv = env.node_dist[:, env.edge_v]                  # (K,N)
+    L = env.seg_len                                    # (N,)
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 6.2))
     for ax, a, ttl in ((axes[0], np.zeros(env.K), "a = 0  (일반 Voronoi)"),
                        (axes[1], a_best, f"최적 탐색 결과  (rho={np.exp(a_best.max()-a_best.min()):.2f})")):
         w = env.weights(a)
-        d = np.linalg.norm(M.reshape(-1, 1, 2) - env.site_coords[None], axis=2) / w
-        own = d.argmin(1)
+        d = np.minimum(du[:, :, None] + t_mid[None, None, :] * L[None, :, None],
+                       dv[:, :, None] + (1.0 - t_mid[None, None, :]) * L[None, :, None])
+        d = d / w[:, None, None]                        # (K,N,sub)
+        own = d.transpose(1, 2, 0).reshape(-1, len(w)).argmin(1)   # (N*sub,)
         ax.add_collection(LineCollection(segs, colors=PAL[own % len(PAL)], linewidths=0.7))
         ax.scatter(env.site_coords[:, 0], env.site_coords[:, 1],
                    s=25 + 90 * (w - w.min()) / max(w.max() - w.min(), 1e-9),

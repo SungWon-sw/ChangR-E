@@ -3,18 +3,26 @@
 """
 MW(곱셈가중) 보로노이로 '선분을 정확히 자르는' 벡터화 커널.
 
-폴리곤을 전혀 만들지 않는다. 도로 선분 하나하나에 대해
-    d_i(x(t)) = |x(t) - p_i| / w_i,   x(t) = P + t (Q-P),  t in [0,1]
-의 argmin 이 바뀌는 t 를 이차방정식으로 정확히 구하고,
-구간 중점에서 argmin 을 평가해 소유 셀을 확정한다.
+폴리곤을 전혀 만들지 않는다. 도로 선분 하나하나에 대해 소유 셀이 바뀌는 지점을
+정확히 구하고, 구간 중점에서 argmin 을 평가해 소유 셀을 확정한다.
 
-  w_j^2 |x-p_i|^2 - w_i^2 |x-p_j|^2 = 0
-  => alpha t^2 + beta t + gamma = 0
-     alpha = |u|^2 (w_j^2 - w_i^2)
-     beta  = 2 (w_j^2 (A.u) - w_i^2 (B.u))        A = P-p_i, B = P-p_j, u = Q-P
-     gamma = w_j^2 |A|^2 - w_i^2 |B|^2
+이 파일에는 거리 metric 이 다른 두 구현이 있다:
 
-MW 셀이 비볼록이든, 여러 조각이든, 구멍이 있든 자동으로 처리된다.
+  * graph_cut_segments_fast (현재 rl_env_voronoi_mw.py 가 사용) — 도로 그래프
+    최단거리(dijkstra) 기준. d_i(x(t)) = min(du_i + t*L, dv_i + (1-t)*L) / w_i
+    (du_i, dv_i = 사이트 i 에서 선분 양 끝 그래프 노드까지의 최단거리). t 에 대해
+    선형이므로 소유권이 바뀌는 지점은 선형방정식으로 구한다.
+
+  * cut_segments / cut_segments_fast (예전 버전, owner_bruteforce 검증용으로 남겨둠) —
+    평면상 직선거리 기준. d_i(x(t)) = |x(t) - p_i| / w_i,  x(t) = P + t (Q-P), t in [0,1].
+    거리 제곱이 t 에 대해 이차식이므로 소유권 전환점은 이차방정식으로 구한다:
+      w_j^2 |x-p_i|^2 - w_i^2 |x-p_j|^2 = 0
+      => alpha t^2 + beta t + gamma = 0
+         alpha = |u|^2 (w_j^2 - w_i^2)
+         beta  = 2 (w_j^2 (A.u) - w_i^2 (B.u))        A = P-p_i, B = P-p_j, u = Q-P
+         gamma = w_j^2 |A|^2 - w_i^2 |B|^2
+
+MW 셀이 비볼록이든, 여러 조각이든, 구멍이 있든 (두 구현 모두) 자동으로 처리된다.
 """
 
 import numpy as np
