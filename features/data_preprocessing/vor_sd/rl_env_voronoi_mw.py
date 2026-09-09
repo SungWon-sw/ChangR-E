@@ -43,6 +43,8 @@ class TrafficRLEnvMW:
                  min_pieces=2,         # 이보다 조각이 적은 셀은 목적함수에서 제외
                  objective="within",   # "global" | "within" | "mixed"
                  lam_scaling="none"):  # "none" | "length"  (아래 설명 참조)
+        """segments/sites/meta CSV 를 읽어 도로망 + 도로 그래프(_build_road_graph)를
+        구성하고, RL 상태(log-가중치 a)와 목적함수 설정을 초기화한다."""
         self.sites_df = pd.read_csv(sites_csv)
         self.seg_df = pd.read_csv(segments_csv)
         
@@ -108,11 +110,13 @@ class TrafficRLEnvMW:
 
     # ------------------------------------------------------------------
     def weights(self, a=None):
+        """로그-가중치 a (생략 시 self.a) 로부터 실제 MW 가중치 w = exp(a - mean(a)) 를 구한다.
+        평균을 빼는 것이 스케일 불변(w -> cw 는 동일 다이어그램) 게이지 고정이다."""
         a = self.a if a is None else np.asarray(a, float)
         return np.exp(a - a.mean())
 
     def evaluate(self, a):
-        """log-가중치 a 를 받아 (목적함수값, 셀별 지표, 진단정보) 반환."""
+        """log-가중치 a 를 받아 (목적함수값 J, 셀별 표준편차, 진단정보 dict) 3-tuple 을 반환한다."""
         a = np.asarray(a, float)
         if len(a) != self.K:
             raise ValueError(f"가중치 개수({len(a)}) != 분기점 개수({self.K})")
@@ -157,15 +161,21 @@ class TrafficRLEnvMW:
         info = dict(info, n_pieces=len(probs), n_valid_cells=int(valid.sum()),
                     within=within, global_std=glob,
                     mean_prob=float(probs.mean()), rho=float(w.max() / w.min()))
-        return J, np.nan_to_num(stds)
+        return J, np.nan_to_num(stds), info
 
     # ------------------------------------------------------------------
     def reset(self):
+        """log-가중치 a 를 [-0.1, 0.1] 범위의 무작위값(평균 0)으로 재초기화하고 반환한다."""
         self.a = np.random.uniform(-0.1, 0.1, self.K)
         self.a -= self.a.mean()
         return self.a.copy()
 
     def step(self, action):
+        """action = (강도 A, 중심 x, y, 폭 mu) 로 정의되는 가우시안 범프를 현재 a 에
+        더해 상태를 갱신하고, evaluate() 로 계산한 목적함수의 음수를 보상으로 반환한다.
+        (다음 상태 a, reward, done(항상 False), 셀별 표준편차) 튜플을 돌려준다.
+        범프의 중심-사이트 거리(uclid_dist)는 Voronoi 셀 metric 과 무관한, 액션을
+        적용할 때 쓰는 실제 평면상 거리다 — 도로 그래프 거리로 바꿀 필요가 없다."""
         # 액션을 a 공간에서 그대로 더한다. a_bound 가 곧 rho_max 제약.
         A = action [0]
         xpos = self.x_min + (action[1] + 1) / 2 * (self.x_max - self.x_min)
@@ -181,12 +191,10 @@ class TrafficRLEnvMW:
         self.a = np.clip(self.a, -self.a_bound, self.a_bound)
         self.a -= self.a.mean()          # 클리핑 후 재중심화
 
-        mean_std, stds = self.evaluate(self.a)
-        reward = -mean_std
-        if(mean_std < self.finalA):
-            self.finalA=mean_std
+        J, stds, _ = self.evaluate(self.a)
+        if J < self.finalA:
+            self.finalA = J
             self.finalW = self.a.copy()
-        J, stds = self.evaluate(self.a)
-        
+
         reward = -J
         return self.a.copy(), reward, False, stds

@@ -97,7 +97,7 @@ res=0
 a=[]
 for i in range(it):
     env.reset()
-    val, ans=(env.evaluate(env.a))
+    val, ans, _ = env.evaluate(env.a)
     if val < mnval:
         mnval = val
         res=ans
