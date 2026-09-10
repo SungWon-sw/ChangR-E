@@ -85,9 +85,6 @@ class TrafficRLEnvMW:
         self.finalA = 99999999
         print(f"[MW Env] 분기점 {self.K}개, 도로 선분 {self.N}개, "
               f"이웃간격 중앙값 {self.spacing:.0f} m, rho_max={self.rho_max}")
-        
-        self.x_min, self.y_min = self.site_coords.min(axis=0)
-        self.x_max, self.y_max = self.site_coords.max(axis=0)
 
     def _build_road_graph(self):
         """도로 선분을 길이 가중 무방향 그래프로 만들고 사이트를 노드에 매핑한다."""
@@ -104,7 +101,6 @@ class TrafficRLEnvMW:
         self.site_graph_distance = site_to_node.min(axis=1)
         self.node_dist = dijkstra(graph.tocsr(), directed=False,
                                   indices=self.site_node)
-        self.graph_node_tree = KDTree(coords)   # step() 의 액션 위치 -> 최근접 그래프 노드 스냅용
         print(f"[MW Env] 그래프 노드 {len(coords)}개, 사이트-도로 노드 매핑 최대오차 "
               f"{self.site_graph_distance.max():.1f} m")
 
@@ -171,22 +167,15 @@ class TrafficRLEnvMW:
         return self.a.copy()
 
     def step(self, action):
-        """action = (강도 A, 중심 x, y, 폭 mu) 로 정의되는 가우시안 범프를 현재 a 에
-        더해 상태를 갱신하고, evaluate() 로 계산한 목적함수의 음수를 보상으로 반환한다.
-        (다음 상태 a, reward, done(항상 False), 셀별 표준편차) 튜플을 돌려준다.
-        범프의 중심-사이트 거리는 도로 그래프 최단거리 기준(evaluate() 와 동일 metric)이다:
-        중심점을 가장 가까운 그래프 노드에 스냅하고, 그 노드에서 각 사이트까지의
-        최단거리에 스냅 오프셋을 더해 근사한다 (rl_env_vor_show.rasterize_owner_grid 와 동일 방식)."""
-        # 액션을 a 공간에서 그대로 더한다. a_bound 가 곧 rho_max 제약.
-        A = action [0]
-        xpos = self.x_min + (action[1] + 1) / 2 * (self.x_max - self.x_min)
-        ypos = self.y_min + (action[2] + 1) / 2 * (self.y_max - self.y_min)
-        mu   = max(1e-5, (action[3] + 1) / 2 * self.spacing)
-        # tanh 스케일링 반영함
-        node_offset, nearest_node = self.graph_node_tree.query([xpos, ypos])
-        dist = self.node_dist[:, nearest_node] + node_offset   # (K,) 도로 그래프 최단거리
-        kernel = np.exp(-0.5 * (dist / mu) ** 2)                # dist=0일 때 항상 1, mu와 무관
-        self.a += A * kernel
+        """action 은 사이트(그래프 정점)별 log-가중치 증분 벡터(길이 K)다. 공간 커널로
+        퍼뜨리지 않고 각 정점에 그대로 더한다 — 그래프 보로노이는 이산 구조(정점=사이트,
+        간선=도로, 간선 가중치=길이)이므로 연속 평면 위의 가우시안 범프로 스무딩할
+        이유가 없다: 도로망 자체의 정점/간선 가중치는 evaluate() 의
+        graph_cut_segments_fast 가 이미 최단거리로 반영한다. 평균 0 게이지로
+        재정규화한 뒤 a_bound(rho_max 제약)로 클리핑하고, evaluate() 로 계산한
+        목적함수의 음수를 보상으로 (다음 상태 a, reward, done(항상 False),
+        셀별 표준편차) 튜플로 반환한다."""
+        self.a = self.a + np.asarray(action, float)
         self.a -= self.a.mean()
         self.a = np.clip(self.a, -self.a_bound, self.a_bound)
         self.a -= self.a.mean()          # 클리핑 후 재중심화

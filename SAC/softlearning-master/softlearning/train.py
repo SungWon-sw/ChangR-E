@@ -91,8 +91,7 @@ env = TrafficRLEnvMW(
     meta_txt=META_FILE
 )
 STATE_DIM = env.K
-ACTION_DIM = 4
-# ACTION_DIM = env.K
+ACTION_DIM = env.K   # 사이트(정점)별 log-가중치 증분 — 공간 커널 없이 그래프 정점에 직접 대응
 # =====================
 # 네트워크 초기화
 # =====================
