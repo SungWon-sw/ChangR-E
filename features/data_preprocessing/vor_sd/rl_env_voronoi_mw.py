@@ -27,7 +27,6 @@ from scipy.sparse.csgraph import dijkstra
 from features.data_preprocessing.vor_sd.mw_cut import graph_cut_segments_fast
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
 
-from math import sqrt
 from scipy.stats import norm
 
 VF_MPH_DEFAULT = 65.0
@@ -105,6 +104,7 @@ class TrafficRLEnvMW:
         self.site_graph_distance = site_to_node.min(axis=1)
         self.node_dist = dijkstra(graph.tocsr(), directed=False,
                                   indices=self.site_node)
+        self.graph_node_tree = KDTree(coords)   # step() 의 액션 위치 -> 최근접 그래프 노드 스냅용
         print(f"[MW Env] 그래프 노드 {len(coords)}개, 사이트-도로 노드 매핑 최대오차 "
               f"{self.site_graph_distance.max():.1f} m")
 
@@ -174,19 +174,19 @@ class TrafficRLEnvMW:
         """action = (강도 A, 중심 x, y, 폭 mu) 로 정의되는 가우시안 범프를 현재 a 에
         더해 상태를 갱신하고, evaluate() 로 계산한 목적함수의 음수를 보상으로 반환한다.
         (다음 상태 a, reward, done(항상 False), 셀별 표준편차) 튜플을 돌려준다.
-        범프의 중심-사이트 거리(uclid_dist)는 Voronoi 셀 metric 과 무관한, 액션을
-        적용할 때 쓰는 실제 평면상 거리다 — 도로 그래프 거리로 바꿀 필요가 없다."""
+        범프의 중심-사이트 거리는 도로 그래프 최단거리 기준(evaluate() 와 동일 metric)이다:
+        중심점을 가장 가까운 그래프 노드에 스냅하고, 그 노드에서 각 사이트까지의
+        최단거리에 스냅 오프셋을 더해 근사한다 (rl_env_vor_show.rasterize_owner_grid 와 동일 방식)."""
         # 액션을 a 공간에서 그대로 더한다. a_bound 가 곧 rho_max 제약.
         A = action [0]
         xpos = self.x_min + (action[1] + 1) / 2 * (self.x_max - self.x_min)
         ypos = self.y_min + (action[2] + 1) / 2 * (self.y_max - self.y_min)
         mu   = max(1e-5, (action[3] + 1) / 2 * self.spacing)
         # tanh 스케일링 반영함
-        for i in range(0,len(self.a)):
-            uclid_dist = sqrt((xpos-self.site_coords[i][0])**2 + (ypos-self.site_coords[i][1])**2)
-            kernel = np.exp(-0.5 * (uclid_dist / mu) ** 2)   # dist=0일 때 항상 1, mu와 무관
-            self.a[i] += A * kernel
-        # self.a += action
+        node_offset, nearest_node = self.graph_node_tree.query([xpos, ypos])
+        dist = self.node_dist[:, nearest_node] + node_offset   # (K,) 도로 그래프 최단거리
+        kernel = np.exp(-0.5 * (dist / mu) ** 2)                # dist=0일 때 항상 1, mu와 무관
+        self.a += A * kernel
         self.a -= self.a.mean()
         self.a = np.clip(self.a, -self.a_bound, self.a_bound)
         self.a -= self.a.mean()          # 클리핑 후 재중심화
