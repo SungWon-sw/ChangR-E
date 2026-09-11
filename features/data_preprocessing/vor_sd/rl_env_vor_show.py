@@ -166,7 +166,7 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     ax2.set_xlabel("X Coordinate (meters)", fontsize=11)
     ax2.grid(True, linestyle="--", alpha=0.3)
 
-    J, _, _ = env.evaluate(a)
+    J, _ = env.evaluate(a)
     fig.suptitle(
         f"PeMS D07 Traffic RL Environment State Analysis (MW Voronoi)\n"
         f"Objective [{env.objective}]: {J:.6f}",

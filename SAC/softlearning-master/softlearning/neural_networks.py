@@ -22,32 +22,35 @@ class GaussianPolicy(tf.keras.Model):
         # 1개 층 쌓기 - 정규분포 log( 표준편차 )
 
     # 순전파
-    def call(self, states):
+    def call(self, states, deterministic=False):
         x = self.fc1(states)
         x = self.fc2(x)
         # states -> fc1 -> fc2 추출
 
         mu = self.mu(x)
-        log_std = tf.clip_by_value(self.log_std(x), -20, 0)
+        log_std = tf.clip_by_value(self.log_std(x), -20, 2)
         # 학습 안정화 전략
         std = tf.exp(log_std)
 
-        epsilon = tf.random.normal(tf.shape(mu))
+        if deterministic:
+            epsilon = tf.zeros_like(mu)     # 평가/배포용: 노이즈 없는 대표 액션
+        else:
+            epsilon = tf.random.normal(tf.shape(mu))
         u = mu + std * epsilon  # 평균 + 표준편차 * 노이즈
                                 # epsilon을 난수로 설정해서 역전파가 가능한 랜덤을 만듦
 
-        # log_prob 계산 - 마할라노비스 거리 계산 후 정규화
-        log_probs = -0.5 * ((u - mu) ** 2 / (std ** 2 + 1e-6) +
-                            2 * log_std + tf.math.log(2.0 * np.pi))
+        # log_prob 계산 - 마할라노비스 거리 계산 후 정규화 (squash 전 가우시안)
+        log_probs = -0.5 * (epsilon ** 2 + 2 * log_std + tf.math.log(2.0 * np.pi))
         log_probs = tf.reduce_sum(log_probs, axis=-1, keepdims=True)
 
         # Squash
         actions = tf.tanh(u)
 
-        # Jacobian 보정: log(1 - tanh(u)^2) = log(1 - a^2)
-        # Squash에서 바뀐 확률 밀도를 보정.
+        # tanh Jacobian 보정: log(1 - tanh(u)^2). 수치안정형
+        # (a^2->1 에서 -13.8 로 바닥 찍지 않고 -2|u| 로 매끄럽게 감소).
         log_probs -= tf.reduce_sum(
-            tf.math.log(1 - actions ** 2 + 1e-6), axis=-1, keepdims=True)
+            2.0 * (tf.math.log(2.0) - u - tf.math.softplus(-2.0 * u)),
+            axis=-1, keepdims=True)
 
         return actions, log_probs
         #log_probs는 0에 가까울수록(==크면) 선택 확률 높음. target_entrophy에 가까우면 좋음

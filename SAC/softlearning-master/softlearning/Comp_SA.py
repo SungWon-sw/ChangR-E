@@ -60,7 +60,7 @@ SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
 SITES_FILE = f"{DIR}/outputs/pems_d07_sites.csv"
 META_FILE = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
-OBJECTIVE = "global"          # "global" | "within" | "mixed"
+OBJECTIVE = "within"          # "global" | "within" | "mixed"
 
 env = TrafficRLEnvMW(
     segments_csv=SEGMENTS_FILE,
@@ -111,7 +111,7 @@ def objective(a):
     global EVAL_COUNT
     EVAL_COUNT += 1
     try:
-        val, _, _ = env.evaluate(a)
+        val, _ = env.evaluate(a)
     except Exception:
         return np.inf
     val = float(val)
@@ -248,7 +248,7 @@ def main():
             np.save("sa_best_a.npy", global_best_a)
 
     # 최종 검증
-    final_J, final_stds, _ = env.evaluate(global_best_a)
+    final_J, final_stds = env.evaluate(global_best_a)
     improve = (base_J - final_J) / base_J * 100.0
     print("\n" + "=" * 60)
     print(f"BEST J        = {final_J:.8f}")

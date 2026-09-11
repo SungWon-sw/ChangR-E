@@ -119,12 +119,12 @@ def search(seg, sites, meta_path, rho_list=(1.0001, 1.5, 2.0, 3.0),
     for obj in objectives:
         for rho in rho_list:
             env = TrafficRLEnvMW(*paths, rho_max=rho, objective=obj)
-            J0, _, _ = env.evaluate(np.zeros(env.K))
+            J0, _ = env.evaluate(np.zeros(env.K))
             b, bestJ, bestA = env.a_bound, J0, np.zeros(env.K)
             for _ in range(n_iter):
                 a = rng.uniform(-b, b, env.K)
                 a -= a.mean()
-                J, _, _ = env.evaluate(a)
+                J, _ = env.evaluate(a)
                 if J < bestJ:
                     bestJ, bestA = J, a
             imp = (J0 - bestJ) / max(J0, 1e-12) * 100
@@ -197,15 +197,14 @@ def main():
     env = TrafficRLEnvMW(*paths, rho_max=2.0, objective="within")
     import time
     t0 = time.time()
-    J0, stds, info = env.evaluate(np.zeros(env.K))
+    J0, stds, cnt, valid = env.evaluate(np.zeros(env.K), return_cells=True)
     dt = time.time() - t0
+    n_valid_cells = int(valid.sum())
     print(f"  evaluate() 1회 = {dt*1000:.0f} ms  ({1/dt:.0f} step/s)")
-    print(f"  J(within)={info['within']:.6f}   J(global)={info['global_std']:.6f}")
-    print(f"  평균 차단확률={info['mean_prob']:.4f}   조각수={info['n_pieces']}")
-    print(f"  유효 셀(조각>=2) {info['n_valid_cells']}/{env.K}"
-          + ("" if info["n_valid_cells"] == env.K else "   !! 조각이 거의 없는 셀이 있습니다"))
-    if info.get("truncated"):
-        print(f"  !! max_cuts 초과 선분 {info['truncated']}개 — cut_segments_fast(max_cuts=...) 를 키우세요")
+    print(f"  J(within, RMS of stds)={J0:.6f}")
+    print(f"  조각수={int(cnt.sum())}")
+    print(f"  유효 셀(조각>=2) {n_valid_cells}/{env.K}"
+          + ("" if n_valid_cells == env.K else "   !! 조각이 거의 없는 셀이 있습니다"))
 
     diagnose(env)
     best = search(None, None, None, n_iter=args.iters, paths=paths)
