@@ -39,8 +39,10 @@ def graph_cut_segments_fast(P, Q, edge_u, edge_v, site_node, node_dist,
     w = np.asarray(w, float)
     N, K = len(P), len(site_node)
     seg_len = np.linalg.norm(Q - P, axis=1)
-    du = node_dist[:, edge_u]
-    dv = node_dist[:, edge_v]
+    # node_dist 는 (K, 노드수) — 선분별(행=n) 소유권 판정을 하는 아래 로직과 맞추려면
+    # (N, K)로 전치해서 du[n]/dv[n] 이 "선분 n에서 각 사이트까지의 거리" (K,) 가 되어야 한다.
+    du = node_dist[:, edge_u].T
+    dv = node_dist[:, edge_v].T
     finite = np.isfinite(du) & np.isfinite(dv)
 
     seg_out, cell_out, len_out = [], [], []
