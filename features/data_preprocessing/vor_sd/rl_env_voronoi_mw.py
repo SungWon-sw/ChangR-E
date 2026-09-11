@@ -41,9 +41,18 @@ class TrafficRLEnvMW:
                  min_len=1.0,          # 자투리 컷 [m]
                  min_pieces=2,         # 이보다 조각이 적은 셀은 목적함수에서 제외
                  objective="within",   # "global" | "within" | "mixed"
-                 lam_scaling="none"):  # "none" | "length"  (아래 설명 참조)
+                 lam_scaling="none",   # "none" | "length"  (아래 설명 참조)
+                 phf=PHF):             # vol_day_veh -> 시간당 도착률 환산계수
         """segments/sites/meta CSV 를 읽어 도로망 + 도로 그래프(_build_road_graph)를
-        구성하고, RL 상태(log-가중치 a)와 목적함수 설정을 초기화한다."""
+        구성하고, RL 상태(log-가중치 a)와 목적함수 설정을 초기화한다.
+
+        phf 는 lam = vol_day_veh * phf / 3600 [veh/s] 로 쓰인다.
+        - 종일 파일(vol_day_veh = 일 총량)이면 기본값 0.15 (첨두시간 계수).
+        - pems_pipeline.py --pivot/--span 으로 만든 시간창 파일은 vol_day_veh 가
+          '그 창 동안의 통과 대수'라서 phf = 60/span 을 넘겨야 실제 창 도착률
+          (= vol / (span*60)) 이 된다. 기본값 그대로 두면 창 카운트를 일 총량으로
+          오해해 도착률이 크게 과소평가된다.
+        """
         self.sites_df = pd.read_csv(sites_csv)
         self.seg_df = pd.read_csv(segments_csv)
         
@@ -60,7 +69,8 @@ class TrafficRLEnvMW:
 
         self.lanes = self.seg_df["Lanes"].values.astype(float)
         self.vols = self.seg_df["vol_day_veh"].values.astype(float)
-        self.lam = (self.vols * PHF) / 3600.0
+        self.phf = float(phf)
+        self.lam = (self.vols * self.phf) / 3600.0
         self.lam_scaling = lam_scaling
 
         self.P = self.seg_df[["x1", "y1"]].values.astype(float)

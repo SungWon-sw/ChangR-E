@@ -90,16 +90,21 @@ REWARD_SCALE = 5000.0      # 개선량 보상 r=J_prev-J 는 스텝당 ~1e-3 -> 
 EVAL_EVERY = 100           # N 에피소드마다 결정론 롤아웃 평가
 RHO_MAX = 5.0              # within 은 큰 rho_max 에서 셀 굶기기로 뚫린다. 3~5 권장.
 OBJECTIVE = "within"       # (근본 수정은 objective 재설계: 조각수 가중 within + 굶은셀 페널티 + min_len>=50)
+WINDOW_MIN = 90            # pems_pipeline.py --span 기본값. 아래 PHF 계산에 쓰임
+PHF = 60.0 / WINDOW_MIN    # 시간창 파일의 vol_day_veh 는 '창 동안의 통과 대수'다.
+                           # 이 값을 넘겨야 lam = vol/(span*60) 인 실제 창 도착률이 된다.
+                           # 기본값(0.15)을 쓰면 창 카운트를 일 총량으로 오해해 ~4.4배 과소평가.
 SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_0841_after.csv"
 SITES_FILE    = f"{DIR}/outputs_2008/pems_d07_sites.csv"
 META_FILE     = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
 env = TrafficRLEnvMW(
-    segments_csv=SEGMENTS_FILE, 
-    sites_csv=SITES_FILE, 
+    segments_csv=SEGMENTS_FILE,
+    sites_csv=SITES_FILE,
     meta_txt=META_FILE,
     rho_max=RHO_MAX,
     objective=OBJECTIVE,
+    phf=PHF,
 )
 STATE_DIM = env.obs_dim      # [a(K), 셀별 std(K), 굶은셀 마스크(K), J(1)]
 ACTION_DIM = env.K           # 사이트별 Δa
