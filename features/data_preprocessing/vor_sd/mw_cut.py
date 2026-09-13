@@ -95,6 +95,68 @@ def graph_cut_segments_fast(P, Q, edge_u, edge_v, site_node, node_dist,
     return Lmat
 
 
+def graph_cut_segments_pieces(P, Q, edge_u, edge_v, site_node, node_dist, w):
+    """graph_cut_segments_fast 와 같은 도로그래프 최단거리 절단이지만, 한 선분 안에서
+    같은 셀이 여러 조각으로 나뉘어도 합산하지 않고 조각 하나하나의 위치(t_lo,t_hi)를
+    그대로 반환한다. 시각화(실제 그래프 보로노이 경계를 선분 위에 정확히 그리기)
+    전용 — RL 학습/평가 경로(graph_cut_segments_fast)는 건드리지 않는다.
+
+    반환: seg_idx (M,), cell_idx (M,), t_lo (M,), t_hi (M,)  (t 는 P->Q 선분 위 비율)
+    """
+    P = np.asarray(P, float)
+    Q = np.asarray(Q, float)
+    edge_u = np.asarray(edge_u, int)
+    edge_v = np.asarray(edge_v, int)
+    node_dist = np.asarray(node_dist, float)
+    w = np.asarray(w, float)
+    N, K = len(P), len(site_node)
+    seg_len = np.linalg.norm(Q - P, axis=1)
+    du_all = node_dist[:, edge_u].T
+    dv_all = node_dist[:, edge_v].T
+    finite = np.isfinite(du_all) & np.isfinite(dv_all)
+
+    seg_out, cell_out, lo_out, hi_out = [], [], [], []
+    for n in range(N):
+        L = seg_len[n]
+        if L <= 0 or not finite[n].any():
+            continue
+        du, dv = du_all[n], dv_all[n]
+        switches = (dv + L - du) / (2.0 * L)
+        cuts = np.r_[0.0, switches[finite[n]], 1.0]
+        cuts = np.unique(np.clip(cuts, 0.0, 1.0))
+        roots = []
+        for lo, hi in zip(cuts[:-1], cuts[1:]):
+            if hi - lo <= 1e-12:
+                continue
+            mid = (lo + hi) / 2.0
+            use_u = du + mid * L <= dv + (1.0 - mid) * L
+            intercept = np.where(use_u, du, dv + L) / w
+            slope = np.where(use_u, L, -L) / w
+            valid = finite[n]
+            for i in range(K):
+                if not valid[i]:
+                    continue
+                denom = slope[i] - slope
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    cross = (intercept - intercept[i]) / denom
+                ok = valid & (np.arange(K) != i) & (np.abs(denom) > 1e-12)
+                roots.extend(cross[ok & (cross > lo + 1e-12) & (cross < hi - 1e-12)])
+        cuts = np.unique(np.r_[cuts, roots])
+        mids = (cuts[:-1] + cuts[1:]) / 2.0
+        d = np.minimum(du[None, :] + mids[:, None] * L,
+                       dv[None, :] + (1.0 - mids[:, None]) * L) / w
+        d[:, ~finite[n]] = np.inf
+        owner = d.argmin(axis=1)
+        for j in range(len(mids)):
+            seg_out.append(n)
+            cell_out.append(int(owner[j]))
+            lo_out.append(cuts[j])
+            hi_out.append(cuts[j + 1])
+
+    return (np.array(seg_out, int), np.array(cell_out, int),
+            np.array(lo_out, float), np.array(hi_out, float))
+
+
 def _roots_stable(alpha, beta, gamma, lin_eps=1e-12):
     """벡터화된 수치안정 이차방정식. (N,) 배열 3개 -> (N,2) 근 (없으면 nan).
 

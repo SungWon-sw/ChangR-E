@@ -5,8 +5,13 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from scipy.spatial import KDTree
+from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap, Normalize
+
+# 기본 폰트(DejaVu Sans)는 한글 글리프가 없어 제목/축/컬러바의 한글이
+# 네모(tofu)로 깨진다. Windows에 기본 내장된 맑은 고딕으로 지정한다.
+plt.rcParams["font.family"] = "Malgun Gothic"
+plt.rcParams["axes.unicode_minus"] = False
 
 # 이 파일(vor_sd/rl_env_vor_show.py) 기준으로 저장소 루트를 sys.path 에 추가한다.
 # rl_env_voronoi_mw.py 가 절대 패키지 경로(features.data_preprocessing.vor_sd...)로
@@ -16,7 +21,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW, VF_MS
-from features.data_preprocessing.vor_sd.mw_cut import graph_cut_segments_fast
+from features.data_preprocessing.vor_sd.mw_cut import graph_cut_segments_fast, graph_cut_segments_pieces
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
 
 
@@ -33,9 +38,9 @@ def distinct_cmap(n):
 
 def compute_mw_stats(env, a):
     """
-    evaluate()와 동일한 MW(곱셈가중) 절단/차단확률 로직을 재현하되,
-    (1) 세그먼트별 대표 소유 사이트/확률, (2) 사이트(셀)별 평균/표준편차를 모두 반환한다.
-    폴리곤을 만들지 않는 MW 버전에서는 셀 좌표 자체가 존재하지 않는다.
+    evaluate()와 동일한 MW(곱셈가중) 절단/차단확률 로직을 재현해
+    (세그먼트,셀)별 유효길이 Lmat 와 그 자리의 차단확률 prob_mat, 그리고
+    사이트(셀)별 표준편차를 반환한다.
     """
     w = env.weights(a)
 
@@ -50,80 +55,78 @@ def compute_mw_stats(env, a):
         lam_eff = lam_eff * (L_eff / env.seg_len[seg_i])
     probs, _ = blocking_probability_batch(L_eff, VF_MS, lam_eff, env.lanes[seg_i])
 
-    # 세그먼트별 대표 소유 사이트 = 그 세그먼트 위에서 가장 긴 조각을 차지한 셀
-    assigned_site = np.full(env.N, -1, dtype=int)
-    seg_prob = np.full(env.N, np.nan)
-    if len(seg_i) > 0:
-        order = np.lexsort((-L_eff, seg_i))  # seg_i 오름차순, 그 안에서 L_eff 내림차순
-        dominant = order[np.concatenate(([True], seg_i[order][1:] != seg_i[order][:-1]))]
-        assigned_site[seg_i[dominant]] = cell_i[dominant]
-        seg_prob[seg_i[dominant]] = probs[dominant]
+    prob_mat = np.full_like(Lmat, np.nan)
+    prob_mat[seg_i, cell_i] = probs
 
-    # 셀(사이트)별 평균/표준편차
+    # 셀(사이트)별 표준편차
     cnt = np.bincount(cell_i, minlength=env.K)
     s1 = np.bincount(cell_i, weights=probs, minlength=env.K)
     s2 = np.bincount(cell_i, weights=probs ** 2, minlength=env.K)
     with np.errstate(invalid="ignore", divide="ignore"):
         var = np.maximum(s2 / cnt - (s1 / cnt) ** 2, 0.0)
-    cell_mean_prob = np.where(cnt > 0, s1 / np.maximum(cnt, 1), np.nan)
     cell_std = np.where(cnt >= env.min_pieces, np.sqrt(var), 0.0)
 
-    return assigned_site, seg_prob, cell_mean_prob, cell_std
+    return Lmat, prob_mat, cell_std, w
 
 
-def rasterize_owner_grid(env, w, grid_res=300, pad=4000):
+def build_piece_geometry(env, w, Lmat, prob_mat):
     """
-    MW(Apollonius) 셀은 비볼록/비연결일 수 있어 폴리곤으로 그리기 어렵다.
-    대신 평면을 촘촘한 격자로 샘플링해 각 점의 소유 사이트를 구해 래스터(pcolormesh)로
-    영역을 채운다. 소유권은 도로 그래프 최단거리 기준(evaluate() 와 동일 metric)이며,
-    격자점은 도로 위에 있지 않으므로 가장 가까운 그래프 노드까지의 최단거리에
-    그 노드까지의 직선거리를 더해 근사한다: d_i = (node_dist[i, nearest_node] + offset) / w_i.
+    실제 그래프 보로노이 경계를 도로 위에 정확히 그리기 위한 조각별 기하.
+    평면 전체를 격자로 채워 근사하던 예전 래스터 대신, graph_cut_segments_pieces
+    (도로그래프 최단거리 절단, 세그먼트 내부에서 소유 셀이 바뀌는 조각까지 보존)
+    로 얻은 조각들을 실제 위치(t_lo,t_hi) 그대로 선분으로 그린다.
+    조각 하나의 owned 길이가 min_len 미만이면(Lmat==0) objective에서도 빠지는
+    슬리버이므로 회색(미배정)으로 표시한다.
     """
-    x_min, y_min = env.site_coords.min(axis=0) - pad
-    x_max, y_max = env.site_coords.max(axis=0) + pad
+    seg_i, cell_i, t_lo, t_hi = graph_cut_segments_pieces(
+        env.P, env.Q, env.edge_u, env.edge_v, env.site_node, env.node_dist, w)
 
-    xs = np.linspace(x_min, x_max, grid_res)
-    ys = np.linspace(y_min, y_max, grid_res)
-    XX, YY = np.meshgrid(xs, ys)
-    pts = np.stack([XX.ravel(), YY.ravel()], axis=1)
+    u = env.Q[seg_i] - env.P[seg_i]
+    p0 = env.P[seg_i] + t_lo[:, None] * u
+    p1 = env.P[seg_i] + t_hi[:, None] * u
+    lines = np.stack([p0, p1], axis=1)  # (M, 2, 2)
 
-    node_offset, nearest_node = KDTree(env.graph_coords).query(pts)
-    d = (env.node_dist[:, nearest_node].T + node_offset[:, None]) / w[None, :]
-    owner = d.argmin(1).reshape(grid_res, grid_res)
-
-    return XX, YY, owner, (x_min, y_min, x_max, y_max)
+    owned = Lmat[seg_i, cell_i] > 0
+    return lines, cell_i, prob_mat[seg_i, cell_i], owned
 
 
 def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     """
-    MW(곱셈가중) 보로노이 다이어그램을 래스터로 채워서 시각화한다.
-    왼쪽: site별 영역 분할, 오른쪽: 영역별 평균 M/G/c/c 차단확률(+개별 도로 산점도).
+    도로 그래프(정점=사이트/분기점, 간선=도로 선분) 위에 실제 MW 그래프-보로노이
+    절단 조각을 그 위치 그대로 그린다. 평면 전체를 래스터로 채우던 예전 방식은
+    도로 밖 빈 공간까지 "영역"으로 보여줘 오해를 줄 수 있었다 — 이 환경이 실제로
+    다루는 것은 연속된 2D 평면이 아니라 도로망(그래프) 그 자체이므로, 소유권이
+    바뀌는 지점을 도로 위에서 정확히 잘라 색칠하는 쪽이 모델과 일치한다.
+    왼쪽: 조각별 소유 사이트, 오른쪽: 조각별 M/G/c/c 차단확률.
     """
-    w = env.weights(a)
-    seg_coords = 0.5 * (env.P + env.Q)
+    Lmat, prob_mat, cell_std, w = compute_mw_stats(env, a)
+    lines, owner_cell, piece_prob, owned = build_piece_geometry(env, w, Lmat, prob_mat)
 
-    assigned_site, seg_prob, cell_mean_prob, cell_std = compute_mw_stats(env, a)
-    XX, YY, owner_grid, (x_min, y_min, x_max, y_max) = rasterize_owner_grid(env, w)
+    pad = 4000
+    x_min, y_min = env.site_coords.min(axis=0) - pad
+    x_max, y_max = env.site_coords.max(axis=0) + pad
 
     fig, axes = plt.subplots(1, 2, figsize=(20, 9), sharex=True, sharey=True)
     plt.subplots_adjust(wspace=0.1)
 
     # --------------------------------------------------------------------------
-    # [왼쪽 플롯] MW 보로노이 영역 분할 (래스터 채우기)
+    # [왼쪽 플롯] 그래프 보로노이 — 조각별 소유 사이트
     # --------------------------------------------------------------------------
     ax1 = axes[0]
 
-    ax1.pcolormesh(XX, YY, owner_grid, cmap=distinct_cmap(env.K), vmin=0, vmax=max(env.K - 1, 1),
-                   alpha=0.55, shading="auto")
-
-    unassigned = assigned_site == -1
-    ax1.scatter(seg_coords[unassigned, 0], seg_coords[unassigned, 1],
-                c="dimgray", s=4, alpha=0.5, label="Unassigned road")
-    ax1.scatter(seg_coords[~unassigned, 0], seg_coords[~unassigned, 1],
-                c="black", s=2, alpha=0.35, label="Road segments")
+    cmap1 = distinct_cmap(env.K)
+    cmap1.set_bad("lightgray")
+    cell_arr = np.ma.masked_array(owner_cell.astype(float), mask=~owned)
+    lc1 = LineCollection(lines, cmap=cmap1, norm=Normalize(0, max(env.K - 1, 1)),
+                          linewidths=2.5)
+    lc1.set_array(cell_arr)
+    ax1.add_collection(lc1)
 
     ax1.scatter(env.site_coords[:, 0], env.site_coords[:, 1],
-                c="red", marker="^", s=100, edgecolor="black", linewidth=1.2, label="Junction Sites")
+                c="red", marker="^", s=100, edgecolor="black", linewidth=1.2,
+                label="Junction Sites", zorder=3)
+    ax1.plot([], [], color="lightgray", linewidth=3,
+             label=f"Excluded sliver (< {env.min_len:.0f} m)")
     for k in range(env.K):
         ax1.text(env.site_coords[k, 0] + 300, env.site_coords[k, 1] + 300,
                   f"#{k}\n(σ:{cell_std[k]:.3f})", fontsize=8, weight="bold",
@@ -133,42 +136,40 @@ def plot_traffic_voronoi(env, a, save_filename="traffic_visualization.png"):
     ax1.set_xlim(x_min, x_max)
     ax1.set_ylim(y_min, y_max)
     ax1.set_aspect("equal")
-    ax1.set_title(f"1. MW-Voronoi Area Partitions (ρ = w_max/w_min: {rho:.2f})", fontsize=14, weight="bold")
+    ax1.set_title(f"1. MW Graph-Voronoi Partitions (ρ = w_max/w_min: {rho:.2f})", fontsize=14, weight="bold")
     ax1.set_xlabel("X Coordinate (meters)", fontsize=11)
     ax1.set_ylabel("Y Coordinate (meters)", fontsize=11)
     ax1.grid(True, linestyle="--", alpha=0.3)
     ax1.legend(loc="upper left")
 
     # --------------------------------------------------------------------------
-    # [오른쪽 플롯] 영역별 평균 차단확률 (래스터 채우기) + 개별 도로 산점도
+    # [오른쪽 플롯] 조각별 M/G/c/c 차단확률
     # --------------------------------------------------------------------------
     ax2 = axes[1]
 
-    prob_grid = np.nan_to_num(cell_mean_prob, nan=0.0)[owner_grid]
-    mesh2 = ax2.pcolormesh(XX, YY, prob_grid, cmap="YlOrRd", vmin=0.0, vmax=1.0,
-                            alpha=0.85, shading="auto")
-
-    valid_seg = ~np.isnan(seg_prob)
-    ax2.scatter(seg_coords[valid_seg, 0], seg_coords[valid_seg, 1],
-                c=seg_prob[valid_seg], cmap="YlOrRd", s=5, alpha=0.9,
-                vmin=0.0, vmax=1.0, edgecolors="black", linewidths=0.15)
+    cmap2 = plt.get_cmap("YlOrRd").copy()
+    cmap2.set_bad("lightgray")
+    prob_arr = np.ma.masked_invalid(piece_prob)
+    lc2 = LineCollection(lines, cmap=cmap2, norm=Normalize(0.0, 1.0), linewidths=2.5)
+    lc2.set_array(prob_arr)
+    ax2.add_collection(lc2)
 
     ax2.scatter(env.site_coords[:, 0], env.site_coords[:, 1],
-                c="black", marker="o", s=40, edgecolor="white", linewidth=0.8)
+                c="black", marker="o", s=40, edgecolor="white", linewidth=0.8, zorder=3)
 
-    cbar = fig.colorbar(mesh2, ax=ax2, fraction=0.046, pad=0.04)
-    cbar.set_label("M/G/c/c Blocking Probability $P(c)$ (영역 평균)", fontsize=12, weight="bold")
+    cbar = fig.colorbar(lc2, ax=ax2, fraction=0.046, pad=0.04)
+    cbar.set_label("M/G/c/c Blocking Probability $P(c)$ (조각별)", fontsize=12, weight="bold")
 
     ax2.set_xlim(x_min, x_max)
     ax2.set_ylim(y_min, y_max)
     ax2.set_aspect("equal")
-    ax2.set_title("2. Spatial Distribution of Blocking Probabilities (Rasterized)", fontsize=14, weight="bold")
+    ax2.set_title("2. Spatial Distribution of Blocking Probabilities (Graph Edges)", fontsize=14, weight="bold")
     ax2.set_xlabel("X Coordinate (meters)", fontsize=11)
     ax2.grid(True, linestyle="--", alpha=0.3)
 
     J, _ = env.evaluate(a)
     fig.suptitle(
-        f"PeMS D07 Traffic RL Environment State Analysis (MW Voronoi)\n"
+        f"PeMS D07 Traffic RL Environment State Analysis (MW Graph Voronoi)\n"
         f"Objective [{env.objective}]: {J:.6f}",
         fontsize=16, weight="bold", y=0.98
     )
@@ -187,23 +188,23 @@ def random_search_best_a(env, iters=200, seed=42):
     최단거리 기준에서는 최적이 아니므로, 그래프 버전으로 재학습해 갱신해야 한다.
     또 값의 범위(±0.81)는 rho_max=5 (a_bound=ln5/2≈0.805) 학습 결과라,
     아래 __main__ 이 쓰는 기본 rho_max=2 (a_bound≈0.347) 보다 넓다."""
-    x = [0.67345226, 0.79994928, -0.80948863, -0.80948863, -0.80948863, -0.64501681,
-         0.76048317, -0.80948863, 0.79994928, 0.79994928, -0.05356401, 0.79994928,
-         -0.80948863, -0.5868654, -0.80948863, 0.53337838, 0.6831316, 0.79994928,
-         -0.5963721, -0.80948863, -0.80948863, 0.70118556, -0.61850963, 0.79994928,
-         -0.69994044, 0.79994928, 0.79234576, 0.79994928, 0.62706703, 0.79994928,
-         0.79994928, 0.79994928, 0.79994928, 0.45261881, 0.53201163, 0.706643,
-         -0.78162469, 0.79994928, 0.55610597, -0.80948863, -0.80948863, -0.80948863,
-         -0.80948863, -0.80948863, -0.80948863, -0.80948863, -0.48556732, -0.32669872,
-         0.50754601, 0.79994928, 0.50125047, -0.80948863, -0.80948863, -0.80948863,
-         -0.66150429, 0.79994928]
+    x = [-0.46003652,  0.79388923, -0.81554869,  0.79388923,  0.57641288 ,-0.81554869,
+  0.72619487, -0.32531135,  0.79388923,  0.68316196, -0.81554869, -0.81554869,
+ -0.34454446,  0.79388923,  0.79388923, -0.81554869,  0.79388923, -0.81554869,
+ -0.81554869,  0.57065552,  0.79388923, -0.6703975 , -0.49259775,  0.79388923,
+ -0.81554869,  0.79388923,  0.10761414,  0.58522164,  0.79388923, -0.62617607,
+  0.00144334, -0.81554869,  0.66061639, -0.38285376, -0.79314214, -0.81554869,
+  0.68696046,  0.53911715, -0.08145936, -0.81554869,  0.79388923,  0.38703136,
+ -0.81554869, -0.81554869,  0.79388923,  0.08453524,  0.65153859, -0.81554869,
+ -0.78110814,  0.02867462, -0.81554869,  0.79388923, -0.74407895,  0.79388923,
+  0.79388923, -0.26258025]
     return np.array(x)
 
 
 if __name__ == "__main__":
     DIR = str(REPO_ROOT / "features" / "data_preprocessing" / "vor_sd")
 
-    SEGMENTS_FILE = f"{DIR}/outputs/pems_d07_segments.csv"
+    SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_0841_after.csv"
     SITES_FILE = f"{DIR}/outputs/pems_d07_sites.csv"
     META_FILE = f"{DIR}/d07_text_meta_2018_10_13.txt"
 

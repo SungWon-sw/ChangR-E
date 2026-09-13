@@ -22,17 +22,18 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import KDTree
 from scipy.sparse import coo_matrix
-from scipy.sparse.csgraph import dijkstra
+from scipy.sparse.csgraph import dijkstra, connected_components
 
 from features.data_preprocessing.vor_sd.mw_cut import graph_cut_segments_fast
 from features.data_preprocessing.vor_sd.mg_cc_batch import blocking_probability_batch
+from features.data_preprocessing.vor_sd.ff_links import load_ff_links
 
 from scipy.stats import norm
 
 VF_MPH_DEFAULT = 65.0
 MPH2MS = 0.44704
 VF_MS = VF_MPH_DEFAULT * MPH2MS
-PHF = 0.15
+PHF = 60/90
 
 
 class TrafficRLEnvMW:
@@ -42,7 +43,8 @@ class TrafficRLEnvMW:
                  min_pieces=2,         # 이보다 조각이 적은 셀은 목적함수에서 제외
                  objective="within",   # "global" | "within" | "mixed"
                  lam_scaling="none",   # "none" | "length"  (아래 설명 참조)
-                 phf=PHF):             # vol_day_veh -> 시간당 도착률 환산계수
+                 phf=PHF,              # vol_day_veh -> 시간당 도착률 환산계수
+                 connector_tol=300.0): # 대롱대롱(degree-1) 끝점 스냅 허용거리 [m] (아래 설명 참조)
         """segments/sites/meta CSV 를 읽어 도로망 + 도로 그래프(_build_road_graph)를
         구성하고, RL 상태(log-가중치 a)와 목적함수 설정을 초기화한다.
 
@@ -76,6 +78,8 @@ class TrafficRLEnvMW:
         self.P = self.seg_df[["x1", "y1"]].values.astype(float)
         self.Q = self.seg_df[["x2", "y2"]].values.astype(float)
         self.seg_len = np.linalg.norm(self.Q - self.P, axis=1)
+        self.connector_tol = float(connector_tol)
+        self._meta_txt = meta_txt
         self._build_road_graph()
 
         # bbox 는 더 이상 필요 없다 (셀을 자르지 않고 선분만 다루므로).
@@ -101,7 +105,34 @@ class TrafficRLEnvMW:
         self._J_prev = None
 
     def _build_road_graph(self):
-        """도로 선분을 길이 가중 무방향 그래프로 만들고 사이트를 노드에 매핑한다."""
+        """도로 선분을 길이 가중 무방향 그래프로 만들고 사이트를 노드에 매핑한다.
+
+        세그먼트 끝점이 좌표 완전일치로만 병합되면, 같은 물리적 교차점인데도
+        세그먼트마다 독립적으로 지오코딩돼 좌표가 몇 m~수백 m씩 어긋난 지점들이
+        전부 별개 노드로 남아 도로망 전체가 수십 개의 고립된 섬(경로)으로
+        쪼개진다(실측: 47개 컴포넌트, degree>=3인 진짜 분기 노드가 하나도 없이
+        전부 degree 1(끝점)/2(통과)뿐 — 47개의 단순 경로, (고속도로,방향) 조합
+        하나당 사슬 하나). 그 결과 그래프 최단거리 기반 소유권 판정이 "실제로
+        더 가까운 사이트"가 아니라 "우연히 같은 컴포넌트에 있는 사이트"로
+        결정돼 버린다.
+
+        두 단계로 연결자 간선을 추가해 복구한다(둘 다 물리 세그먼트 self.P/Q,
+        self.edge_u/edge_v — 실제 교통량이 흐르는 도로 조각 — 는 건드리지
+        않는다. 연결자는 Dijkstra 그래프 전용):
+
+          1) **FF 관측소 Name 기반(우선, 근거 있음)** — PeMS 메타데이터의
+             Type=="FF"(고속도로-고속도로 연결) 관측소는 Name 필드에
+             "SB 110 TO EB 105"처럼 정확히 어느 두 (고속도로,방향) 사슬을
+             잇는지 문자열로 적혀 있다(ff_links.py 가 파싱). 이건 좌표
+             추측이 아니라 데이터에 적힌 사실이라, 두 사슬에서 그 FF 지점에
+             가장 가까운 노드를 찾아 간선으로 잇는다.
+          2) **좌표 근접 휴리스틱(폴백)** — 1)로도 안 이어진 나머지에 한해,
+             대롱대롱 매달린(degree-1) 끝점들 중 서로가 서로의 최근접
+             끝점이면서(상호 최근접) 거리가 connector_tol 이내인 쌍만
+             연결자로 추가한다. (District 경계에서 실제로 지도 밖으로
+             빠져나가 안 이어지는 사슬도 있다 — 전부 다 이어야 하는 게
+             아니다.)
+        """
         coords = np.unique(np.vstack([self.P, self.Q]), axis=0)
         self.graph_coords = coords
         self.edge_u = np.argmin(np.linalg.norm(self.P[:, None] - coords[None, :], axis=2), axis=1)
@@ -109,14 +140,95 @@ class TrafficRLEnvMW:
         rows = np.r_[self.edge_u, self.edge_v]
         cols = np.r_[self.edge_v, self.edge_u]
         data = np.r_[self.seg_len, self.seg_len]
-        graph = coo_matrix((data, (rows, cols)), shape=(len(coords), len(coords)))
+        n = len(coords)
+        graph0 = coo_matrix((data, (rows, cols)), shape=(n, n)).tocsr()
+        n_before = connected_components(graph0, directed=False)[0]
+
+        # ---- 1) FF 관측소 Name 기반 연결자 -------------------------------
+        ff_rows, ff_cols, ff_data = [], [], []
+        n_ff_connectors = 0
+        fwy_arr = self.seg_df["fwy"].values
+        dir_arr = self.seg_df["dir"].values
+        chain_nodes = {}
+        for i in range(self.N):
+            key = (fwy_arr[i], dir_arr[i])
+            chain_nodes.setdefault(key, set()).update((int(self.edge_u[i]), int(self.edge_v[i])))
+        chain_keys = set(chain_nodes.keys())
+
+        try:
+            links = load_ff_links(self._meta_txt, chain_keys)
+        except Exception as e:
+            links = []
+            print(f"[MW Env] FF 연결자 파싱 실패({e}) — 좌표 휴리스틱만 사용")
+
+        if links:
+            meta_all = pd.read_csv(self._meta_txt, sep="\t").dropna(subset=["Latitude", "Longitude"])
+            lat0, lon0 = meta_all.Latitude.mean(), meta_all.Longitude.mean()
+            for side1, side2, lat, lon in links:
+                x = (lon - lon0) * np.cos(np.radians(lat0)) * 111320.0
+                y = (lat - lat0) * 111320.0
+                idx1 = np.fromiter(chain_nodes[side1], int)
+                idx2 = np.fromiter(chain_nodes[side2], int)
+                n1 = idx1[np.argmin(np.linalg.norm(coords[idx1] - [x, y], axis=1))]
+                n2 = idx2[np.argmin(np.linalg.norm(coords[idx2] - [x, y], axis=1))]
+                if n1 == n2:
+                    continue
+                d = float(np.linalg.norm(coords[n1] - [x, y]) + np.linalg.norm(coords[n2] - [x, y]))
+                ff_rows += [int(n1), int(n2)]
+                ff_cols += [int(n2), int(n1)]
+                ff_data += [d, d]
+                n_ff_connectors += 1
+
+        if ff_rows:
+            rows = np.r_[rows, ff_rows]
+            cols = np.r_[cols, ff_cols]
+            data = np.r_[data, ff_data]
+        graph1 = coo_matrix((data, (rows, cols)), shape=(n, n)).tocsr()
+        n_mid, labels = connected_components(graph1, directed=False)
+
+        # ---- 2) 좌표 근접 휴리스틱(폴백) ----------------------------------
+        deg = np.asarray((graph1 > 0).sum(axis=1)).ravel()
+        dangling = np.where(deg == 1)[0]
+
+        conn_rows, conn_cols, conn_data = [], [], []
+        n_connectors = 0
+        if len(dangling) >= 2:
+            tree = KDTree(coords[dangling])
+            nn_dist, nn_idx = tree.query(coords[dangling], k=2)
+            nearest_local = nn_idx[:, 1]                 # 자기 자신 제외 최근접(로컬 인덱스)
+            nearest_dist = nn_dist[:, 1]
+            mutual = nearest_local[nearest_local] == np.arange(len(dangling))
+            within_tol = nearest_dist <= self.connector_tol
+            i_local = np.where(mutual & within_tol)[0]
+            pairs = {tuple(sorted((int(i), int(nearest_local[i])))) for i in i_local}
+
+            for li, lj in pairs:
+                ni, nj = int(dangling[li]), int(dangling[lj])
+                if labels[ni] == labels[nj]:
+                    continue                              # 이미 같은 컴포넌트(자기 루프 방지)
+                d = float(np.linalg.norm(coords[ni] - coords[nj]))
+                conn_rows += [ni, nj]
+                conn_cols += [nj, ni]
+                conn_data += [d, d]
+                n_connectors += 1
+
+        if conn_rows:
+            rows = np.r_[rows, conn_rows]
+            cols = np.r_[cols, conn_cols]
+            data = np.r_[data, conn_data]
+        graph = coo_matrix((data, (rows, cols)), shape=(n, n))
+
         site_to_node = np.linalg.norm(self.site_coords[:, None] - coords[None, :], axis=2)
         self.site_node = site_to_node.argmin(axis=1)
         self.site_graph_distance = site_to_node.min(axis=1)
         self.node_dist = dijkstra(graph.tocsr(), directed=False,
                                   indices=self.site_node)
+        n_after = connected_components(graph.tocsr(), directed=False)[0]
         print(f"[MW Env] 그래프 노드 {len(coords)}개, 사이트-도로 노드 매핑 최대오차 "
               f"{self.site_graph_distance.max():.1f} m")
+        print(f"[MW Env] 연결성 보정: 컴포넌트 {n_before}개 "
+              f"-(FF Name 연결자 {n_ff_connectors}개)-> {n_mid}개 "
+              f"-(좌표 휴리스틱 {n_connectors}개, tol={self.connector_tol:.0f}m)-> {n_after}개")
 
     # ------------------------------------------------------------------
     def weights(self, a=None):
