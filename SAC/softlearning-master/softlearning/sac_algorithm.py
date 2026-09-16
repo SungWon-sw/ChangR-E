@@ -45,10 +45,12 @@ class SAC:
         self.q2_optimizer = tf.optimizers.Adam(q_lr)
         self.alpha_optimizer = tf.optimizers.Adam(alpha_lr)
         
-        # Entropy parameter
-        self.log_alpha = tf.Variable(0.0, trainable=True) # 역전파로 학습 -> 엔트로피 온도 계수의 log값.
-                                                          # alpha가 크면 많이 바뀐다.
-        self.target_entropy = -float(action_dim)  # 2D action space
+        # Entropy parameter. alpha 초기값 0.2, 하한 0.02 (아래 update_alpha 에서 클립).
+        # target_entropy 는 -dim 휴리스틱의 절반 (평평한 보상에서 alpha 가 0 으로
+        # 붕괴하는 것 완화).
+        self.log_alpha = tf.Variable(float(np.log(0.2)), trainable=True)
+        self.log_alpha_min = float(np.log(0.02))
+        self.target_entropy = -0.5 * float(action_dim)
         
         self.discount = discount
         self.tau = tau
@@ -141,7 +143,8 @@ class SAC:
         
         alpha_grad = tape.gradient(alpha_loss, [self.log_alpha])
         self.alpha_optimizer.apply_gradients(zip(alpha_grad, [self.log_alpha]))
-        
+        self.log_alpha.assign(tf.maximum(self.log_alpha, self.log_alpha_min))  # 하한
+
         return alpha_loss
     
     def train_step(self, batch):
