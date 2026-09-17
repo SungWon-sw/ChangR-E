@@ -45,11 +45,13 @@ def graph_cut_segments_fast(P, Q, edge_u, edge_v, site_node, node_dist,
     dv = node_dist[:, edge_v].T
     finite = np.isfinite(du) & np.isfinite(dv)
 
+    eye_K = np.eye(K, dtype=bool)
     seg_out, cell_out, len_out = [], [], []
     for n in range(N):
         L = seg_len[n]
         if L <= 0 or not finite[n].any():
             continue
+        valid = finite[n]
         switches = (dv[n] + L - du[n]) / (2.0 * L)
         cuts = np.r_[0.0, switches[finite[n]], 1.0]
         cuts = np.unique(np.clip(cuts, 0.0, 1.0))
@@ -61,15 +63,15 @@ def graph_cut_segments_fast(P, Q, edge_u, edge_v, site_node, node_dist,
             use_u = du[n] + mid * L <= dv[n] + (1.0 - mid) * L
             intercept = np.where(use_u, du[n], dv[n] + L) / w
             slope = np.where(use_u, L, -L) / w
-            valid = finite[n]
-            for i in range(K):
-                if not valid[i]:
-                    continue
-                denom = slope[i] - slope
-                with np.errstate(divide="ignore", invalid="ignore"):
-                    cross = (intercept - intercept[i]) / denom
-                ok = valid & (np.arange(K) != i) & (np.abs(denom) > 1e-12)
-                roots.extend(cross[ok & (cross > lo + 1e-12) & (cross < hi - 1e-12)])
+            # pairwise crossing d_i(t) = d_j(t) for every (i, j) at once, replacing
+            # the old per-i python loop (mathematically identical to the scalar form).
+            denom = slope[:, None] - slope[None, :]
+            with np.errstate(divide="ignore", invalid="ignore"):
+                cross = (intercept[None, :] - intercept[:, None]) / denom
+            ok = (valid[:, None] & valid[None, :] & ~eye_K
+                  & (np.abs(denom) > 1e-12)
+                  & (cross > lo + 1e-12) & (cross < hi - 1e-12))
+            roots.extend(cross[ok])
         cuts = np.unique(np.r_[cuts, roots])
         mids = (cuts[:-1] + cuts[1:]) / 2.0
         length = np.diff(cuts) * L

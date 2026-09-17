@@ -35,7 +35,16 @@ def _normalize(name):
 
 
 def _dirset_to_letters(dirset):
-    return {tok[0] for tok in dirset.split("/")}
+    """방향집합 문자열(예 "EB/NB")의 앞 글자들을, 등장 순서를 보존한 채 중복
+    제거해 반환한다. 예전엔 set 을 썼는데, 양쪽 글자가 모두 chain_keys 에
+    걸리는 대각선 표기(§_resolve)에서 어느 쪽을 고를지가 PYTHONHASHSEED에
+    따라 프로세스마다 달라져 도로 그래프 연결자가 비결정적이 되는 버그였다."""
+    seen = []
+    for tok in dirset.split("/"):
+        letter = tok[0]
+        if letter not in seen:
+            seen.append(letter)
+    return seen
 
 
 def _resolve(fwy_str, dirset, chain_keys):

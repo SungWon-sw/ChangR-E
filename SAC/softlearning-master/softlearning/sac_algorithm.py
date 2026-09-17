@@ -45,11 +45,15 @@ class SAC:
         self.q2_optimizer = tf.optimizers.Adam(q_lr)
         self.alpha_optimizer = tf.optimizers.Adam(alpha_lr)
         
-        # Entropy parameter. alpha 초기값 0.2, 하한 0.02 (아래 update_alpha 에서 클립).
+        # Entropy parameter. alpha 초기값 0.2, 하한 0.1 (아래 update_alpha 에서 클립).
         # target_entropy 는 -dim 휴리스틱의 절반 (평평한 보상에서 alpha 가 0 으로
-        # 붕괴하는 것 완화).
+        # 붕괴하는 것 완화). 하한을 0.02->0.1로 올림: 1500ep 실측 로그에서 alpha가
+        # ep~950부터 계속 바닥(0.02)에 눌린 채 못 올라오고, 그 구간 내내 a_range가
+        # 레일(2*a_bound)에 박혀있으면서 eval best J는 ep100 수준(~0.026)에서
+        # 전혀 개선이 없었음 — 56차원 액션엔 0.02가 탐색을 너무 일찍 죽이는
+        # 수준이라고 판단. 0.1은 여전히 안전망(신호원 아님)이지 목표값이 아니다.
         self.log_alpha = tf.Variable(float(np.log(0.2)), trainable=True)
-        self.log_alpha_min = float(np.log(0.02))
+        self.log_alpha_min = float(np.log(0.1))
         self.target_entropy = -0.5 * float(action_dim)
         
         self.discount = discount
