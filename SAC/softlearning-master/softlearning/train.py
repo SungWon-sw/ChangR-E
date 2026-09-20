@@ -14,7 +14,7 @@ from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW
 from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "8"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 import sys
 
 # 로그 파일 설정

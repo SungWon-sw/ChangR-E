@@ -53,7 +53,7 @@ class SAC:
         # 전혀 개선이 없었음 — 56차원 액션엔 0.02가 탐색을 너무 일찍 죽이는
         # 수준이라고 판단. 0.1은 여전히 안전망(신호원 아님)이지 목표값이 아니다.
         self.log_alpha = tf.Variable(float(np.log(0.2)), trainable=True)
-        self.log_alpha_min = float(np.log(0.1))
+        self.log_alpha_min = float(np.log(0.02))
         self.target_entropy = -0.5 * float(action_dim)
         
         self.discount = discount

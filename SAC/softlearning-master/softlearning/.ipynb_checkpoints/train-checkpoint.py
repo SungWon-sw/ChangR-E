@@ -14,7 +14,7 @@ from features.data_preprocessing.vor_sd.rl_env_voronoi_mw import TrafficRLEnvMW
 from neural_networks import GaussianPolicy, QNetwork
 from replay_buffer import ReplayBuffer
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "8"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 import sys
 
 # 로그 파일 설정
@@ -86,7 +86,14 @@ BATCH_SIZE = 256
 NUM_EPISODES = 2000        # 짧은 에피소드 -> 개수 늘림 (2000*64 = 128k step)
 MAX_STEPS = 64             # reset -> 몇 스텝 refine. 1000 은 return 이 상수에 묻힘
 WARMUP_STEPS = 2000
-REWARD_SCALE = 5000.0      # 개선량 보상 r=J_prev-J 는 스텝당 ~1e-3 -> 키운다
+REWARD_SCALE = 250.0       # 개선량 보상 r=J_prev-J 는 스텝당 ~1e-3 -> 키운다.
+                           # 5000은 너무 컸음: 1500ep 실측 로그에서 alpha~0.04,
+                           # log_probs~+25일 때 actor loss의 alpha*log_probs 항은
+                           # ~1인데 Q항은 ~590 (500배 차이) — 엔트로피 보너스가
+                           # Q에 완전히 묻혀서 target_entropy 오토튜닝이 policy
+                           # gradient에 실질적 영향을 못 줌. Q는 reward에 선형
+                           # 비례(감가 누적)하므로 250 = 5000*(30/590) 목표: Q를
+                           # 수십 단위로 낮춰 alpha*log_probs와 비슷한 자릿수로.
 EVAL_EVERY = 100           # N 에피소드마다 결정론 롤아웃 평가
 RHO_MAX = 5.0              # within 은 큰 rho_max 에서 셀 굶기기로 뚫린다. 3~5 권장.
 OBJECTIVE = "within"       # (근본 수정은 objective 재설계: 조각수 가중 within + 굶은셀 페널티 + min_len>=50)

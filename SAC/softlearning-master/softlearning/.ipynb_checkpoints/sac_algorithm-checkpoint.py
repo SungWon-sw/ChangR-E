@@ -34,6 +34,10 @@ class SAC:
         self.Q2(dummy);        self.Q2_target(dummy)
         self.Q1_target.set_weights(self.Q1.get_weights())
         self.Q2_target.set_weights(self.Q2.get_weights())
+
+        # 정책도 여기서 미리 build 해 둔다.
+        # @tf.function 은 tracing(첫 호출) 이후에 변수가 새로 생기면 에러를 낸다.
+        self.policy(tf.zeros((1, state_dim)))
         
         # Optimizers
         self.policy_optimizer = tf.optimizers.Adam(policy_lr)
@@ -41,10 +45,16 @@ class SAC:
         self.q2_optimizer = tf.optimizers.Adam(q_lr)
         self.alpha_optimizer = tf.optimizers.Adam(alpha_lr)
         
-        # Entropy parameter
-        self.log_alpha = tf.Variable(0.0, trainable=True) # 역전파로 학습 -> 엔트로피 온도 계수의 log값.
-                                                          # alpha가 크면 많이 바뀐다.
-        self.target_entropy = -float(action_dim)  # 2D action space
+        # Entropy parameter. alpha 초기값 0.2, 하한 0.1 (아래 update_alpha 에서 클립).
+        # target_entropy 는 -dim 휴리스틱의 절반 (평평한 보상에서 alpha 가 0 으로
+        # 붕괴하는 것 완화). 하한을 0.02->0.1로 올림: 1500ep 실측 로그에서 alpha가
+        # ep~950부터 계속 바닥(0.02)에 눌린 채 못 올라오고, 그 구간 내내 a_range가
+        # 레일(2*a_bound)에 박혀있으면서 eval best J는 ep100 수준(~0.026)에서
+        # 전혀 개선이 없었음 — 56차원 액션엔 0.02가 탐색을 너무 일찍 죽이는
+        # 수준이라고 판단. 0.1은 여전히 안전망(신호원 아님)이지 목표값이 아니다.
+        self.log_alpha = tf.Variable(float(np.log(0.2)), trainable=True)
+        self.log_alpha_min = float(np.log(0.02))
+        self.target_entropy = -0.5 * float(action_dim)
         
         self.discount = discount
         self.tau = tau
@@ -118,24 +128,53 @@ class SAC:
                     for g, v in zip(policy_grad, self.policy.trainable_variables)]
         self.policy_optimizer.apply_gradients(
             zip(policy_grad, self.policy.trainable_variables))
-            
-        return policy_loss
-    
-    def update_alpha(self, batch):
-        """Entropy 계수 자동 조정"""
-        observations, _, _, _, _ = batch
-        
+
+        # log_probs 를 같이 돌려준다.
+        # update_alpha 가 정책을 다시 샘플링하지 않고 이걸 그대로 재사용한다.
+        return policy_loss, log_probs
+
+    def update_alpha(self, log_probs):
+        """Entropy 계수 자동 조정
+
+        log_probs : update_actor 가 방금 계산한 값을 그대로 받는다.
+        어차피 stop_gradient 로 상수 취급하므로 정책을 다시 샘플링할 이유가 없다.
+        (정책 forward pass 1회 절약 + actor/alpha 두 손실이 같은 샘플을 공유)
+        """
         with tf.GradientTape() as tape:
-            _, log_probs = self.policy(observations)
             alpha_loss = -tf.reduce_mean(
                 self.log_alpha * tf.stop_gradient(log_probs + self.target_entropy)
             )
         
         alpha_grad = tape.gradient(alpha_loss, [self.log_alpha])
         self.alpha_optimizer.apply_gradients(zip(alpha_grad, [self.log_alpha]))
-        
+        self.log_alpha.assign(tf.maximum(self.log_alpha, self.log_alpha_min))  # 하한
+
         return alpha_loss
     
+    def train_step(self, batch):
+        """한 배치로 critic -> actor -> alpha -> target 을 한 번에 업데이트.
+
+        train.py 에서 부르는 진입점. 아래 _train_step 이 @tf.function 이라
+        Python 을 거치지 않고 그래프 하나로 실행된다.
+        numpy 배열을 그대로 넘기면 TF 버전에 따라 매 호출 re-tracing 이
+        일어날 수 있어서, 여기서 텐서로 바꿔 넘긴다.
+        """
+        return self._train_step(
+            *(tf.convert_to_tensor(x, dtype=tf.float32) for x in batch))
+
+    @tf.function
+    def _train_step(self, observations, actions, rewards, next_observations, dones):
+        # 주의: 이 안의 Python 코드는 첫 호출(tracing) 때 딱 한 번만 실행된다.
+        #       print() 대신 tf.print() 를 써야 하고, .numpy() 는 쓸 수 없다.
+        batch = (observations, actions, rewards, next_observations, dones)
+
+        q1_loss, q2_loss = self.update_critic(batch)
+        policy_loss, log_probs = self.update_actor(batch)
+        alpha_loss = self.update_alpha(log_probs)
+        self.update_target_networks()
+
+        return q1_loss, q2_loss, policy_loss, alpha_loss
+
     def update_target_networks(self):
         """타겟 네트워크를 천천히 업데이트"""
         # 온라인 네트워크 기반
