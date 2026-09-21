@@ -71,6 +71,13 @@ class TrafficRLEnvMW:
 
         self.lanes = self.seg_df["Lanes"].values.astype(float)
         self.vols = self.seg_df["vol_day_veh"].values.astype(float)
+        # 관측 데이터가 없는 선분(vol NaN)은 NaN 이 차단확률 -> 셀 σ 로 번지므로
+        # 관측된 선분들의 평균 교통량으로 보간한다.
+        nan_vol = np.isnan(self.vols)
+        if nan_vol.any():
+            self.vols[nan_vol] = np.nanmean(self.vols)
+            print(f"[MW Env] vol_day_veh 결측 {int(nan_vol.sum())}/{len(self.vols)}개 "
+                  f"-> 평균 {self.vols[nan_vol][0]:.0f} 로 보간")
         self.phf = float(phf)
         self.lam = (self.vols * self.phf) / 3600.0
         self.lam_scaling = lam_scaling
