@@ -44,7 +44,8 @@ class TrafficRLEnvMW:
                  objective="within",   # "global" | "within" | "mixed"
                  lam_scaling="none",   # "none" | "length"  (아래 설명 참조)
                  phf=PHF,              # vol_day_veh -> 시간당 도착률 환산계수
-                 connector_tol=300.0): # 대롱대롱(degree-1) 끝점 스냅 허용거리 [m] (아래 설명 참조)
+                 connector_tol=300.0,  # 대롱대롱(degree-1) 끝점 스냅 허용거리 [m] (아래 설명 참조)
+                 merge_radius=0.0):    # 도로 최단거리 이내 사이트를 한 노드로 병합 [m] (0=병합 안 함)
         """segments/sites/meta CSV 를 읽어 도로망 + 도로 그래프(_build_road_graph)를
         구성하고, RL 상태(log-가중치 a)와 목적함수 설정을 초기화한다.
 
@@ -88,6 +89,9 @@ class TrafficRLEnvMW:
         self.connector_tol = float(connector_tol)
         self._meta_txt = meta_txt
         self._build_road_graph()
+        self.site_members = [[k] for k in range(self.K)]   # 병합 노드 -> 원래 사이트 ID들
+        self._merge_sites(float(merge_radius))
+        self.site_labels = ["+".join(map(str, m)) for m in self.site_members]
 
         # bbox 는 더 이상 필요 없다 (셀을 자르지 않고 선분만 다루므로).
         self.rho_max = float(rho_max)
@@ -236,6 +240,35 @@ class TrafficRLEnvMW:
         print(f"[MW Env] 연결성 보정: 컴포넌트 {n_before}개 "
               f"-(FF Name 연결자 {n_ff_connectors}개)-> {n_mid}개 "
               f"-(좌표 휴리스틱 {n_connectors}개, tol={self.connector_tol:.0f}m)-> {n_after}개")
+
+    def _merge_sites(self, radius):
+        """도로 최단거리가 radius 이내로 이어지는 사이트들(단일 연결 군집)을 노드 하나로 병합한다.
+
+        조밀하게 몰린 사이트들은 서로의 경계가 a 의 작은 변화에도 크게 출렁여서, 그 지역의
+        셀 배치가 사실상 무작위로 나오고 전체 경향성이 묻힌다. 병합 노드는 구성원 도로
+        노드 전부를 거리 0 인 다중 출발점으로 삼는다(node_dist = 구성원 행들의 최솟값).
+        즉 구성원 중 가장 가까운 곳까지의 도로거리로 소유권을 판정하므로 무게중심 하나로
+        옮기는 것과 달리 도로 위 위치가 보존된다. site_coords 는 시각화용 무게중심이다.
+        """
+        if radius <= 0:
+            return
+        G = self.node_dist[:, self.site_node]
+        n_cl, lab = connected_components(coo_matrix(np.minimum(G, G.T) <= radius),
+                                         directed=False)
+        if n_cl == self.K:
+            print(f"[MW Env] 사이트 병합: radius={radius:.0f} m 이내 쌍 없음")
+            return
+        order = np.unique(lab, return_index=True)[1].argsort()   # 가장 작은 원 ID 순서 유지
+        groups = [np.where(lab == c)[0] for c in np.unique(lab)[order]]
+        self.site_members = [g.tolist() for g in groups]
+        self.node_dist = np.stack([self.node_dist[g].min(axis=0) for g in groups])
+        self.site_node = np.array([self.site_node[g[0]] for g in groups])
+        self.site_graph_distance = np.array([self.site_graph_distance[g].min() for g in groups])
+        self.site_coords = np.stack([self.site_coords[g].mean(axis=0) for g in groups])
+        merged = [m for m in self.site_members if len(m) > 1]
+        print(f"[MW Env] 사이트 병합(radius={radius:.0f} m): {self.K} -> {len(groups)}개, "
+              f"병합 그룹 {merged}")
+        self.K = len(groups)
 
     # ------------------------------------------------------------------
     def weights(self, a=None):
