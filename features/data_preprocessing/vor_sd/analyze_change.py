@@ -33,6 +33,7 @@ import argparse
 import json
 import re
 import sys
+import types
 from pathlib import Path
 
 import numpy as np
@@ -507,6 +508,113 @@ def fig_traffic_vs_change(jac_df, corr, path):
     plt.close(fig)
 
 
+def cell_std_stats(env_traffic, st, K, min_pieces):
+    """셀별 BP 평균/표준편차 (rl_env.evaluate 의 셀 σ 와 같은 정의: (선분,셀) 단위 BP 의 std)."""
+    pm = prob_matrix(env_traffic, st["Lmat"])
+    seg_i, cell_i = np.nonzero(st["Lmat"])
+    p = pm[seg_i, cell_i]
+    cnt = np.bincount(cell_i, minlength=K)
+    s1 = np.bincount(cell_i, weights=p, minlength=K)
+    s2 = np.bincount(cell_i, weights=p ** 2, minlength=K)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        mean = s1 / cnt
+        sd = np.sqrt(np.maximum(s2 / cnt - mean ** 2, 0.0))
+    return np.where(cnt >= min_pieces, sd, np.nan), mean, cnt
+
+
+def std_change_table(env_b, env_a, st_b, st_a, jac_df, step=0.05):
+    """셀 σ 의 BEFORE->AFTER 변화를 분할 효과 / 교통량 효과로 분해하고, BP 가 교통량에 얼마나
+    민감한지(σ 의 교통량 민감도)로 교통량 효과를 예측해 본다.
+
+    sd_xy: 분할 x(b/a), 교통량 y(b/a).  d_sd_traffic = sd_ba - sd_bb (교통량만 AFTER),
+    d_sd_partition = sd_ab - sd_bb (분할만 AFTER).
+    sens_sd: BEFORE 분할 고정, BEFORE 교통량을 (1±step) 배했을 때 dσ / d(상대 교통량).
+    pred_d_sd = sens_sd * traffic_change_rel  (교통량이 균일하게 변한다는 선형 근사)
+    """
+    K, mp = env_b.K, env_b.min_pieces
+    sd, bp = {}, {}
+    for pk, st in (("b", st_b), ("a", st_a)):
+        for tk, en in (("b", env_b), ("a", env_a)):
+            sd[pk + tk], bp[pk + tk], _ = cell_std_stats(en, st, K, mp)
+
+    def scaled(f):
+        e = env_b
+        return types.SimpleNamespace(lam=e.lam * f, lam_scaling=e.lam_scaling,
+                                     seg_len=e.seg_len, lanes=e.lanes)
+    lo = cell_std_stats(scaled(1 - step), st_b, K, mp)[0]
+    hi = cell_std_stats(scaled(1 + step), st_b, K, mp)[0]
+
+    df = pd.DataFrame(dict(
+        label=env_b.site_labels, A_len_m=jac_df["A_len_m"].values,
+        traffic_before_mean=jac_df["traffic_before_mean"].values,
+        traffic_change_rel=jac_df["traffic_change_rel"].values,
+        bp_before=bp["bb"], bp_after=bp["aa"], sd_before=sd["bb"], sd_after=sd["aa"]))
+    df["d_sd"] = sd["aa"] - sd["bb"]
+    df["d_sd_traffic"] = sd["ba"] - sd["bb"]
+    df["d_sd_partition"] = sd["ab"] - sd["bb"]
+    df["d_sd_interaction"] = sd["aa"] - sd["ab"] - sd["ba"] + sd["bb"]
+    df["sens_sd"] = (hi - lo) / (2 * step)
+    df["pred_d_sd_traffic"] = df["sens_sd"] * df["traffic_change_rel"]
+    return df
+
+
+def std_change_stats(df):
+    """상관 요약: 교통량 수준 vs σ 수준 / |Δσ|, 예측 Δσ vs 실제 Δσ(교통량만)."""
+    def sp(a, b):
+        m = np.isfinite(a) & np.isfinite(b)
+        if m.sum() < 3:
+            return dict(rho=float("nan"), p=float("nan"), n=int(m.sum()))
+        rho, pv = spearmanr(a[m], b[m])
+        return dict(rho=float(rho), p=float(pv), n=int(m.sum()))
+    t = df["traffic_before_mean"].values
+    return {
+        "traffic_level_vs_sd_before": sp(t, df["sd_before"].values),
+        "traffic_level_vs_bp_before": sp(t, df["bp_before"].values),
+        "traffic_level_vs_abs_d_sd": sp(t, np.abs(df["d_sd"].values)),
+        "pred_vs_actual_d_sd_traffic": sp(df["pred_d_sd_traffic"].values, df["d_sd_traffic"].values),
+    }
+
+
+def fig_std_change(df, stats, path, top_n=20):
+    """왼쪽: |Δσ| 상위 셀의 교통량 효과/분할 효과. 오른쪽: 민감도 기반 예측 vs 실제 Δσ(교통량만)."""
+    d = df.reindex(df["d_sd"].abs().sort_values(ascending=False).index).head(top_n).iloc[::-1]
+    y = np.arange(len(d))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8), gridspec_kw=dict(width_ratios=[1, 1]))
+    h = 0.38
+    ax1.barh(y + h / 2, d["d_sd_traffic"], h, color="#e8a33d", label="교통량 효과 (교통량만 AFTER)")
+    ax1.barh(y - h / 2, d["d_sd_partition"], h, color="#3a7bd5", label="분할 효과 (분할만 AFTER)")
+    ax1.scatter(d["d_sd"], y, color="black", zorder=5, s=25, label="합계 Δσ (AFTER - BEFORE)")
+    ax1.set_yticks(y)
+    ax1.set_yticklabels([f"#{l}  (교통량 {r * 100:+.1f}%)" if np.isfinite(r) else f"#{l}  (교통량 관측 없음)"
+                         for l, r in zip(d["label"], d["traffic_change_rel"])], fontsize=8)
+    ax1.axvline(0, color="black", lw=0.8)
+    ax1.set_xlabel("셀 BP 표준편차 σ 의 변화")
+    ax1.set_title(f"셀 σ 변화 분해 (|Δσ| 상위 {len(d)}개)", fontsize=13, weight="bold")
+    ax1.legend(loc="lower right", fontsize=8)
+    ax1.grid(axis="x", linestyle="--", alpha=0.3)
+
+    m = df[np.isfinite(df["pred_d_sd_traffic"]) & np.isfinite(df["d_sd_traffic"])]
+    ax2.scatter(m["pred_d_sd_traffic"], m["d_sd_traffic"], s=30 + 300 * m["A_len_m"] / m["A_len_m"].max(),
+                c="#3a7bd5", alpha=0.7, edgecolor="black", linewidth=0.6)
+    for _, r in m.iterrows():
+        ax2.annotate(r["label"], (r["pred_d_sd_traffic"], r["d_sd_traffic"]),
+                     xytext=(3, 3), textcoords="offset points", fontsize=7)
+    lim = [min(m["pred_d_sd_traffic"].min(), m["d_sd_traffic"].min()),
+           max(m["pred_d_sd_traffic"].max(), m["d_sd_traffic"].max())]
+    ax2.plot(lim, lim, "--", color="#d9534f", lw=1.5, label="y = x")
+    c = stats["pred_vs_actual_d_sd_traffic"]
+    ax2.set_xlabel("예측 Δσ = (σ 의 교통량 민감도) x (교통량 변화율)")
+    ax2.set_ylabel("실제 Δσ (교통량만 AFTER)")
+    ax2.set_title(f"민감도 기반 예측 vs 실제   (Spearman ρ={c['rho']:.2f}, p={c['p']:.2g}, n={c['n']})",
+                  fontsize=12, weight="bold")
+    ax2.legend()
+    ax2.grid(True, linestyle="--", alpha=0.3)
+    fig.suptitle("셀 BP 표준편차 변화: 교통량 vs 분할 (점 크기 ∝ 초기 영역 크기)", fontsize=15, weight="bold")
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
 def fig_retention(cells, path, top_n=30):
     df = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(top_n, "act")
     df = df.iloc[::-1]
@@ -681,6 +789,9 @@ def main(argv=None):
     jac_df["weighted_change_share"] = jac_df["weighted_change_m"] / jac_df["A_len_m"].sum()
     jac_df = pd.concat([jac_df, region_traffic_change(env_b, env_a, cp, env_b.K)], axis=1)
     traffic_corr = traffic_correlation(jac_df)
+    std_df = std_change_table(env_b, env_a, st_b, st_a, jac_df)
+    std_stats = std_change_stats(std_df)
+    std_df.to_csv(out / "cell_std_change.csv", index=False, encoding="utf-8-sig")
     if incident is not None:
         jac_df["dist_from_incident_m"] = cells["dist_from_incident_m"]
         jac_df = jac_df[list(jac_df.columns[:2]) + ["dist_from_incident_m"] + list(jac_df.columns[2:-1])]
@@ -707,6 +818,7 @@ def main(argv=None):
         rms_delta_a_all=float(region_df.loc[0, "rms_delta_a"]),
         bp_valid_piece_share=n_valid / len(L),
         traffic_change_vs_area_change_spearman=traffic_corr,
+        cell_std_change=std_stats,
         incident_xy=None if incident is None else incident.tolist(),
         weights=dict(before=args.a_before, after=args.a_after))
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2),
@@ -720,6 +832,7 @@ def main(argv=None):
         if incident is not None:
             fig_jaccard_distance(jac_df, radii, out / "cell_jaccard_distance.png")
         fig_traffic_vs_change(jac_df, traffic_corr, out / "traffic_vs_area_change.png")
+        fig_std_change(std_df, std_stats, out / "cell_std_change.png")
         fig_retention(cells, out / "cell_retention.png")
         fig_bp(env_b, cp, bp, valid, regions, incident, radii, out / "bp_change.png")
 
@@ -753,6 +866,16 @@ def main(argv=None):
     for col, c in traffic_corr.items():
         print(f"{col}: Spearman(|traffic_change|) = {c['rho']:.3f}  p={c['p']:.3g}  n={c['n']}  "
               f"OLS 기울기={c['slope_per_unit'] / 100:.5f} (x=%당)  R2={c['r2']:.3f}")
+    print("\n" + "=" * 90)
+    print("셀 BP 표준편차 σ 변화: 교통량 효과 vs 분할 효과 (|Δσ| 상위 12)")
+    print("=" * 90)
+    top_sd = std_df.reindex(std_df["d_sd"].abs().sort_values(ascending=False).index).head(12)
+    print(top_sd[["label", "traffic_before_mean", "traffic_change_rel", "bp_before", "bp_after",
+                  "sd_before", "sd_after", "d_sd", "d_sd_traffic", "d_sd_partition",
+                  "sens_sd", "pred_d_sd_traffic"]].to_string(
+        index=False, float_format=lambda v: f"{v:,.4f}"))
+    for k, c in std_stats.items():
+        print(f"Spearman {k}: rho={c['rho']:.3f}  p={c['p']:.3g}  n={c['n']}")
     print("\n셀 변화 TOP 10 (잃거나 얻은 도로 길이 합)")
     top = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(10, "act")
     print(top[["label", "lost_len_m", "gained_len_m", "jaccard", "delta_a"]]
