@@ -83,7 +83,7 @@ tf.random.set_seed(SEED)
 HIDDEN_SIZE = 256
 BUFFER_SIZE = 200000
 BATCH_SIZE = 256
-NUM_EPISODES = 2000        # 짧은 에피소드 -> 개수 늘림 (2000*64 = 128k step)
+NUM_EPISODES = 1000        # warm start 라 시작점이 이미 좋다 -> 2000 에서 1000 으로 (1000*64 = 64k step)
 MAX_STEPS = 64             # reset -> 몇 스텝 refine. 1000 은 return 이 상수에 묻힘
 WARMUP_STEPS = 2000
 REWARD_SCALE = 250.0       # 개선량 보상 r=J_prev-J 는 스텝당 ~1e-3 -> 키운다.
@@ -102,9 +102,15 @@ WINDOW_MIN = 90            # pems_pipeline.py --span 기본값. 아래 PHF 계�
 PHF = 60.0 / WINDOW_MIN    # 시간창 파일의 vol_day_veh 는 '창 동안의 통과 대수'다.
                            # 이 값을 넘겨야 lam = vol/(span*60) 인 실제 창 도착률이 된다.
                            # 기본값(0.15)을 쓰면 창 카운트를 일 총량으로 오해해 ~4.4배 과소평가.
-SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_0841_after.csv"
+SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_inc8057187_1401_after.csv"   # AFTER 창 (K=44. 0841 파일은 K=43)
 SITES_FILE    = f"{DIR}/outputs_2008/pems_d07_sites.csv"
 META_FILE     = f"{DIR}/d07_text_meta_2018_10_13.txt"
+
+# Warm start: AFTER 학습을 BEFORE 의 finalW 에서 시작한다. 무작위 시작이면 로그가중치가 평평한 J
+# 지형에서 시드마다 다른 해(상/하한을 오가는 뒤집힘)로 가서, BEFORE/AFTER 차이에 학습 노이즈가 섞인다.
+# None 이면 기존처럼 [-0.1, 0.1] 무작위 시작. 길이는 env.K(44) 와 같아야 한다.
+INIT_A_FILE = f"{DIR}/weights_warmstart/before_finalW.txt"
+WARM_NOISE = 0.05          # 에피소드마다 시작점에 더하는 U(-n, n) 노이즈 (0=매번 같은 시작점)
 
 env = TrafficRLEnvMW(
     segments_csv=SEGMENTS_FILE,
@@ -115,6 +121,12 @@ env = TrafficRLEnvMW(
     phf=PHF,
     merge_radius=MERGE_RADIUS,
 )
+if INIT_A_FILE is not None:
+    import re
+    _nums = re.findall(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?",
+                       open(INIT_A_FILE, encoding="utf-8").read())
+    env.set_warm_start(np.array(_nums, float), noise=WARM_NOISE)
+    print(f"[Warm start] {INIT_A_FILE} (K={len(_nums)}), noise={WARM_NOISE}")
 STATE_DIM = env.obs_dim      # [a(K), 셀별 std(K), 굶은셀 마스크(K), J(1)]
 ACTION_DIM = env.K           # 사이트별 Δa
 # =====================
@@ -154,7 +166,7 @@ print("학습 시작...")
 
 def eval_policy(n_steps=MAX_STEPS):
     """결정론 롤아웃 (tanh(mu)). 정책이 실제로 뭘 배웠는지 본다."""
-    s = np.asarray(env.reset(), np.float32)
+    s = np.asarray(env.reset(noise=0.0), np.float32)   # 평가는 노이즈 없는 시작점에서
     best = np.inf
     info = {"J": np.nan}
     for _ in range(n_steps):

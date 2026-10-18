@@ -348,12 +348,37 @@ class TrafficRLEnvMW:
             [float(J) * 10.0],                   # 현재 목적함수값
         ]).astype(np.float32)
 
-    def reset(self):
-        """log-가중치 a 를 [-0.1, 0.1] 범위의 무작위값(평균 0)으로 재초기화하고,
-        관측 벡터(obs_dim = 3K+1: 정규화된 a·셀별 std·굶은 셀 마스크·J)를 반환한다."""
-        self.a = np.random.uniform(-0.1, 0.1, self.K)
+    def set_warm_start(self, a0, noise=0.0):
+        """reset() 의 시작점을 무작위 대신 a0(길이 K, 예: 이전 시점의 finalW)로 바꾼다.
+        noise>0 이면 에피소드마다 a0 에 U(-noise, noise) 를 더해 시작점을 조금씩 흩뜨린다.
+        a0=None 이면 원래의 무작위 시작으로 되돌린다."""
+        if a0 is None:
+            self.init_a, self.init_noise = None, 0.0
+            return
+        a0 = np.asarray(a0, float).ravel()
+        if len(a0) != self.K:
+            raise ValueError(f"warm start 길이({len(a0)}) != 분기점 개수({self.K}): "
+                             f"merge_radius/segments 파일이 a0 를 학습한 설정과 같아야 한다")
+        self.init_a, self.init_noise = a0.copy(), float(noise)
+
+    def reset(self, noise=None):
+        """log-가중치 a 를 재초기화하고 관측 벡터(obs_dim = 3K+1: 정규화된 a·셀별 std·굶은 셀
+        마스크·J)를 반환한다. 기본은 [-0.1, 0.1] 무작위(평균 0). set_warm_start 로 시작점이
+        지정돼 있으면 그 값(+노이즈)에서 시작하며, noise 인자로 노이즈 크기를 덮어쓸 수 있다
+        (평가 롤아웃은 noise=0). warm start 의 시작점 J 는 finalA/finalW 후보에도 올린다."""
+        init_a = getattr(self, "init_a", None)
+        if init_a is None:
+            self.a = np.random.uniform(-0.1, 0.1, self.K)
+        else:
+            nz = getattr(self, "init_noise", 0.0) if noise is None else float(noise)
+            self.a = init_a + (np.random.uniform(-nz, nz, self.K) if nz > 0 else 0.0)
+            self.a -= self.a.mean()
+            self.a = np.clip(self.a, -self.a_bound, self.a_bound)
         self.a -= self.a.mean()
         J, stds, cnt, valid = self.evaluate(self.a, return_cells=True)
+        if init_a is not None and J < self.finalA:
+            self.finalA = J
+            self.finalW = self.a.copy()
         self._J_prev = J                      # 개선량 보상용
         return self._make_obs(J, stds, valid)
 
