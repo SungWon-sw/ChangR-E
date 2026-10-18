@@ -57,6 +57,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 DIR = Path(__file__).resolve().parent
 EPS = 1e-10
+SMALL_CELL_FRAC = 0.25   # 초기 크기가 중앙값의 이 비율 미만이면 '작은 셀' 로 표시
 
 
 # ----------------------------------------------------------------------
@@ -393,7 +394,10 @@ def distance_bands(jac_df, radii):
             m |= jac_df["dist_from_incident_m"] == 0.0
         d = jac_df[m]
         u = d["union_len_m"].sum()
+        a_tot = d["A_len_m"].sum()
         rows.append(dict(band=name, n_cells=int(len(d)),
+                         mean_change_norm=float(d["change_norm"].mean()) if len(d) else float("nan"),
+                         change_share_of_A=float(d["change_len_m"].sum() / a_tot) if a_tot > 0 else float("nan"),
                          mean_jaccard=float(d["jaccard"].mean()) if len(d) else float("nan"),
                          union_weighted_jaccard=float(d["intersection_len_m"].sum() / u) if u > 0 else float("nan"),
                          min_jaccard=float(d["jaccard"].min()) if len(d) else float("nan")))
@@ -402,19 +406,28 @@ def distance_bands(jac_df, radii):
 
 def fig_jaccard_distance(jac_df, radii, path):
     d = jac_df.sort_values("dist_from_incident_m")
-    fig, ax = plt.subplots(figsize=(12, 6.5))
-    ax.scatter(d["dist_from_incident_m"] / 1000, d["jaccard"], s=45,
-               c=d["jaccard"], cmap="RdYlGn", vmin=0, vmax=1, edgecolor="black", linewidth=0.6)
-    for _, r in d.iterrows():
-        ax.annotate(r["label"], (r["dist_from_incident_m"] / 1000, r["jaccard"]),
-                    xytext=(3, 3), textcoords="offset points", fontsize=7)
-    for r in radii:
-        ax.axvline(r / 1000, color="gray", linestyle="--", lw=1)
-    ax.set_xlabel("사고 지점에서 셀 사이트(병합 노드 무게중심)까지 거리 (km)")
-    ax.set_ylabel("Jaccard J_i")
-    ax.set_ylim(-0.03, 1.05)
-    ax.set_title("사고 거리별 셀 영역 유지율", fontsize=13, weight="bold")
-    ax.grid(True, linestyle="--", alpha=0.3)
+    fig, axes = plt.subplots(1, 2, figsize=(20, 6.5))
+    for ax, col, ylabel, title, ylim in [
+            (axes[0], "jaccard", "Jaccard J_i  (작은 셀은 과대평가될 수 있음)", "셀별 영역 유지율 J", (-0.03, 1.05)),
+            (axes[1], "change_norm", "|A△B| / (셀 초기 크기 평균)", "크기 정규화 변화량", None)]:
+        for small, marker in [(False, "o"), (True, "s")]:
+            m = d[d["small_cell"] == small]
+            ax.scatter(m["dist_from_incident_m"] / 1000, m[col], s=55, marker=marker,
+                       c="#d9534f" if small else "#3a7bd5", edgecolor="black", linewidth=0.6,
+                       label="작은 셀" if small else "일반 셀")
+        for _, r in d.iterrows():
+            ax.annotate(r["label"], (r["dist_from_incident_m"] / 1000, r[col]),
+                        xytext=(3, 3), textcoords="offset points", fontsize=7)
+        for r in radii:
+            ax.axvline(r / 1000, color="gray", linestyle="--", lw=1)
+        ax.set_xlabel("사고 지점 ~ 셀 사이트 거리 (km)")
+        ax.set_ylabel(ylabel)
+        if ylim:
+            ax.set_ylim(*ylim)
+        ax.set_title(title, fontsize=13, weight="bold")
+        ax.grid(True, linestyle="--", alpha=0.3)
+        ax.legend()
+    fig.suptitle("사고 거리별 셀 영역 변화", fontsize=15, weight="bold")
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)
@@ -585,6 +598,12 @@ def main(argv=None):
         intersection_len_m=cells["kept_len_m"],
         union_len_m=cells["before_len_m"] + cells["after_len_m"] - cells["kept_len_m"],
         jaccard=cells["jaccard"]))
+    # |A△B| 를 셀 자기 크기가 아니라 공통 기준(셀 초기 크기의 평균)으로 나눈다.
+    # J 는 작은 셀이 조금만 변해도 크게 나오지만, 이 값은 셀 크기에 의존하지 않는다.
+    ref_len = float(jac_df.loc[jac_df["A_len_m"] > 0, "A_len_m"].mean())
+    jac_df["change_len_m"] = jac_df["A_len_m"] + jac_df["B_len_m"] - 2 * jac_df["intersection_len_m"]
+    jac_df["change_norm"] = jac_df["change_len_m"] / ref_len
+    jac_df["small_cell"] = jac_df["A_len_m"] < SMALL_CELL_FRAC * jac_df["A_len_m"].median()
     if incident is not None:
         jac_df["dist_from_incident_m"] = cells["dist_from_incident_m"]
         jac_df = jac_df[list(jac_df.columns[:2]) + ["dist_from_incident_m"] + list(jac_df.columns[2:-1])]
@@ -630,6 +649,22 @@ def main(argv=None):
     print("영역별 요약")
     print("=" * 90)
     print(region_df.to_string(index=False, float_format=lambda v: f"{v:,.4f}"))
+    print("\n" + "=" * 90)
+    print("셀별 J_i = |A_i ∩ B_i| / |A_i ∪ B_i|  (A=BEFORE, B=AFTER, 도로 길이 m; 낮은 순)")
+    print("change_norm = |A△B| / 셀 초기 크기 평균 (셀 크기에 의존하지 않는 변화량)")
+    print("=" * 90)
+    cols = ["label", "A_len_m", "B_len_m", "jaccard", "change_norm", "small_cell"]
+    print(jac_df.sort_values("jaccard")[cols].to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
+    print(f"\n정규화 기준: 셀 초기 크기 평균 {ref_len / 1000:.1f} km; 작은 셀 = 초기 크기 < "
+          f"중앙값의 {SMALL_CELL_FRAC:g}배 ({int(jac_df['small_cell'].sum())}개)")
+    if incident is not None:
+        print("\n" + "=" * 90)
+        print("셀별 변화를 사고 거리순으로 (가까운 셀 -> 먼 셀)")
+        print("=" * 90)
+        print(jac_df.sort_values("dist_from_incident_m")[["dist_from_incident_m"] + cols]
+              .to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
+        print("\n거리 구간별 요약 (change_share_of_A = Σ|A△B| / ΣA, union_weighted = Σ교집합 / Σ합집합)")
+        print(band_df.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
     print("\n셀 변화 TOP 10 (잃거나 얻은 도로 길이 합)")
     top = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(10, "act")
     print(top[["label", "lost_len_m", "gained_len_m", "jaccard", "delta_a"]]
