@@ -423,6 +423,10 @@ def parse_args(argv=None):
     p.add_argument("--merge-radius", type=float, default=2500.0)
     p.add_argument("--incident-lat", type=float, default=None)
     p.add_argument("--incident-lon", type=float, default=None)
+    p.add_argument("--incident-site", default=None,
+                   help="위경도 대신 병합 노드 라벨(예: 10+15) 기준으로 사고 위치 지정")
+    p.add_argument("--incident-offset", default="0,-500",
+                   help="--incident-site 기준 (dx,dy) [m]. 기본: 바로 아래(남쪽) 500 m")
     p.add_argument("--radii", default="1000,3000,10000", help="사고 반경 [m], 쉼표 구분")
     p.add_argument("--out", type=Path, default=None, help="기본: outputs_change/<after-seg 이름>")
     p.add_argument("--no-plots", action="store_true")
@@ -444,9 +448,17 @@ def main(argv=None):
     a_a = load_weights(args.a_after, env_a)
 
     incident, radii = None, []
-    if (args.incident_lat is None) != (args.incident_lon is None):
+    if args.incident_site is not None:
+        if args.incident_site not in env_b.site_labels:
+            raise ValueError(f"사이트 라벨 {args.incident_site!r} 없음. 가능: {env_b.site_labels}")
+        dx, dy = (float(v) for v in args.incident_offset.split(","))
+        incident = env_b.site_coords[env_b.site_labels.index(args.incident_site)] + [dx, dy]
+        radii = [float(r) for r in args.radii.split(",") if r.strip()]
+        print(f"사고 위치 = 사이트 #{args.incident_site} + ({dx:g}, {dy:g}) m -> "
+              f"x/y = {incident[0]:.1f}, {incident[1]:.1f} m")
+    elif (args.incident_lat is None) != (args.incident_lon is None):
         raise ValueError("--incident-lat 과 --incident-lon 은 같이 줘야 한다.")
-    if args.incident_lat is not None:
+    if incident is None and args.incident_lat is not None:
         incident = project_latlon(args.meta, args.incident_lat, args.incident_lon)
         radii = [float(r) for r in args.radii.split(",") if r.strip()]
         print(f"사고 위치 x/y = {incident[0]:.1f}, {incident[1]:.1f} m")
