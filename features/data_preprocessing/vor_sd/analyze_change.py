@@ -37,6 +37,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import spearmanr
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, Normalize
@@ -430,6 +431,73 @@ def fig_jaccard_distance(jac_df, radii, path):
     plt.close(fig)
 
 
+def region_traffic_change(env_b, env_a, cp, n_cells):
+    """각 셀의 '초기 영역 A_i' 도로 위에서 BEFORE -> AFTER 교통량(vol) 변화.
+
+    영역을 A_i 로 고정해서 비교하므로 분할이 바뀐 효과가 섞이지 않고 순수한 교통량 변화만 남는다.
+    vol 이 두 시점 모두 관측된 도로 조각만 쓰고(결측 보간값은 시점마다 달라 제외), 길이로 가중한다.
+    traffic_change_rel = Σ L*vol_after / Σ L*vol_before - 1
+    """
+    vb = env_b.seg_df["vol_day_veh"].values.astype(float)[cp["seg"]]
+    va = env_a.seg_df["vol_day_veh"].values.astype(float)[cp["seg"]]
+    ok = np.isfinite(vb) & np.isfinite(va)
+    L = np.where(ok, cp["length"], 0.0)
+    cell = cp["before_cell"]
+    obs = np.bincount(cell, weights=L, minlength=n_cells)
+    sb = np.bincount(cell, weights=L * np.where(ok, vb, 0.0), minlength=n_cells)
+    sa = np.bincount(cell, weights=L * np.where(ok, va, 0.0), minlength=n_cells)
+    a_len = np.bincount(cell, weights=cp["length"], minlength=n_cells)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return pd.DataFrame(dict(
+            traffic_before_mean=np.where(obs > 0, sb / obs, np.nan),
+            traffic_after_mean=np.where(obs > 0, sa / obs, np.nan),
+            traffic_change_rel=np.where(sb > 0, sa / sb - 1.0, np.nan),
+            traffic_coverage=np.where(a_len > 0, obs / a_len, np.nan)))
+
+
+def traffic_correlation(jac_df):
+    """교통량 변화(x) 와 영역 변화(y) 의 Spearman 상관. y = 1-J, (1-J)*|A|/Σ|A|."""
+    out = {}
+    for col in ("dissimilarity", "weighted_change_share"):
+        m = np.isfinite(jac_df["traffic_change_rel"]) & np.isfinite(jac_df[col])
+        if m.sum() >= 3:
+            rho, pv = spearmanr(jac_df.loc[m, "traffic_change_rel"], jac_df.loc[m, col])
+            out[col] = dict(rho=float(rho), p=float(pv), n=int(m.sum()))
+        else:
+            out[col] = dict(rho=float("nan"), p=float("nan"), n=int(m.sum()))
+    return out
+
+
+def fig_traffic_vs_change(jac_df, corr, path):
+    """가로: 셀 초기 영역의 교통량 변화율, 세로: 영역 변화. 점 크기 ∝ 초기 영역 크기."""
+    d = jac_df[np.isfinite(jac_df["traffic_change_rel"])]
+    fig, axes = plt.subplots(1, 2, figsize=(20, 8))
+    for ax, col, ylabel, title in [
+            (axes[0], "dissimilarity", "1 - J_i", "영역 변화율 1 - J"),
+            (axes[1], "weighted_change_share", "(1 - J_i) x |A_i| / Σ|A|", "초기 크기를 곱한 영역 변화량")]:
+        x = d["traffic_change_rel"].values * 100
+        y = d[col].values
+        ax.scatter(x, y, s=30 + 400 * d["A_len_m"].values / d["A_len_m"].max(), c="#3a7bd5",
+                   alpha=0.7, edgecolor="black", linewidth=0.6)
+        for xi, yi, lab in zip(x, y, d["label"]):
+            ax.annotate(lab, (xi, yi), xytext=(3, 3), textcoords="offset points", fontsize=7)
+        if len(d) >= 3 and np.ptp(x) > 0:
+            k, b = np.polyfit(x, y, 1)
+            xs = np.array([x.min(), x.max()])
+            ax.plot(xs, k * xs + b, "--", color="#d9534f", lw=1.5)
+        c = corr[col]
+        ax.axvline(0, color="gray", lw=0.8)
+        ax.set_xlabel("셀 초기 영역(A_i)의 교통량 변화율 (%)  [BEFORE -> AFTER]")
+        ax.set_ylabel(ylabel)
+        ax.set_title(f"{title}   (Spearman ρ={c['rho']:.2f}, p={c['p']:.2g}, n={c['n']})",
+                     fontsize=12, weight="bold")
+        ax.grid(True, linestyle="--", alpha=0.3)
+    fig.suptitle("교통량 변화 vs 영역 변화 (점 크기 ∝ 초기 영역 크기)", fontsize=15, weight="bold")
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
 def fig_retention(cells, path, top_n=30):
     df = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(top_n, "act")
     df = df.iloc[::-1]
@@ -602,6 +670,8 @@ def main(argv=None):
     jac_df["dissimilarity"] = 1.0 - jac_df["jaccard"]
     jac_df["weighted_change_m"] = jac_df["dissimilarity"] * jac_df["A_len_m"]
     jac_df["weighted_change_share"] = jac_df["weighted_change_m"] / jac_df["A_len_m"].sum()
+    jac_df = pd.concat([jac_df, region_traffic_change(env_b, env_a, cp, env_b.K)], axis=1)
+    traffic_corr = traffic_correlation(jac_df)
     if incident is not None:
         jac_df["dist_from_incident_m"] = cells["dist_from_incident_m"]
         jac_df = jac_df[list(jac_df.columns[:2]) + ["dist_from_incident_m"] + list(jac_df.columns[2:-1])]
@@ -627,6 +697,7 @@ def main(argv=None):
             - cells["kept_len_m"])),
         rms_delta_a_all=float(region_df.loc[0, "rms_delta_a"]),
         bp_valid_piece_share=n_valid / len(L),
+        traffic_change_vs_area_change_spearman=traffic_corr,
         incident_xy=None if incident is None else incident.tolist(),
         weights=dict(before=args.a_before, after=args.a_after))
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2),
@@ -639,6 +710,7 @@ def main(argv=None):
         fig_jaccard(env_b, cp, cells, incident, radii, out / "cell_jaccard.png")
         if incident is not None:
             fig_jaccard_distance(jac_df, radii, out / "cell_jaccard_distance.png")
+        fig_traffic_vs_change(jac_df, traffic_corr, out / "traffic_vs_area_change.png")
         fig_retention(cells, out / "cell_retention.png")
         fig_bp(env_b, cp, bp, valid, regions, incident, radii, out / "bp_change.png")
 
@@ -662,6 +734,15 @@ def main(argv=None):
         print("\n거리 구간별 요약 (size_weighted_dissimilarity = Σ(1-J)|A| / Σ|A|, "
               "weighted_change_share_sum = 구간 기여도 합, union_weighted = Σ교집합 / Σ합집합)")
         print(band_df.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
+    print("\n" + "=" * 90)
+    print("교통량 변화(초기 영역 A_i 기준) vs 영역 변화")
+    print("=" * 90)
+    print(jac_df.sort_values("traffic_change_rel")
+          [["label", "A_len_m", "traffic_before_mean", "traffic_after_mean", "traffic_change_rel",
+            "traffic_coverage", "dissimilarity", "weighted_change_share"]]
+          .to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
+    for col, c in traffic_corr.items():
+        print(f"Spearman(traffic_change_rel, {col}) = {c['rho']:.3f}  p={c['p']:.3g}  n={c['n']}")
     print("\n셀 변화 TOP 10 (잃거나 얻은 도로 길이 합)")
     top = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(10, "act")
     print(top[["label", "lost_len_m", "gained_len_m", "jaccard", "delta_a"]]
