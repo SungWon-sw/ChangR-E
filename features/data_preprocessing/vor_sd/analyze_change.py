@@ -452,47 +452,56 @@ def region_traffic_change(env_b, env_a, cp, n_cells):
             traffic_before_mean=np.where(obs > 0, sb / obs, np.nan),
             traffic_after_mean=np.where(obs > 0, sa / obs, np.nan),
             traffic_change_rel=np.where(sb > 0, sa / sb - 1.0, np.nan),
+            traffic_change_abs=np.where(sb > 0, np.abs(sa / sb - 1.0), np.nan),
             traffic_coverage=np.where(a_len > 0, obs / a_len, np.nan)))
 
 
 def traffic_correlation(jac_df):
-    """교통량 변화(x) 와 영역 변화(y) 의 Spearman 상관. y = 1-J, (1-J)*|A|/Σ|A|."""
+    """|교통량 변화율|(x) 와 영역 변화(y) 의 Spearman 상관과 OLS 추세선. y = 1-J, (1-J)*|A|/Σ|A|."""
     out = {}
     for col in ("dissimilarity", "weighted_change_share"):
-        m = np.isfinite(jac_df["traffic_change_rel"]) & np.isfinite(jac_df[col])
-        if m.sum() >= 3:
-            rho, pv = spearmanr(jac_df.loc[m, "traffic_change_rel"], jac_df.loc[m, col])
-            out[col] = dict(rho=float(rho), p=float(pv), n=int(m.sum()))
+        m = np.isfinite(jac_df["traffic_change_abs"]) & np.isfinite(jac_df[col])
+        x, y = jac_df.loc[m, "traffic_change_abs"].values, jac_df.loc[m, col].values
+        if m.sum() >= 3 and np.ptp(x) > 0:
+            rho, pv = spearmanr(x, y)
+            slope, icpt = np.polyfit(x, y, 1)
+            r2 = float(np.corrcoef(x, y)[0, 1] ** 2)
+            out[col] = dict(rho=float(rho), p=float(pv), n=int(m.sum()),
+                            slope_per_unit=float(slope), intercept=float(icpt), r2=r2)
         else:
-            out[col] = dict(rho=float("nan"), p=float("nan"), n=int(m.sum()))
+            out[col] = dict(rho=float("nan"), p=float("nan"), n=int(m.sum()),
+                            slope_per_unit=float("nan"), intercept=float("nan"), r2=float("nan"))
     return out
 
 
 def fig_traffic_vs_change(jac_df, corr, path):
-    """가로: 셀 초기 영역의 교통량 변화율, 세로: 영역 변화. 점 크기 ∝ 초기 영역 크기."""
-    d = jac_df[np.isfinite(jac_df["traffic_change_rel"])]
+    """가로: 셀 초기 영역의 |교통량 변화율|, 세로: 영역 변화 + OLS 추세선. 점 크기 ∝ 초기 영역 크기."""
+    d = jac_df[np.isfinite(jac_df["traffic_change_abs"])]
     fig, axes = plt.subplots(1, 2, figsize=(20, 8))
     for ax, col, ylabel, title in [
             (axes[0], "dissimilarity", "1 - J_i", "영역 변화율 1 - J"),
             (axes[1], "weighted_change_share", "(1 - J_i) x |A_i| / Σ|A|", "초기 크기를 곱한 영역 변화량")]:
-        x = d["traffic_change_rel"].values * 100
+        x = d["traffic_change_abs"].values * 100
         y = d[col].values
         ax.scatter(x, y, s=30 + 400 * d["A_len_m"].values / d["A_len_m"].max(), c="#3a7bd5",
                    alpha=0.7, edgecolor="black", linewidth=0.6)
         for xi, yi, lab in zip(x, y, d["label"]):
             ax.annotate(lab, (xi, yi), xytext=(3, 3), textcoords="offset points", fontsize=7)
-        if len(d) >= 3 and np.ptp(x) > 0:
-            k, b = np.polyfit(x, y, 1)
-            xs = np.array([x.min(), x.max()])
-            ax.plot(xs, k * xs + b, "--", color="#d9534f", lw=1.5)
         c = corr[col]
-        ax.axvline(0, color="gray", lw=0.8)
-        ax.set_xlabel("셀 초기 영역(A_i)의 교통량 변화율 (%)  [BEFORE -> AFTER]")
+        if np.isfinite(c["slope_per_unit"]):
+            xs = np.linspace(0, x.max(), 50)
+            # slope_per_unit 은 x 가 비율(0~1)일 때의 기울기 -> % 축으로 환산
+            ax.plot(xs, c["slope_per_unit"] / 100 * xs + c["intercept"], "--", color="#d9534f", lw=2,
+                    label=f"OLS 추세선: y = {c['slope_per_unit'] / 100:.4f}·x + {c['intercept']:.3f}"
+                          f"  (R²={c['r2']:.2f})")
+            ax.legend(loc="upper right")
+        ax.set_xlim(left=0)
+        ax.set_xlabel("셀 초기 영역(A_i)의 |교통량 변화율| (%)  [BEFORE -> AFTER]")
         ax.set_ylabel(ylabel)
         ax.set_title(f"{title}   (Spearman ρ={c['rho']:.2f}, p={c['p']:.2g}, n={c['n']})",
                      fontsize=12, weight="bold")
         ax.grid(True, linestyle="--", alpha=0.3)
-    fig.suptitle("교통량 변화 vs 영역 변화 (점 크기 ∝ 초기 영역 크기)", fontsize=15, weight="bold")
+    fig.suptitle("|교통량 변화율| vs 영역 변화 (점 크기 ∝ 초기 영역 크기)", fontsize=15, weight="bold")
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)
@@ -735,14 +744,15 @@ def main(argv=None):
               "weighted_change_share_sum = 구간 기여도 합, union_weighted = Σ교집합 / Σ합집합)")
         print(band_df.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
     print("\n" + "=" * 90)
-    print("교통량 변화(초기 영역 A_i 기준) vs 영역 변화")
+    print("|교통량 변화율|(초기 영역 A_i 기준) vs 영역 변화")
     print("=" * 90)
-    print(jac_df.sort_values("traffic_change_rel")
-          [["label", "A_len_m", "traffic_before_mean", "traffic_after_mean", "traffic_change_rel",
+    print(jac_df.sort_values("traffic_change_abs")
+          [["label", "A_len_m", "traffic_before_mean", "traffic_after_mean", "traffic_change_abs",
             "traffic_coverage", "dissimilarity", "weighted_change_share"]]
           .to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
     for col, c in traffic_corr.items():
-        print(f"Spearman(traffic_change_rel, {col}) = {c['rho']:.3f}  p={c['p']:.3g}  n={c['n']}")
+        print(f"{col}: Spearman(|traffic_change|) = {c['rho']:.3f}  p={c['p']:.3g}  n={c['n']}  "
+              f"OLS 기울기={c['slope_per_unit'] / 100:.5f} (x=%당)  R2={c['r2']:.3f}")
     print("\n셀 변화 TOP 10 (잃거나 얻은 도로 길이 합)")
     top = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(10, "act")
     print(top[["label", "lost_len_m", "gained_len_m", "jaccard", "delta_a"]]
