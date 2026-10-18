@@ -11,9 +11,10 @@ BEFORE/AFTER 의 셀 경계(t 값)를 한 선분 안에서 전부 합친 '공통
 산출물 (--out 디렉터리)
   summary.json            핵심 수치
   region_table.csv        전체 / 바뀐 영역 / 안 바뀐 영역 / (사고 반경별) 요약
-  cell_table.csv          셀별 유지/상실/획득 길이와 길이 기반 Jaccard, Δa
+  cell_jaccard.csv        셀별 |A_i ∩ B_i| / |A_i ∪ B_i| (A=BEFORE 영역, B=AFTER 영역, 도로 길이 기준)
+  cell_table.csv          셀별 유지/상실/획득 길이, Jaccard, Δa 등 상세
   transfers.csv           (이전 셀 -> 새 셀) 로 넘어간 도로 길이
-  ownership_before_after.png, change_map.png, cell_retention.png, bp_change.png
+  ownership_before_after.png, change_map.png, cell_jaccard.png, cell_retention.png, bp_change.png
 
 사용 예
   python features/data_preprocessing/vor_sd/analyze_change.py \\
@@ -342,6 +343,43 @@ def fig_change_map(env, cp, cells, incident, radii, path):
     plt.close(fig)
 
 
+def fig_jaccard(env, cp, cells, incident, radii, path):
+    """왼쪽: 유지된 도로(A∩B)를 셀의 Jaccard 색으로, 바뀐 도로는 회색. 오른쪽: 셀별 Jaccard 정렬."""
+    ch = cp["changed"]
+    lines = np.stack([cp["p0"], cp["p1"]], axis=1)
+    jac = cells["jaccard"].values
+    cmap, norm = plt.get_cmap("RdYlGn"), Normalize(0.0, 1.0)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(22, 10), gridspec_kw=dict(width_ratios=[1.5, 1]))
+    ax1.add_collection(LineCollection(lines[ch], colors="#d0d0d0", linewidths=1.0))
+    lc = LineCollection(lines[~ch], cmap=cmap, norm=norm, linewidths=3.0)
+    lc.set_array(jac[cp["before_cell"][~ch]])
+    ax1.add_collection(lc)
+    ax1.scatter(env.site_coords[:, 0], env.site_coords[:, 1], c=jac, cmap=cmap, norm=norm,
+                s=70, edgecolor="black", linewidth=0.8, zorder=10)
+    for k, (sx, sy) in enumerate(env.site_coords):
+        ax1.text(sx + 200, sy + 200, f"{env.site_labels[k]}: {jac[k]:.2f}", fontsize=7, zorder=11,
+                 bbox=dict(facecolor="white", alpha=0.75, edgecolor="none", pad=0.5))
+    _frame(ax1, cp, env, incident, radii, "셀별 영역 유지율 J = |A∩B| / |A∪B|  (회색=바뀐 도로)")
+    ax1.set_ylabel("Y (m)")
+    fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax1, fraction=0.04,
+                 pad=0.02).set_label("Jaccard")
+
+    df = cells.sort_values("jaccard")
+    y = np.arange(len(df))
+    ax2.barh(y, df["jaccard"], color=cmap(norm(df["jaccard"].values)), edgecolor="black", linewidth=0.4)
+    for yi, j in zip(y, df["jaccard"]):
+        ax2.text(j + 0.01, yi, f"{j:.3f}", va="center", fontsize=7)
+    ax2.set_yticks(y)
+    ax2.set_yticklabels([f"#{l}" for l in df["label"]], fontsize=7)
+    ax2.set_xlim(0, 1.1)
+    ax2.set_xlabel("Jaccard (1 = 변화 없음)")
+    ax2.set_title("셀별 Jaccard (낮은 순)", fontsize=13, weight="bold")
+    ax2.grid(axis="x", linestyle="--", alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
 def fig_retention(cells, path, top_n=30):
     df = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(top_n, "act")
     df = df.iloc[::-1]
@@ -501,6 +539,13 @@ def main(argv=None):
     moved["from_label"] = [env_b.site_labels[i] for i in moved["from_cell"]]
     moved["to_label"] = [env_b.site_labels[i] for i in moved["to_cell"]]
 
+    jac_df = pd.DataFrame(dict(
+        site=cells["site"], label=cells["label"],
+        A_len_m=cells["before_len_m"], B_len_m=cells["after_len_m"],
+        intersection_len_m=cells["kept_len_m"],
+        union_len_m=cells["before_len_m"] + cells["after_len_m"] - cells["kept_len_m"],
+        jaccard=cells["jaccard"]))
+    jac_df.to_csv(out / "cell_jaccard.csv", index=False, encoding="utf-8-sig")
     region_df.to_csv(out / "region_table.csv", index=False, encoding="utf-8-sig")
     cells.to_csv(out / "cell_table.csv", index=False, encoding="utf-8-sig")
     moved.to_csv(out / "transfers.csv", index=False, encoding="utf-8-sig")
@@ -527,6 +572,7 @@ def main(argv=None):
         print("[5] 그림 저장")
         fig_ownership(env_b, cp, incident, radii, out / "ownership_before_after.png")
         fig_change_map(env_b, cp, cells, incident, radii, out / "change_map.png")
+        fig_jaccard(env_b, cp, cells, incident, radii, out / "cell_jaccard.png")
         fig_retention(cells, out / "cell_retention.png")
         fig_bp(env_b, cp, bp, valid, regions, incident, radii, out / "bp_change.png")
 
