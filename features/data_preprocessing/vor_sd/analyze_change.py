@@ -380,6 +380,46 @@ def fig_jaccard(env, cp, cells, incident, radii, path):
     plt.close(fig)
 
 
+def distance_bands(jac_df, radii):
+    """사고 거리 구간별 J 요약. 구간 = (0,r1], (r1,r2], ..., (r_last, inf)."""
+    edges = [0.0] + list(radii) + [np.inf]
+    names = [f"{edges[i] / 1000:g}-{edges[i + 1] / 1000:g} km" if np.isfinite(edges[i + 1])
+             else f">{edges[i] / 1000:g} km" for i in range(len(edges) - 1)]
+    names[0] = f"<={edges[1] / 1000:g} km"
+    rows = []
+    for name, lo, hi in zip(names, edges[:-1], edges[1:]):
+        m = (jac_df["dist_from_incident_m"] > lo) & (jac_df["dist_from_incident_m"] <= hi)
+        if lo == 0.0:
+            m |= jac_df["dist_from_incident_m"] == 0.0
+        d = jac_df[m]
+        u = d["union_len_m"].sum()
+        rows.append(dict(band=name, n_cells=int(len(d)),
+                         mean_jaccard=float(d["jaccard"].mean()) if len(d) else float("nan"),
+                         union_weighted_jaccard=float(d["intersection_len_m"].sum() / u) if u > 0 else float("nan"),
+                         min_jaccard=float(d["jaccard"].min()) if len(d) else float("nan")))
+    return pd.DataFrame(rows)
+
+
+def fig_jaccard_distance(jac_df, radii, path):
+    d = jac_df.sort_values("dist_from_incident_m")
+    fig, ax = plt.subplots(figsize=(12, 6.5))
+    ax.scatter(d["dist_from_incident_m"] / 1000, d["jaccard"], s=45,
+               c=d["jaccard"], cmap="RdYlGn", vmin=0, vmax=1, edgecolor="black", linewidth=0.6)
+    for _, r in d.iterrows():
+        ax.annotate(r["label"], (r["dist_from_incident_m"] / 1000, r["jaccard"]),
+                    xytext=(3, 3), textcoords="offset points", fontsize=7)
+    for r in radii:
+        ax.axvline(r / 1000, color="gray", linestyle="--", lw=1)
+    ax.set_xlabel("사고 지점에서 셀 사이트(병합 노드 무게중심)까지 거리 (km)")
+    ax.set_ylabel("Jaccard J_i")
+    ax.set_ylim(-0.03, 1.05)
+    ax.set_title("사고 거리별 셀 영역 유지율", fontsize=13, weight="bold")
+    ax.grid(True, linestyle="--", alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
 def fig_retention(cells, path, top_n=30):
     df = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(top_n, "act")
     df = df.iloc[::-1]
@@ -545,6 +585,13 @@ def main(argv=None):
         intersection_len_m=cells["kept_len_m"],
         union_len_m=cells["before_len_m"] + cells["after_len_m"] - cells["kept_len_m"],
         jaccard=cells["jaccard"]))
+    if incident is not None:
+        jac_df["dist_from_incident_m"] = cells["dist_from_incident_m"]
+        jac_df = jac_df[list(jac_df.columns[:2]) + ["dist_from_incident_m"] + list(jac_df.columns[2:-1])]
+        jac_df.sort_values("dist_from_incident_m").to_csv(
+            out / "cell_jaccard_by_distance.csv", index=False, encoding="utf-8-sig")
+        band_df = distance_bands(jac_df, radii)
+        band_df.to_csv(out / "jaccard_by_distance_band.csv", index=False, encoding="utf-8-sig")
     jac_df.to_csv(out / "cell_jaccard.csv", index=False, encoding="utf-8-sig")
     region_df.to_csv(out / "region_table.csv", index=False, encoding="utf-8-sig")
     cells.to_csv(out / "cell_table.csv", index=False, encoding="utf-8-sig")
@@ -573,6 +620,8 @@ def main(argv=None):
         fig_ownership(env_b, cp, incident, radii, out / "ownership_before_after.png")
         fig_change_map(env_b, cp, cells, incident, radii, out / "change_map.png")
         fig_jaccard(env_b, cp, cells, incident, radii, out / "cell_jaccard.png")
+        if incident is not None:
+            fig_jaccard_distance(jac_df, radii, out / "cell_jaccard_distance.png")
         fig_retention(cells, out / "cell_retention.png")
         fig_bp(env_b, cp, bp, valid, regions, incident, radii, out / "bp_change.png")
 
