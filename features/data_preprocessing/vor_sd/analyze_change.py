@@ -438,6 +438,7 @@ def region_traffic_change(env_b, env_a, cp, n_cells):
     영역을 A_i 로 고정해서 비교하므로 분할이 바뀐 효과가 섞이지 않고 순수한 교통량 변화만 남는다.
     vol 이 두 시점 모두 관측된 도로 조각만 쓰고(결측 보간값은 시점마다 달라 제외), 길이로 가중한다.
     traffic_change_rel = Σ L*vol_after / Σ L*vol_before - 1
+    traffic_change_abs = Σ L*|vol_after - vol_before| / Σ L*vol_before  (도로별 절댓값 -> 증감 상쇄 없음)
     """
     vb = env_b.seg_df["vol_day_veh"].values.astype(float)[cp["seg"]]
     va = env_a.seg_df["vol_day_veh"].values.astype(float)[cp["seg"]]
@@ -447,13 +448,14 @@ def region_traffic_change(env_b, env_a, cp, n_cells):
     obs = np.bincount(cell, weights=L, minlength=n_cells)
     sb = np.bincount(cell, weights=L * np.where(ok, vb, 0.0), minlength=n_cells)
     sa = np.bincount(cell, weights=L * np.where(ok, va, 0.0), minlength=n_cells)
+    sd = np.bincount(cell, weights=L * np.where(ok, np.abs(va - vb), 0.0), minlength=n_cells)
     a_len = np.bincount(cell, weights=cp["length"], minlength=n_cells)
     with np.errstate(invalid="ignore", divide="ignore"):
         return pd.DataFrame(dict(
             traffic_before_mean=np.where(obs > 0, sb / obs, np.nan),
             traffic_after_mean=np.where(obs > 0, sa / obs, np.nan),
             traffic_change_rel=np.where(sb > 0, sa / sb - 1.0, np.nan),
-            traffic_change_abs=np.where(sb > 0, np.abs(sa / sb - 1.0), np.nan),
+            traffic_change_abs=np.where(sb > 0, sd / sb, np.nan),
             traffic_coverage=np.where(a_len > 0, obs / a_len, np.nan)))
 
 
@@ -615,6 +617,232 @@ def fig_std_change(df, stats, path, top_n=20):
     plt.close(fig)
 
 
+# ----------------------------------------------------------------------
+# 평가지표 2: BEFORE 가중치 고정 -> AFTER 교통량에서의 misfit
+# ----------------------------------------------------------------------
+def unit_misfit(env_b, env_a, st_b):
+    """w_B(분할 고정)로 (선분,셀) 유닛 단위 misfit 을 계산한다. 유닛 = rl_env.evaluate 의 BP 표본 단위.
+
+    m_u = (p_after - mu_after[c])^2 - (p_before - mu_before[c])^2   (c = 유닛의 셀)
+    셀 평균을 유닛 수로 나눈 mean(m_u) = sigma_after^2 - sigma_before^2 (분산 분해가 정확히 성립)
+    이므로 J^2 의 변화량이 유닛에 귀속된다. 분할이 고정이라 AFTER 재학습의 우연성이 없다.
+    e_u = |(p_after - mu_after[c]) - (p_before - mu_before[c])|  (셀 평균 이동을 뺀 상대 위치 변화량)
+    m_u 는 부호가 있어서 교통이 붕괴해 BP 가 균일하게 0 이 되면 분산이 줄어 음수가 된다
+    (J 로는 오히려 '더 잘 맞는' 것으로 보임). 증감이 상쇄되지 않는 지표가 e_u 이다.
+    d_u = |vol_after - vol_before| / vol_before  (선분 단위, 두 시점 모두 관측된 선분만).
+    """
+    Lmat = st_b["Lmat"]
+    seg_i, cell_i = np.nonzero(Lmat)
+    p_b = prob_matrix(env_b, Lmat)[seg_i, cell_i]
+    p_a = prob_matrix(env_a, Lmat)[seg_i, cell_i]
+    K = env_b.K
+    cnt = np.bincount(cell_i, minlength=K)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        mu_b = np.bincount(cell_i, weights=p_b, minlength=K) / cnt
+        mu_a = np.bincount(cell_i, weights=p_a, minlength=K) / cnt
+    valid = cnt >= env_b.min_pieces
+    vb = env_b.seg_df["vol_day_veh"].values.astype(float)[seg_i]
+    va = env_a.seg_df["vol_day_veh"].values.astype(float)[seg_i]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        d = np.where(np.isfinite(vb) & np.isfinite(va) & (vb > 0), np.abs(va - vb) / vb, np.nan)
+    mid = (env_b.P[seg_i] + env_b.Q[seg_i]) / 2.0
+    rel_b, rel_a = p_b - mu_b[cell_i], p_a - mu_a[cell_i]      # 셀 평균 대비 위치
+    df = pd.DataFrame(dict(seg=seg_i, cell=cell_i, p_before=p_b, p_after=p_a,
+                           m=rel_a ** 2 - rel_b ** 2,          # 부호 있음: J^2 분해
+                           e=np.abs(rel_a - rel_b),            # 부호 없음: 셀 안 상대 위치 이동량
+                           d=d, x=mid[:, 0], y=mid[:, 1]))
+    return df[valid[cell_i]].reset_index(drop=True), valid
+
+
+def _spearman(x, y, n_boot=2000, seed=0):
+    """Spearman rho, p, 그리고 쌍 부트스트랩 95% CI (단위 = 행)."""
+    m = np.isfinite(x) & np.isfinite(y)
+    x, y = x[m], y[m]
+    if len(x) < 5 or np.ptp(x) == 0 or np.ptp(y) == 0:
+        return dict(rho=float("nan"), p=float("nan"), ci_lo=float("nan"), ci_hi=float("nan"), n=int(len(x)))
+    rho, pv = spearmanr(x, y)
+    rng = np.random.default_rng(seed)
+    bs = []
+    for _ in range(n_boot):
+        i = rng.integers(0, len(x), len(x))
+        if np.ptp(x[i]) > 0 and np.ptp(y[i]) > 0:
+            bs.append(spearmanr(x[i], y[i])[0])
+    lo, hi = np.percentile(bs, [2.5, 97.5]) if bs else (float("nan"),) * 2
+    return dict(rho=float(rho), p=float(pv), ci_lo=float(lo), ci_hi=float(hi), n=int(len(x)))
+
+
+def _aggregate(env_b, u, radii, min_units, incident, incident_radius):
+    """활성 유닛 집합 u 에 대해 셀/이웃 집계와 대조 통계를 낸다. 셀 표(DataFrame, K행)와 요약 dict 반환."""
+    K = env_b.K
+    g = u.groupby("cell")
+    n = g.size().reindex(range(K)).fillna(0).astype(int).values
+    cells = pd.DataFrame(dict(n_units=n,
+                              traffic_change_abs=g["d"].mean().reindex(range(K)).values,
+                              mean_e=g["e"].mean().reindex(range(K)).values,
+                              mean_m=g["m"].mean().reindex(range(K)).values))
+    cells.loc[n < min_units, ["traffic_change_abs", "mean_e", "mean_m"]] = np.nan
+    out = {"n_units": int(len(u)), "n_cells_used": int((n >= min_units).sum())}
+    out["cell_e"] = _spearman(cells["traffic_change_abs"].values, cells["mean_e"].values)
+    out["cell_m"] = _spearman(cells["traffic_change_abs"].values, cells["mean_m"].values)
+
+    xy, d_all, m_all, e_all = u[["x", "y"]].values, u["d"].values, u["m"].values, u["e"].values
+    for r in radii:
+        Ds, Es, Ms = (np.full(K, np.nan) for _ in range(3))
+        for i in np.nonzero(n > 0)[0]:
+            inn = np.linalg.norm(xy - env_b.site_coords[i], axis=1) <= r
+            ok = inn & np.isfinite(d_all)
+            if ok.sum() >= min_units:
+                Ds[i], Es[i], Ms[i] = d_all[ok].mean(), e_all[ok].mean(), m_all[ok].mean()
+        cells[f"traffic_r{r:g}"], cells[f"misfit_e_r{r:g}"], cells[f"misfit_m_r{r:g}"] = Ds, Es, Ms
+        out[f"nbr_e_r{r:g}"] = _spearman(Ds, Es)
+        out[f"nbr_m_r{r:g}"] = _spearman(Ds, Ms)
+
+    fin = np.isfinite(d_all)
+    if fin.sum() >= 20:
+        thr = np.quantile(d_all[fin], 0.9)
+        hot, rest = fin & (d_all >= thr), fin & (d_all < thr)
+        out["hot_vs_rest"] = dict(
+            d_threshold=float(thr), n_hot=int(hot.sum()), n_rest=int(rest.sum()),
+            mean_e_hot=float(e_all[hot].mean()), mean_e_rest=float(e_all[rest].mean()),
+            mean_m_hot=float(m_all[hot].mean()), mean_m_rest=float(m_all[rest].mean()))
+    out["pooled_unit_spearman_e"] = _spearman(d_all, e_all, n_boot=200)
+    out["pooled_unit_spearman_m"] = _spearman(d_all, m_all, n_boot=200)
+    if incident is not None:
+        near = np.linalg.norm(xy - incident, axis=1) <= incident_radius
+        out["near_vs_far_incident"] = dict(
+            radius_m=float(incident_radius), n_near=int(near.sum()), n_far=int((~near).sum()),
+            mean_e_near=float(e_all[near].mean()) if near.any() else float("nan"),
+            mean_e_far=float(e_all[~near].mean()) if (~near).any() else float("nan"))
+    return cells, out
+
+
+def misfit_analysis(env_b, env_a, st_b, radii, taus, incident=None, incident_radius=3000.0,
+                    min_units=3):
+    """유닛 misfit 을 |교통량 변화| 와 비교한다. 변형(variant):
+      all      : 모든 유닛
+      tau<t>   : BP 활성 유닛만, max(p_before, p_after) >= t
+    BP≈0 인 구간은 교통량이 바뀌어도 셀 분산에 기여하지 않으므로, 활성 유닛으로 한정한 결과를 주 지표로 쓴다.
+    (t 는 결과를 본 뒤 정한 탐색적 값이라 여러 개를 함께 보고한다.)"""
+    K = env_b.K
+    u, valid = unit_misfit(env_b, env_a, st_b)
+    cnt = np.bincount(u["cell"], minlength=K)
+    dev_b = u["p_before"] - u.groupby("cell")["p_before"].transform("mean")
+    dev_a = u["p_after"] - u.groupby("cell")["p_after"].transform("mean")
+    with np.errstate(invalid="ignore", divide="ignore"):
+        var_b = np.bincount(u["cell"], weights=dev_b ** 2, minlength=K) / cnt
+        var_a = np.bincount(u["cell"], weights=dev_a ** 2, minlength=K) / cnt
+    out = {"J_before": float(np.sqrt(np.mean(var_b[valid]))),
+           "J_after_frozen_w_before": float(np.sqrt(np.mean(var_a[valid]))),
+           "n_units": int(len(u)), "n_valid_cells": int(valid.sum()),
+           "share_units_p_before_lt_1e-3": float((u["p_before"] < 1e-3).mean()),
+           "variants": {}}
+    cells = pd.DataFrame(dict(site=np.arange(K), label=env_b.site_labels, valid=valid,
+                              var_before=var_b, var_after_frozen=var_a, d_var=var_a - var_b))
+    act = np.maximum(u["p_before"].values, u["p_after"].values)
+    variants = [("all", np.ones(len(u), bool))] + [(f"tau{t:g}", act >= t) for t in taus]
+    for tag, mask in variants:
+        cs, o = _aggregate(env_b, u[mask], radii, min_units, incident, incident_radius)
+        out["variants"][tag] = o
+        cells = pd.concat([cells, cs.add_prefix(f"{tag}__")], axis=1)
+    return u, cells, out
+
+
+def fig_misfit_map(env, u, path, incident=None):
+    fig, ax = plt.subplots(figsize=(12, 9))
+    P, Q = env.P[u["seg"].values], env.Q[u["seg"].values]
+    lim = max(float(np.nanpercentile(u["e"], 98)), 1e-9)
+    lc = LineCollection(np.stack([P, Q], axis=1), cmap="magma_r", norm=Normalize(0, lim), linewidths=2.4)
+    lc.set_array(u["e"].values)
+    ax.add_collection(lc)
+    ax.scatter(env.site_coords[:, 0], env.site_coords[:, 1], c="black", s=14, zorder=10)
+    pts = np.vstack([P, Q])
+    ax.set_xlim(pts[:, 0].min() - 1000, pts[:, 0].max() + 1000)
+    ax.set_ylim(pts[:, 1].min() - 1000, pts[:, 1].max() + 1000)
+    ax.set_aspect("equal")
+    if incident is not None:
+        ax.scatter(*incident, marker="*", s=420, c="white", edgecolor="black", linewidth=1.6, zorder=20)
+    ax.set_title("유닛 misfit e = |Δ(셀 평균 대비 BP 위치)|  (w_B 고정)", fontsize=12, weight="bold")
+    fig.colorbar(lc, ax=ax, fraction=0.04, pad=0.02).set_label("e")
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
+def fig_misfit(env, cells, summ, radii, path):
+    """행 1: 셀 단위, 행 2: 첫 반경 이웃 단위. 열: 변형(all, tau...). x = 평균 |교통량 변화율|, y = 평균 e."""
+    tags = list(summ["variants"])
+    rk = f"r{radii[0]:g}"
+    fig, axes = plt.subplots(2, len(tags), figsize=(7.5 * len(tags), 13), squeeze=False)
+    for j, tag in enumerate(tags):
+        o = summ["variants"][tag]
+        for i, (xc, yc, key, name) in enumerate([
+                (f"{tag}__traffic_change_abs", f"{tag}__mean_e", "cell_e", "셀 단위"),
+                (f"{tag}__traffic_{rk}", f"{tag}__misfit_e_{rk}", f"nbr_e_{rk}", f"반경 {radii[0]:g} m 이웃")]):
+            ax = axes[i, j]
+            x, y = cells[xc].values * 100, cells[yc].values
+            mk = np.isfinite(x) & np.isfinite(y)
+            ax.scatter(x[mk], y[mk], s=45, c="#3a7bd5", alpha=0.75, edgecolor="black", linewidth=0.5)
+            for xi, yi, lab in zip(x[mk], y[mk], cells["label"].values[mk]):
+                ax.annotate(lab, (xi, yi), xytext=(3, 3), textcoords="offset points", fontsize=7)
+            c = o[key]
+            ax.set_title(f"[{tag}] {name}  유닛 {o['n_units']}\nρ={c['rho']:.2f} [{c['ci_lo']:.2f}, {c['ci_hi']:.2f}], n={c['n']}",
+                         fontsize=11, weight="bold")
+            ax.set_xlabel("평균 |교통량 변화율| (%)")
+            ax.set_ylabel("평균 e (셀 내 상대 BP 위치 이동량)")
+            ax.grid(True, linestyle="--", alpha=0.3)
+    fig.suptitle("평가지표 2 — w_B 고정, AFTER 교통량에서의 misfit vs |교통량 변화|  (tau = BP 활성 기준)",
+                 fontsize=15, weight="bold")
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
+def run_misfit(env_b, env_a, a_b, args, incident, out):
+    out.mkdir(parents=True, exist_ok=True)
+    st_b = cut_state(env_b, a_b)
+    radii = [float(r) for r in args.nbr_radii.split(",") if r.strip()]
+    taus = [float(t) for t in args.tau.split(",") if t.strip()]
+    u, cells, summ = misfit_analysis(env_b, env_a, st_b, radii, taus, incident, args.incident_radius)
+
+    # 정합성: 직접 계산한 J 가 rl_env.evaluate 와 같아야 한다 (같은 BP/셀 정의를 쓴다는 확인)
+    summ["check_J_before_env"] = float(env_b.evaluate(a_b)[0])
+    summ["check_J_after_frozen_env"] = float(env_a.evaluate(a_b)[0])
+    summ["weights_before"] = str(args.a_before)
+
+    u.to_csv(out / "unit_misfit.csv", index=False, encoding="utf-8-sig")
+    cells.to_csv(out / "cell_misfit.csv", index=False, encoding="utf-8-sig")
+    (out / "misfit_summary.json").write_text(json.dumps(summ, ensure_ascii=False, indent=2), encoding="utf-8")
+    if not args.no_plots:
+        fig_misfit_map(env_b, u, out / "misfit_map.png", incident)
+        fig_misfit(env_b, cells, summ, radii, out / "misfit_vs_traffic.png")
+
+    print("\n" + "=" * 90)
+    print("평가지표 2: w_B 고정, AFTER 교통량 misfit  (e = 셀 내 상대 BP 위치 이동량, d = |교통량 변화율|)")
+    print("=" * 90)
+    print(f"J(before)={summ['J_before']:.5f} (env {summ['check_J_before_env']:.5f})   "
+          f"J(after, w_B 고정)={summ['J_after_frozen_w_before']:.5f} (env {summ['check_J_after_frozen_env']:.5f})")
+    print(f"유닛 {summ['n_units']:,}개, 유효 셀 {summ['n_valid_cells']}개, "
+          f"BP<1e-3 유닛 {100 * summ['share_units_p_before_lt_1e-3']:.0f}%")
+    keys = ["cell_e"] + [f"nbr_e_r{r:g}" for r in radii]
+    print(f"\n{'variant':8s} {'units':>6s} " + " ".join(f"{k:>30s}" for k in keys) + "   hot/rest e   pooled(d,e)")
+    for tag, o in summ["variants"].items():
+        cols = []
+        for k in keys:
+            c = o[k]
+            cols.append(f"{c['rho']:+.2f} [{c['ci_lo']:+.2f},{c['ci_hi']:+.2f}] n={c['n']}".rjust(30))
+        h = o.get("hot_vs_rest")
+        hr = f"{h['mean_e_hot']:.3f}/{h['mean_e_rest']:.3f}" if h else "-"
+        print(f"{tag:8s} {o['n_units']:6d} " + " ".join(cols) + f"   {hr:>11s}   {o['pooled_unit_spearman_e']['rho']:+.3f}")
+    if incident is not None:
+        for tag, o in summ["variants"].items():
+            nf = o["near_vs_far_incident"]
+            print(f"[{tag}] 사고 {nf['radius_m'] / 1000:g} km 이내 평균 e={nf['mean_e_near']:.4f} vs 밖 {nf['mean_e_far']:.4f}")
+    print("tau = BP 활성 기준 max(p_before,p_after)>=tau (결과를 본 뒤 정한 탐색적 값). "
+          "p-value 는 공간 상관 때문에 낙관적이므로 CI 로 판단.")
+    print(f"산출물: {out}")
+    return summ
+
+
 def fig_retention(cells, path, top_n=30):
     df = cells.assign(act=cells["lost_len_m"] + cells["gained_len_m"]).nlargest(top_n, "act")
     df = df.iloc[::-1]
@@ -688,7 +916,12 @@ def parse_args(argv=None):
     p.add_argument("--sites", type=Path, default=od / "pems_d07_sites.csv")
     p.add_argument("--meta", type=Path, default=DIR / "d07_text_meta_2018_10_13.txt")
     p.add_argument("--a-before", required=True, help="BEFORE 로그 가중치 (파일 | zeros | show)")
-    p.add_argument("--a-after", required=True, help="AFTER 로그 가중치 (파일 | zeros | show)")
+    p.add_argument("--a-after", default=None, help="AFTER 로그 가중치 (파일 | zeros | show). --misfit-only 면 생략 가능")
+    p.add_argument("--misfit", action="store_true", help="평가지표 2(w_B 고정 misfit)도 계산")
+    p.add_argument("--misfit-only", action="store_true", help="평가지표 2 만 계산 (a-after 불필요)")
+    p.add_argument("--nbr-radii", default="2000,4000", help="misfit 이웃 반경 [m], 쉼표 구분")
+    p.add_argument("--tau", default="0.01,0.05", help="misfit BP 활성 기준 max(p_before,p_after)>=tau, 쉼표 구분")
+    p.add_argument("--incident-radius", type=float, default=3000.0, help="misfit 근/원거리 비교 반경 [m]")
     # train.py 와 같은 env 설정이어야 K 가 맞는다
     p.add_argument("--rho-max", type=float, default=5.0)
     p.add_argument("--objective", default="within")
@@ -718,7 +951,8 @@ def main(argv=None):
     check_same_geometry(env_b, env_a)
 
     a_b = load_weights(args.a_before, env_b)
-    a_a = load_weights(args.a_after, env_a)
+    if args.a_after is None and not args.misfit_only:
+        raise ValueError("--a-after 가 필요하다 (평가지표 2 만 보려면 --misfit-only).")
 
     incident, radii = None, []
     if args.incident_site is not None:
@@ -735,6 +969,13 @@ def main(argv=None):
         incident = project_latlon(args.meta, args.incident_lat, args.incident_lon)
         radii = [float(r) for r in args.radii.split(",") if r.strip()]
         print(f"사고 위치 x/y = {incident[0]:.1f}, {incident[1]:.1f} m")
+
+    if args.misfit or args.misfit_only:
+        print("[M] 평가지표 2: w_B 고정 misfit")
+        run_misfit(env_b, env_a, a_b, args, incident, out / "misfit")
+        if args.misfit_only:
+            return
+    a_a = load_weights(args.a_after, env_a)
 
     print("[3] 분할 계산 (BEFORE/AFTER)")
     st_b, st_a = cut_state(env_b, a_b), cut_state(env_a, a_a)
