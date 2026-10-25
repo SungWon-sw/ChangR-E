@@ -1,0 +1,58 @@
+{
+  "K": 44,
+  "n_segments": 1831,
+  "n_sub_pieces": 19368,
+  "total_length_m": 1485910.4586810856,
+  "unreachable_length_m": 41660.0923358025,
+  "changed_length_m": 211812.72311405395,
+  "changed_share": 0.14254743405067746,
+  "mean_cell_jaccard": 0.7710174214077945,
+  "union_weighted_jaccard": 0.7504743701619396,
+  "rms_delta_a_all": 0.29589596587426864,
+  "bp_valid_piece_share": 0.9998967368855844,
+  "traffic_change_vs_area_change_spearman": {
+    "dissimilarity": {
+      "rho": 0.28408086545270456,
+      "p": 0.06826374530845669,
+      "n": 42,
+      "slope_per_unit": 1.5865111603613584,
+      "intercept": 0.18706527189332078,
+      "r2": 0.03297029391502094
+    },
+    "weighted_change_share": {
+      "rho": 0.007541969879275344,
+      "p": 0.9621919430200168,
+      "n": 42,
+      "slope_per_unit": -0.016629367975512108,
+      "intercept": 0.005354452734441422,
+      "r2": 0.0033612924968980063
+    }
+  },
+  "cell_std_change": {
+    "traffic_level_vs_sd_before": {
+      "rho": 0.4817275747508306,
+      "p": 0.0012374755200808924,
+      "n": 42
+    },
+    "traffic_level_vs_bp_before": {
+      "rho": 0.6847905356129974,
+      "p": 5.681988910419123e-07,
+      "n": 42
+    },
+    "traffic_level_vs_abs_d_sd": {
+      "rho": 0.17348675147881049,
+      "p": 0.2718772269499916,
+      "n": 42
+    },
+    "pred_vs_actual_d_sd_traffic": {
+      "rho": 0.5815574102584881,
+      "p": 5.366011529127846e-05,
+      "n": 42
+    }
+  },
+  "incident_xy": null,
+  "weights": {
+    "before": ".\\features\\data_preprocessing\\vor_sd\\weights_example\\example_w_before.txt",
+    "after": ".\\features\\data_preprocessing\\vor_sd\\weights_example\\example_w_after.txt"
+  }
+}

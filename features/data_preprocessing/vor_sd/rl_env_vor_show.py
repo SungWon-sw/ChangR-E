@@ -188,19 +188,18 @@ def random_search_best_a(env, iters=200, seed=42):
     최단거리 기준에서는 최적이 아니므로, 그래프 버전으로 재학습해 갱신해야 한다.
     또 값의 범위(±0.81)는 rho_max=5 (a_bound=ln5/2≈0.805) 학습 결과라,
     아래 __main__ 이 쓰는 기본 rho_max=2 (a_bound≈0.347) 보다 넓다."""
-    x =  [-0.8058768,  -0.8058768,   0.80356112,  0.71066798, -0.42901477 ,-0.8058768,
- -0.74279994 ,-0.29433552,  0.76451002, -0.58154552 , 0.79175199 , 0.80356112,
-  0.63019398 , 0.80356112, -0.00186504, -0.8058768  , 0.44259583 ,-0.8058768,
- -0.8058768  , 0.80356112, -0.26580017,  0.80356112 ,-0.62377019 , 0.56351233,
-  0.25314289 ,-0.59174038, -0.8058768 ,  0.80356112 , 0.21805273 ,-0.16460125,
-  0.77815306 , 0.45064982,  0.55187162, -0.35880444 ,-0.3629676  , 0.09483584,
- -0.19501537,  0.35388186,  0.51898361,  0.38987344 ,-0.35048852 , 0.80356112,
- -0.8058768  , 0.50881125, -0.63679939,  0.80356112 , 0.08001268 ,-0.8058768,
- -0.8058768  , 0.7160138 , -0.8058768,  -0.77717944 ,-0.8058768  ,-0.8058768,
-  0.80356112 , 0.80356112]
-
-
-
+    # train.py (merge_radius=2500 -> K=44, rho_max=5) finalW
+    x = [-0.79766486,  0.81177305, -0.79766486, -0.79766486,  0.18228306, -0.79766486,
+         -0.79766486, -0.79766486, -0.79766486, -0.0978488,   0.40603609,  0.28845341,
+          0.81177305, -0.79766486,  0.81177305, -0.79766486,  0.81177305, -0.79766486,
+         -0.33444061, -0.00193652, -0.79766486,  0.81177305,  0.62017848,  0.81177305,
+          0.81177305,  0.81177305,  0.81177305,  0.81177305, -0.79766486,  0.81177305,
+         -0.72638521, -0.56773784,  0.81177305, -0.70528453,  0.6330194,   0.81177305,
+         -0.79766486, -0.58935828,  0.81001033, -0.79766486,  0.81177305,  0.00809677,
+         -0.70387847,  0.58127813]
+    if len(x) != env.K:
+        raise ValueError(f"len(finalW)={len(x)} != env.K={env.K}: "
+                         f"env config (merge_radius / sites file) must match train.py")
 
     return np.array(x)
 
@@ -208,15 +207,24 @@ def random_search_best_a(env, iters=200, seed=42):
 if __name__ == "__main__":
     DIR = str(REPO_ROOT / "features" / "data_preprocessing" / "vor_sd")
 
-    SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_0841_before.csv"
-    SITES_FILE = f"{DIR}/outputs/pems_d07_sites.csv"
+    # must match train.py's env config, or the learned weights (length K) won't fit
+    RHO_MAX = 5.0
+    OBJECTIVE = "within"
+    MERGE_RADIUS = 2500.0      # 56 -> 44 nodes (inc8057187 files; 0841 files give 43)
+    PHF = 60.0 / 90            # WINDOW_MIN = 90
+    SEGMENTS_FILE = f"{DIR}/outputs_2008/pems_d07_segments_inc8057187_1401_before.csv"
+    SITES_FILE = f"{DIR}/outputs_2008/pems_d07_sites.csv"
     META_FILE = f"{DIR}/d07_text_meta_2018_10_13.txt"
 
     print("[Visualizer] 환경 데이터 로드 및 초기화 중...")
     env = TrafficRLEnvMW(
         segments_csv=SEGMENTS_FILE,
         sites_csv=SITES_FILE,
-        meta_txt=META_FILE
+        meta_txt=META_FILE,
+        rho_max=RHO_MAX,
+        objective=OBJECTIVE,
+        phf=PHF,
+        merge_radius=MERGE_RADIUS,
     )
 
     print("\n[시나리오 1] 균등 가중치(Uniform, a=0) 시각화 생성 중...")
